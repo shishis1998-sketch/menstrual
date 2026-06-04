@@ -1293,14 +1293,25 @@
       const recentCycs = validCycles.slice(-6);
       const recentCycAvg = recentCycs.length > 0 ? avg(recentCycs) : null;
 
-      // 预测下次:基于最近周期平均
+      // 预测下次:基于最近一段经期开始日 + 平均周期。
+      // 若算出的预测日已过去(说明当前这段经期已经来了/周期已过),
+      // 自动按平均周期向后顺延,直到预测日落在今天或未来。
       const lastPeriod = periods[periods.length - 1];
       let predictedDate = null;
       let daysUntilNext = null;
       if (recentCycAvg) {
+        const cycLen = Math.max(1, Math.round(recentCycAvg));
         predictedDate = new Date(lastPeriod.start);
-        predictedDate.setDate(predictedDate.getDate() + Math.round(recentCycAvg));
-        daysUntilNext = Math.round((predictedDate - new Date()) / 86400000);
+        predictedDate.setDate(predictedDate.getDate() + cycLen);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        // 顺延到未来(给个上限防止极端数据死循环)
+        let guard = 0;
+        while (predictedDate < today && guard < 60) {
+          predictedDate.setDate(predictedDate.getDate() + cycLen);
+          guard++;
+        }
+        daysUntilNext = Math.round((predictedDate - today) / 86400000);
       }
 
       // 记录时间跨度
@@ -1313,14 +1324,9 @@
 
       // ── 预测块 ──
       if (predictedDate) {
-        const passed = daysUntilNext < -3; // 已过预测日 3 天以上
-        const subText = passed
-          ? `已超过 ${Math.abs(daysUntilNext)} 天`
-          : (daysUntilNext < 0
-              ? `已过 ${Math.abs(daysUntilNext)} 天`
-              : (daysUntilNext === 0
-                  ? '就在今天'
-                  : `还有 ${daysUntilNext} 天`));
+        const subText = daysUntilNext === 0
+          ? '预计就在今天'
+          : `还有 ${daysUntilNext} 天`;
         html += `
           <div class="stats-pred">
             <div class="stats-pred-label">📅 预测下次经期</div>
