@@ -1388,6 +1388,32 @@
         </div>
       `;
 
+      // ── 症状统计（只统计当前选中年份）──
+      const symCount = {};
+      const yearPrefix = year + '-';
+      Object.keys(SYMPTOMS_DATA).forEach(key => {
+        if (key.indexOf(yearPrefix) === 0) {
+          (SYMPTOMS_DATA[key] || []).forEach(name => {
+            symCount[name] = (symCount[name] || 0) + 1;
+          });
+        }
+      });
+      const symSorted = Object.keys(symCount).sort((a, b) => symCount[b] - symCount[a]);
+
+      html += `<div class="stats-section">症状统计 <span class="stats-sub">(${year} 年)</span></div>`;
+      if (symSorted.length === 0) {
+        html += '<div class="stats-empty" style="padding:14px 0;">本年还没有症状记录</div>';
+      } else {
+        symSorted.forEach(name => {
+          html += `
+            <div class="stats-row">
+              <span class="stats-label">${escapeHtml(name)}</span>
+              <span class="stats-value">${symCount[name]} 次</span>
+            </div>
+          `;
+        });
+      }
+
       html += `<div class="stats-hint">💡 周期 = 一段经期开始到下一段开始的天数<br>💡 同一段经期 = 连续(或仅相差 1 天)的有色日期</div>`;
 
       body.innerHTML = html;
