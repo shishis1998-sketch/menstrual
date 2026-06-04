@@ -338,23 +338,21 @@
 
     /* ── 日期上的症状指示点(右上角小圆点) ── */
     .day { position: relative; }
-    /* 关键:has-sym 的格子要抬高一层,否则会被相邻日期向左/右延伸出来的
-       box-shadow(ext-l/ext-r 拼接条)盖在小点上面 */
     .day.has-sym { z-index: 2; }
     .day.has-sym::after {
       content: '';
       position: absolute;
-      top: -2px; right: -2px;     /* 向外探出,完全避开相邻 box-shadow 覆盖区 */
-      width: 6px; height: 6px;
+      top: 3px; right: 3px;        /* 收进格子内部,避开颜色块圆角边缘 */
+      width: 5px; height: 5px;
       border-radius: 50%;
       background: #6366f1;
       box-shadow: 0 0 0 1.5px white;
-      z-index: 3;                 /* 确保点本身也在最上层 */
+      z-index: 3;
       pointer-events: none;
     }
     .month.zoomed .day.has-sym::after {
-      width: 8px; height: 8px;
-      top: -3px; right: -3px;
+      width: 7px; height: 7px;
+      top: 5px; right: 5px;
       box-shadow: 0 0 0 2px white;
     }
 
