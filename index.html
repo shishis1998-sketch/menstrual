@@ -138,8 +138,8 @@
     }
     .stats-overlay.show { display: flex; }
     .stats-modal {
-      background: white; width: 100%;
-      max-width: 460px;
+      background: white; width: 88%;
+      max-width: 380px;
       border-radius: 14px;
       padding: 0;
       max-height: 85vh;
@@ -527,7 +527,7 @@
 
   <!-- 云同步设置弹窗 -->
   <div class="stats-overlay" id="syncOverlay" onclick="closeSyncSettings(event)">
-    <div class="stats-modal" onclick="event.stopPropagation()" style="max-width:420px;">
+    <div class="stats-modal" onclick="event.stopPropagation()" style="max-width:380px;">
       <div class="stats-header">
         <div class="stats-title">☁️ 云端同步设置</div>
         <button class="stats-close" onclick="closeSyncSettings()">✕</button>
@@ -1222,7 +1222,10 @@
     function computeCycles() {
       const dates = [];
       Object.keys(ALL_DATA).forEach(key => {
-        if (ALL_DATA[key] > 0) {
+        // 只统计真正的月经期(POCO=1 / MEDIO=2 / MUCHO=3)
+        // GOTAS(level 4, 灰色点滴)不算经期,排除
+        const lv = ALL_DATA[key];
+        if (lv === 1 || lv === 2 || lv === 3) {
           const [y, m, d] = key.split('-').map(Number);
           dates.push(new Date(y, m - 1, d));
         }
