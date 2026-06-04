@@ -1,0 +1,1581 @@
+<html lang="zh-CN"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>经期日历</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f9fafb;
+      margin: 0;
+      padding: 8px 0 30px;
+    }
+    .header { text-align: center; margin-bottom: 6px; }
+    h1 { color: #1a1a1a; font-size: 20px; margin: 0 0 3px 0; }
+    .subtitle { color: #666; font-size: 11px; }
+    .year-switcher {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; margin: 4px 0 8px;
+    }
+    .year-btn {
+      background: none; border: none; font-size: 18px;
+      color: #888; cursor: pointer; padding: 0 4px; line-height: 1;
+    }
+    .year-btn:hover { color: #333; }
+    .year-label {
+      font-size: 18px; font-weight: bold; color: #1a1a1a;
+      min-width: 50px; text-align: center; cursor: pointer;
+      text-decoration: underline dotted #aaa;
+    }
+    .year-picker-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 100;
+      align-items: flex-end; justify-content: center;
+    }
+    .year-picker-overlay.show { display: flex; }
+    .year-picker-sheet {
+      background: white; width: 100%;
+      border-radius: 16px 16px 0 0; padding: 16px 0 32px;
+    }
+    .year-picker-title { text-align: center; font-size: 13px; color: #999; margin-bottom: 8px; }
+    .year-picker-list { max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .year-picker-item { text-align: center; padding: 12px 0; font-size: 18px; color: #333; cursor: pointer; }
+    .year-picker-item.active { color: #C71F37; font-weight: bold; font-size: 20px; }
+    .year-picker-item:hover { background: #f9f9f9; }
+    .legend {
+      display: flex; justify-content: center; gap: 10px;
+      margin: 6px 0 10px; font-size: 11px; flex-wrap: nowrap;
+    }
+    .calendar-container {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 18px; margin: 0 30px;
+    }
+    .month {
+      background: white; border-radius: 10px;
+      padding: 8px 6px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+    }
+    .month-title { text-align: center; font-size: 14px; font-weight: bold; color: #1a1a1a; margin-bottom: 4px; }
+    .weekdays {
+      display: grid; grid-template-columns: repeat(7, 20px);
+      text-align: center; font-size: 11px; color: #999;
+      margin-bottom: 3px; justify-content: center;
+    }
+    .days {
+      display: grid; grid-template-columns: repeat(7, 20px);
+      row-gap: 3px; justify-content: center; padding: 0 2px;
+      grid-auto-rows: 16px;
+      min-height: 111px;  /* 6 行高度，让所有月份等高（5周月份底部留白） */
+    }
+    .day {
+      --r: 8px;
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center; justify-content: center;
+      border-radius: 8px; font-size: 11px; cursor: pointer;
+      transition: all 0.2s;
+      box-sizing: border-box;
+      background-clip: padding-box;
+      color: #333;
+    }
+    .day:hover { transform: scale(1.05); }
+    .level-g { background-color: #dbdbdf; color: #555; --c: #dbdbdf; }
+    .level-1 { background-color: #ffd5dc; color: #640D14; --c: #ffd5dc; }
+    .level-2 { background-color: #cf4865; color: white; --c: #cf4865; }
+    .level-3 { background-color: #834047; color: white; --c: #834047; }
+
+    /* 用 box-shadow 向左/右延伸 3px 实色，盖住相邻同色格之间的亚像素缝；
+       shadow 不受 grid 切割影响，是消除拼接缝最稳的办法 */
+    .day.ext-l { box-shadow: -3px 0 0 0 var(--c); }
+    .day.ext-r { box-shadow:  3px 0 0 0 var(--c); }
+    .day.ext-l.ext-r { box-shadow: -3px 0 0 0 var(--c), 3px 0 0 0 var(--c); }
+    .today { outline: 2px solid #eab308; outline-offset: -2px; color: #eab308 !important; }
+    .sync-bar {
+      display: flex; justify-content: center; gap: 10px;
+      margin: 12px 30px 6px;
+    }
+    .sync-btn {
+      flex: 1; padding: 9px 0; border: none; border-radius: 8px;
+      font-size: 13px; cursor: pointer; font-family: inherit;
+    }
+    .btn-save { background: #C71F37; color: white; font-weight: bold; }
+    .btn-stats { background: #475569; color: white; font-weight: bold; }
+    .btn-gray { background: #f1f5f9; color: #334155; }
+    .btn-cloud { background: #0ea5e9; color: white; font-weight: bold; position: relative; }
+    .cloud-status-dot {
+      display: inline-block; width: 7px; height: 7px;
+      background: #94a3b8; border-radius: 50%; margin-left: 5px;
+      vertical-align: middle;
+    }
+    .cloud-status-dot.ok { background: #4ade80; }
+    .cloud-status-dot.err { background: #f87171; }
+    .cloud-status-dot.busy { background: #fbbf24; animation: cloudPulse 0.8s infinite; }
+    @keyframes cloudPulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+    .sync-field { margin-bottom: 12px; }
+    .sync-field label { display:block; font-size:13px; color:#475569; font-weight:600; margin-bottom:5px; }
+    .sync-input {
+      width:100%; box-sizing:border-box; padding:9px 11px;
+      border:1px solid #e2e8f0; border-radius:8px; font-size:14px;
+      font-family:inherit; outline:none; -webkit-appearance:none;
+    }
+    .sync-input:focus { border-color:#0ea5e9; }
+    .sync-auto-row { display:flex; align-items:center; gap:8px; font-size:13px; color:#475569; margin:6px 0 14px; cursor:pointer; }
+    .sync-btn-row { display:flex; gap:10px; margin-bottom:10px; }
+    .sync-action-btn { flex:1; padding:10px 0; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
+    .act-pull { background:#e0f2fe; color:#0369a1; }
+    .act-push { background:#0ea5e9; color:white; }
+    .sync-save-cfg { width:100%; padding:10px 0; border:none; border-radius:8px; background:#475569; color:white; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
+    .sync-log { font-size:12px; color:#64748b; margin-top:10px; text-align:center; min-height:16px; }
+    .sync-log.ok { color:#16a34a; }
+    .sync-log.err { color:#dc2626; }
+
+    /* ── 总结弹窗 ── */
+    .stats-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 130;
+      align-items: center; justify-content: center;
+      padding: 20px;
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px);
+    }
+    .stats-overlay.show { display: flex; }
+    .stats-modal {
+      background: white; width: 100%;
+      max-width: 460px;
+      border-radius: 14px;
+      padding: 0;
+      max-height: 85vh;
+      display: flex; flex-direction: column;
+      animation: statsPop 0.22s ease-out;
+    }
+    @keyframes statsPop {
+      from { opacity: 0; transform: scale(0.95); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .stats-header {
+      display: flex; justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .stats-title {
+      font-size: 16px; font-weight: bold; color: #1a1a1a;
+    }
+    .stats-close {
+      background: #f1f5f9; border: none;
+      width: 28px; height: 28px; border-radius: 50%;
+      font-size: 16px; cursor: pointer; color: #555;
+    }
+    .stats-body {
+      padding: 14px 18px 20px;
+      overflow-y: auto;
+    }
+    .stats-row {
+      display: flex; justify-content: space-between;
+      align-items: baseline;
+      padding: 5px 0;
+    }
+    .stats-label {
+      font-size: 15px; color: #475569;
+    }
+    .stats-value {
+      font-size: 15px; font-weight: 600; color: #1a1a1a;
+    }
+    .stats-value-big {
+      font-size: 22px; font-weight: bold; color: #C71F37;
+    }
+    .stats-section {
+      font-size: 13px; color: #64748b;
+      font-weight: 600;
+      margin: 22px 0 6px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .stats-section:first-child { margin-top: 0; }
+    .stats-sub {
+      font-size: 12px; color: #94a3b8;
+      margin-left: 6px;
+      font-weight: normal;
+    }
+    .stats-empty {
+      text-align: center; color: #94a3b8;
+      padding: 30px 0; font-size: 13px;
+    }
+    .stats-pred {
+      background: linear-gradient(135deg, #fef2f4, #fce7eb);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 12px;
+    }
+    .stats-pred-label {
+      font-size: 11px; color: #C71F37;
+      letter-spacing: 1px; font-weight: 600;
+      text-transform: uppercase;
+    }
+    .stats-pred-date {
+      font-size: 18px; font-weight: bold; color: #1a1a1a;
+      margin-top: 4px;
+    }
+    .stats-pred-sub {
+      font-size: 12px; color: #64748b; margin-top: 2px;
+    }
+    .stats-hint {
+      font-size: 11px; color: #94a3b8;
+      margin-top: 14px; line-height: 1.5;
+      padding-top: 10px;
+      border-top: 1px dashed #e2e8f0;
+    }
+    .toast {
+      position: fixed; bottom: 60px; left: 50%;
+      transform: translateX(-50%); background: rgba(0,0,0,0.75);
+      color: white; padding: 8px 18px; border-radius: 20px;
+      font-size: 13px; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+    .unsaved-dot {
+      display: inline-block; width: 7px; height: 7px;
+      background: #fde047; border-radius: 50%; margin-left: 5px;
+      vertical-align: middle; opacity: 0; transition: opacity 0.3s;
+    }
+    .unsaved-dot.show { opacity: 1; }
+
+    /* ── 放大态 ── */
+    .zoom-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55); z-index: 90;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+    .zoom-backdrop.show { display: block; }
+
+    .month.zoomed {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 92vw;
+      max-width: 480px;
+      max-height: 88vh;
+      overflow-y: auto;
+      z-index: 95;
+      padding: 18px 14px 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+      animation: zoomIn 0.25s ease-out;
+    }
+    @keyframes zoomIn {
+      from { transform: translate(-50%, -50%) scale(0.85); opacity: 0; }
+      to   { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+    }
+    .month.zoomed .month-title {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    .month.zoomed .weekdays {
+      grid-template-columns: repeat(7, 1fr);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .month.zoomed .days {
+      grid-template-columns: repeat(7, 1fr);
+      grid-auto-rows: auto;
+      min-height: 0;
+      row-gap: 6px;
+      padding: 0 4px;
+    }
+    .month.zoomed .day {
+      --r: 14px;
+      width: 100% !important;
+      height: 30px;
+      font-size: 16px;
+      margin: 0 !important;
+    }
+
+    .zoom-close {
+      position: absolute; top: 8px; right: 12px;
+      width: 32px; height: 32px;
+      background: #f1f5f9; border: none; border-radius: 50%;
+      font-size: 18px; color: #555; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2;
+    }
+
+    /* ── 色卡选择栏 ── */
+    .color-palette {
+      margin-top: 14px;
+      padding: 10px 0 4px;
+      border-top: 1px solid #eee;
+      display: flex; gap: 14px; justify-content: center;
+      align-items: flex-start; flex-wrap: wrap;
+    }
+    .palette-label {
+      width: 100%; text-align: center;
+      font-size: 10px; color: #999;
+      letter-spacing: 1px; margin-bottom: 4px;
+    }
+    .swatch {
+      flex: 0 0 auto; cursor: pointer;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      padding: 2px;
+      transition: transform 0.15s;
+    }
+    .swatch-dot {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 3px solid transparent;
+      box-sizing: border-box;
+      transition: border-color 0.15s;
+    }
+    .swatch-text {
+      font-size: 9px; color: #888;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+    .swatch.selected { transform: scale(1.08); }
+    .swatch.selected .swatch-dot { border-color: #1a1a1a; }
+    .swatch.selected .swatch-text { color: #1a1a1a; font-weight: bold; }
+    .swatch-g .swatch-dot { background: #dbdbdf; }
+    .swatch-1 .swatch-dot { background: #ffd5dc; }
+    .swatch-2 .swatch-dot { background: #cf4865; }
+    .swatch-3 .swatch-dot { background: #834047; }
+
+    /* ── 日期上的症状指示点(右上角小圆点) ── */
+    .day { position: relative; }
+    /* 关键:has-sym 的格子要抬高一层,否则会被相邻日期向左/右延伸出来的
+       box-shadow(ext-l/ext-r 拼接条)盖在小点上面 */
+    .day.has-sym { z-index: 2; }
+    .day.has-sym::after {
+      content: '';
+      position: absolute;
+      top: -2px; right: -2px;     /* 向外探出,完全避开相邻 box-shadow 覆盖区 */
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #6366f1;
+      box-shadow: 0 0 0 1.5px white;
+      z-index: 3;                 /* 确保点本身也在最上层 */
+      pointer-events: none;
+    }
+    .month.zoomed .day.has-sym::after {
+      width: 8px; height: 8px;
+      top: -3px; right: -3px;
+      box-shadow: 0 0 0 2px white;
+    }
+
+    /* ── 被选中查看的日期:蓝色描边 ── */
+    .day.selected-view {
+      outline: 2px solid #6366f1;
+      outline-offset: -2px;
+    }
+
+    /* ── 底部信息栏(嵌入在放大卡片内) ── */
+    .day-info-bar {
+      margin-top: 12px;
+      padding: 12px 4px 4px;
+      border-top: 1px solid #eee;
+    }
+    .info-date {
+      font-size: 14px; font-weight: bold;
+      color: #1a1a1a; margin-bottom: 6px;
+      text-align: center;
+    }
+    .info-empty {
+      text-align: center; font-size: 12px;
+      color: #94a3b8; padding: 6px 0;
+    }
+    .info-section-title {
+      font-size: 10px; color: #999;
+      letter-spacing: 1px; margin: 10px 0 6px;
+      text-transform: uppercase;
+    }
+    .info-tags {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .info-tag {
+      display: inline-flex; align-items: center;
+      padding: 5px 10px; border-radius: 14px;
+      background: #f1f5f9; color: #475569;
+      font-size: 12px; cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all 0.15s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .info-tag.active {
+      background: #eef2ff;
+      color: #4f46e5;
+      border-color: #6366f1;
+      font-weight: 600;
+    }
+    .info-tag .del {
+      margin-left: 5px;
+      color: #cbd5e1;
+      font-size: 13px;
+      line-height: 1;
+    }
+    .info-tag .del:hover { color: #ef4444; }
+    .info-add-row {
+      display: flex; gap: 6px; margin-top: 8px;
+      position: relative;
+    }
+    .info-input {
+      flex: 1; padding: 7px 10px;
+      border: 1px solid #e2e8f0; border-radius: 7px;
+      font-size: 13px; font-family: inherit;
+      outline: none;
+      -webkit-appearance: none;
+      min-width: 0;
+    }
+    .info-input:focus { border-color: #6366f1; }
+    .info-add-btn {
+      padding: 7px 14px; border: none; border-radius: 7px;
+      background: #6366f1; color: white;
+      font-size: 12px; cursor: pointer; font-weight: 600;
+      white-space: nowrap;
+    }
+    /* "已添加"闪烁提示 */
+    .add-flash {
+      position: absolute;
+      right: 60px; top: 50%;
+      transform: translateY(-50%);
+      background: #10b981; color: white;
+      padding: 4px 10px; border-radius: 12px;
+      font-size: 11px; font-weight: 600;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .add-flash.show {
+      opacity: 1;
+      animation: flashPop 0.25s ease-out;
+    }
+    @keyframes flashPop {
+      0%   { transform: translateY(-50%) scale(0.7); }
+      60%  { transform: translateY(-50%) scale(1.1); }
+      100% { transform: translateY(-50%) scale(1); }
+    }
+  </style>
+</head>
+<body style="">
+  <div class="header">
+    <h1>经期日历</h1>
+    <p class="subtitle">点击月份放大 · 选色再点日期 · 改后记得保存</p>
+  </div>
+  <div class="year-switcher">
+    <button class="year-btn" onclick="changeYear(-1)">‹</button>
+    <div class="year-label" id="yearLabel" onclick="openYearPicker()">2026</div>
+    <button class="year-btn" onclick="changeYear(1)">›</button>
+  </div>
+
+  <div class="year-picker-overlay" id="yearPickerOverlay" onclick="closeYearPicker(event)">
+    <div class="year-picker-sheet">
+      <div class="year-picker-title">选择年份</div>
+      <div class="year-picker-list" id="yearPickerList"><div class="year-picker-item">2028</div><div class="year-picker-item">2027</div><div class="year-picker-item active">2026</div><div class="year-picker-item">2025</div><div class="year-picker-item">2024</div><div class="year-picker-item">2023</div><div class="year-picker-item">2022</div><div class="year-picker-item">2021</div><div class="year-picker-item">2020</div></div>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:9px;color:#666;margin-bottom:3px;letter-spacing:1px;">VOLUMEN</div>
+  <div class="legend" style="font-size:9px;gap:8px;margin:4px 0 8px;">
+    <div><span style="color:#aaa">●</span> GOTAS</div>
+    <div><span style="color:#FFCCD5">●</span> POCO</div>
+    <div><span style="color:#C71F37">●</span> MEDIO</div>
+    <div><span style="color:#640D14">●</span> MUCHO</div>
+  </div>
+
+  <div class="toast" id="toast">请先点击日历选择一天</div>
+  <div class="zoom-backdrop" id="zoomBackdrop" onclick="unzoomMonth()"></div>
+  <div id="calendar" class="calendar-container"><div class="month" data-month="1"><div class="month-title">1 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div></div><div></div><div></div><div data-month="1" data-day="1" class="day level-2 ext-r  " style="border-radius:var(--r) 0 0 var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="1" data-day="2" class="day level-2 ext-l ext-r  " style="border-radius:0px;;user-select:none;-webkit-user-select:none;">2</div><div data-month="1" data-day="3" class="day level-2 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">3</div><div data-month="1" data-day="4" class="day level-1  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">4</div><div data-month="1" data-day="5" class="day level-1 ext-r  " style="border-radius:var(--r) 0 0 var(--r);;user-select:none;-webkit-user-select:none;">5</div><div data-month="1" data-day="6" class="day level-1 ext-l ext-r  " style="border-radius:0px;;user-select:none;-webkit-user-select:none;">6</div><div data-month="1" data-day="7" class="day level-1 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">7</div><div data-month="1" data-day="8" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">8</div><div data-month="1" data-day="9" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="1" data-day="10" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">10</div><div data-month="1" data-day="11" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">11</div><div data-month="1" data-day="12" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">12</div><div data-month="1" data-day="13" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">13</div><div data-month="1" data-day="14" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">14</div><div data-month="1" data-day="15" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">15</div><div data-month="1" data-day="16" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">16</div><div data-month="1" data-day="17" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">17</div><div data-month="1" data-day="18" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">18</div><div data-month="1" data-day="19" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">19</div><div data-month="1" data-day="20" class="day level-g ext-r  " style="border-radius:var(--r) 0 0 var(--r);;user-select:none;-webkit-user-select:none;">20</div><div data-month="1" data-day="21" class="day level-g ext-l ext-r  " style="border-radius:0px;;user-select:none;-webkit-user-select:none;">21</div><div data-month="1" data-day="22" class="day level-g ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">22</div><div data-month="1" data-day="23" class="day level-1  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">23</div><div data-month="1" data-day="24" class="day level-2  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">24</div><div data-month="1" data-day="25" class="day level-3  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">25</div><div data-month="1" data-day="26" class="day level-2  " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="1" data-day="27" class="day level-1 ext-r  " style="border-radius:var(--r) 0 0 var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">27</div><div data-month="1" data-day="28" class="day level-1 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">28</div><div data-month="1" data-day="29" class="day level-g ext-r  " style="border-radius:var(--r) 0 0 var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">29</div><div data-month="1" data-day="30" class="day level-g ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">30</div><div data-month="1" data-day="31" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">31</div></div></div><div class="month" data-month="2"><div class="month-title">2 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div></div><div></div><div></div><div></div><div></div><div></div><div data-month="2" data-day="1" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="2" data-day="2" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">2</div><div data-month="2" data-day="3" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">3</div><div data-month="2" data-day="4" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">4</div><div data-month="2" data-day="5" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">5</div><div data-month="2" data-day="6" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">6</div><div data-month="2" data-day="7" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">7</div><div data-month="2" data-day="8" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">8</div><div data-month="2" data-day="9" class="day level-g  " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="2" data-day="10" class="day level-2  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">10</div><div data-month="2" data-day="11" class="day level-3  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">11</div><div data-month="2" data-day="12" class="day level-2 ext-r  " style="border-radius:var(--r) 0 0 var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">12</div><div data-month="2" data-day="13" class="day level-2 ext-l ext-r  " style="border-radius:0px;;user-select:none;-webkit-user-select:none;">13</div><div data-month="2" data-day="14" class="day level-2 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">14</div><div data-month="2" data-day="15" class="day level-1  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">15</div><div data-month="2" data-day="16" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">16</div><div data-month="2" data-day="17" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">17</div><div data-month="2" data-day="18" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">18</div><div data-month="2" data-day="19" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">19</div><div data-month="2" data-day="20" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">20</div><div data-month="2" data-day="21" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">21</div><div data-month="2" data-day="22" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">22</div><div data-month="2" data-day="23" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">23</div><div data-month="2" data-day="24" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">24</div><div data-month="2" data-day="25" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">25</div><div data-month="2" data-day="26" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="2" data-day="27" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">27</div><div data-month="2" data-day="28" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">28</div></div></div><div class="month" data-month="3"><div class="month-title">3 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div></div><div></div><div></div><div></div><div></div><div></div><div data-month="3" data-day="1" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="3" data-day="2" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">2</div><div data-month="3" data-day="3" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">3</div><div data-month="3" data-day="4" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">4</div><div data-month="3" data-day="5" class="day level-3 ext-r  " style="border-radius:var(--r) 0 0 var(--r);;user-select:none;-webkit-user-select:none;">5</div><div data-month="3" data-day="6" class="day level-3 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">6</div><div data-month="3" data-day="7" class="day level-2 ext-r  " style="border-radius:var(--r) 0 0 var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">7</div><div data-month="3" data-day="8" class="day level-2 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">8</div><div data-month="3" data-day="9" class="day level-1 ext-r  has-sym" style="border-radius:var(--r) 0 0 var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="3" data-day="10" class="day level-1 ext-l ext-r  " style="border-radius:0px;;user-select:none;-webkit-user-select:none;">10</div><div data-month="3" data-day="11" class="day level-1 ext-l ext-r  " style="border-radius:0px;;user-select:none;-webkit-user-select:none;">11</div><div data-month="3" data-day="12" class="day level-1 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">12</div><div data-month="3" data-day="13" class="day level-g  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">13</div><div data-month="3" data-day="14" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">14</div><div data-month="3" data-day="15" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">15</div><div data-month="3" data-day="16" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">16</div><div data-month="3" data-day="17" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">17</div><div data-month="3" data-day="18" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">18</div><div data-month="3" data-day="19" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">19</div><div data-month="3" data-day="20" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">20</div><div data-month="3" data-day="21" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">21</div><div data-month="3" data-day="22" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">22</div><div data-month="3" data-day="23" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">23</div><div data-month="3" data-day="24" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">24</div><div data-month="3" data-day="25" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">25</div><div data-month="3" data-day="26" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="3" data-day="27" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">27</div><div data-month="3" data-day="28" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">28</div><div data-month="3" data-day="29" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">29</div><div data-month="3" data-day="30" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">30</div><div data-month="3" data-day="31" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">31</div></div></div><div class="month" data-month="4"><div class="month-title">4 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div></div><div></div><div data-month="4" data-day="1" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="4" data-day="2" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">2</div><div data-month="4" data-day="3" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">3</div><div data-month="4" data-day="4" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">4</div><div data-month="4" data-day="5" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">5</div><div data-month="4" data-day="6" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">6</div><div data-month="4" data-day="7" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">7</div><div data-month="4" data-day="8" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">8</div><div data-month="4" data-day="9" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="4" data-day="10" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">10</div><div data-month="4" data-day="11" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">11</div><div data-month="4" data-day="12" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">12</div><div data-month="4" data-day="13" class="day level-g  " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">13</div><div data-month="4" data-day="14" class="day level-1 ext-r  " style="border-radius:var(--r) 0 0 var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">14</div><div data-month="4" data-day="15" class="day level-1 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">15</div><div data-month="4" data-day="16" class="day level-2  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">16</div><div data-month="4" data-day="17" class="day level-3  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">17</div><div data-month="4" data-day="18" class="day level-2  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">18</div><div data-month="4" data-day="19" class="day level-1  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">19</div><div data-month="4" data-day="20" class="day level-1 ext-r  " style="border-radius:var(--r) 0 0 var(--r);;user-select:none;-webkit-user-select:none;">20</div><div data-month="4" data-day="21" class="day level-1 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">21</div><div data-month="4" data-day="22" class="day level-g ext-r  " style="border-radius:var(--r) 0 0 var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">22</div><div data-month="4" data-day="23" class="day level-g ext-l ext-r  " style="border-radius:0px;;user-select:none;-webkit-user-select:none;">23</div><div data-month="4" data-day="24" class="day level-g ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">24</div><div data-month="4" data-day="25" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">25</div><div data-month="4" data-day="26" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="4" data-day="27" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">27</div><div data-month="4" data-day="28" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">28</div><div data-month="4" data-day="29" class="day level-g  has-sym" style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">29</div><div data-month="4" data-day="30" class="day level-1  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">30</div></div></div><div class="month" data-month="5"><div class="month-title">5 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div></div><div></div><div></div><div></div><div data-month="5" data-day="1" class="day level-3  " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="5" data-day="2" class="day level-2 ext-r  " style="border-radius:var(--r) 0 0 var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">2</div><div data-month="5" data-day="3" class="day level-2 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">3</div><div data-month="5" data-day="4" class="day level-1 ext-r  " style="border-radius:var(--r) 0 0 var(--r);;user-select:none;-webkit-user-select:none;">4</div><div data-month="5" data-day="5" class="day level-1 ext-l ext-r  " style="border-radius:0px;;user-select:none;-webkit-user-select:none;">5</div><div data-month="5" data-day="6" class="day level-1 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">6</div><div data-month="5" data-day="7" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">7</div><div data-month="5" data-day="8" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">8</div><div data-month="5" data-day="9" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="5" data-day="10" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">10</div><div data-month="5" data-day="11" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">11</div><div data-month="5" data-day="12" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">12</div><div data-month="5" data-day="13" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">13</div><div data-month="5" data-day="14" class="day level-g  " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">14</div><div data-month="5" data-day="15" class="day level-1  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">15</div><div data-month="5" data-day="16" class="day level-3  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">16</div><div data-month="5" data-day="17" class="day level-2  " style="border-radius:var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">17</div><div data-month="5" data-day="18" class="day level-2  " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">18</div><div data-month="5" data-day="19" class="day level-1 ext-r  " style="border-radius:var(--r) 0 0 var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">19</div><div data-month="5" data-day="20" class="day level-1 ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">20</div><div data-month="5" data-day="21" class="day level-g ext-r  " style="border-radius:var(--r) 0 0 var(--r);width:calc(100% - 2px);margin-left:2px;;user-select:none;-webkit-user-select:none;">21</div><div data-month="5" data-day="22" class="day level-g ext-l  " style="border-radius:0 var(--r) var(--r) 0;;user-select:none;-webkit-user-select:none;">22</div><div data-month="5" data-day="23" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">23</div><div data-month="5" data-day="24" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">24</div><div data-month="5" data-day="25" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">25</div><div data-month="5" data-day="26" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="5" data-day="27" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">27</div><div data-month="5" data-day="28" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">28</div><div data-month="5" data-day="29" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">29</div><div data-month="5" data-day="30" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">30</div><div data-month="5" data-day="31" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">31</div></div></div><div class="month" data-month="6"><div class="month-title">6 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div data-month="6" data-day="1" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="6" data-day="2" class="day  today has-sym" style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">2</div><div data-month="6" data-day="3" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">3</div><div data-month="6" data-day="4" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">4</div><div data-month="6" data-day="5" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">5</div><div data-month="6" data-day="6" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">6</div><div data-month="6" data-day="7" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">7</div><div data-month="6" data-day="8" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">8</div><div data-month="6" data-day="9" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="6" data-day="10" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">10</div><div data-month="6" data-day="11" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">11</div><div data-month="6" data-day="12" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">12</div><div data-month="6" data-day="13" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">13</div><div data-month="6" data-day="14" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">14</div><div data-month="6" data-day="15" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">15</div><div data-month="6" data-day="16" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">16</div><div data-month="6" data-day="17" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">17</div><div data-month="6" data-day="18" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">18</div><div data-month="6" data-day="19" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">19</div><div data-month="6" data-day="20" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">20</div><div data-month="6" data-day="21" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">21</div><div data-month="6" data-day="22" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">22</div><div data-month="6" data-day="23" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">23</div><div data-month="6" data-day="24" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">24</div><div data-month="6" data-day="25" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">25</div><div data-month="6" data-day="26" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="6" data-day="27" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">27</div><div data-month="6" data-day="28" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">28</div><div data-month="6" data-day="29" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">29</div><div data-month="6" data-day="30" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">30</div></div></div><div class="month" data-month="7"><div class="month-title">7 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div></div><div></div><div data-month="7" data-day="1" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="7" data-day="2" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">2</div><div data-month="7" data-day="3" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">3</div><div data-month="7" data-day="4" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">4</div><div data-month="7" data-day="5" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">5</div><div data-month="7" data-day="6" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">6</div><div data-month="7" data-day="7" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">7</div><div data-month="7" data-day="8" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">8</div><div data-month="7" data-day="9" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="7" data-day="10" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">10</div><div data-month="7" data-day="11" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">11</div><div data-month="7" data-day="12" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">12</div><div data-month="7" data-day="13" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">13</div><div data-month="7" data-day="14" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">14</div><div data-month="7" data-day="15" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">15</div><div data-month="7" data-day="16" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">16</div><div data-month="7" data-day="17" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">17</div><div data-month="7" data-day="18" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">18</div><div data-month="7" data-day="19" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">19</div><div data-month="7" data-day="20" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">20</div><div data-month="7" data-day="21" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">21</div><div data-month="7" data-day="22" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">22</div><div data-month="7" data-day="23" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">23</div><div data-month="7" data-day="24" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">24</div><div data-month="7" data-day="25" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">25</div><div data-month="7" data-day="26" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="7" data-day="27" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">27</div><div data-month="7" data-day="28" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">28</div><div data-month="7" data-day="29" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">29</div><div data-month="7" data-day="30" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">30</div><div data-month="7" data-day="31" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">31</div></div></div><div class="month" data-month="8"><div class="month-title">8 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div></div><div></div><div></div><div></div><div></div><div data-month="8" data-day="1" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="8" data-day="2" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">2</div><div data-month="8" data-day="3" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">3</div><div data-month="8" data-day="4" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">4</div><div data-month="8" data-day="5" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">5</div><div data-month="8" data-day="6" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">6</div><div data-month="8" data-day="7" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">7</div><div data-month="8" data-day="8" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">8</div><div data-month="8" data-day="9" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="8" data-day="10" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">10</div><div data-month="8" data-day="11" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">11</div><div data-month="8" data-day="12" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">12</div><div data-month="8" data-day="13" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">13</div><div data-month="8" data-day="14" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">14</div><div data-month="8" data-day="15" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">15</div><div data-month="8" data-day="16" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">16</div><div data-month="8" data-day="17" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">17</div><div data-month="8" data-day="18" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">18</div><div data-month="8" data-day="19" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">19</div><div data-month="8" data-day="20" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">20</div><div data-month="8" data-day="21" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">21</div><div data-month="8" data-day="22" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">22</div><div data-month="8" data-day="23" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">23</div><div data-month="8" data-day="24" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">24</div><div data-month="8" data-day="25" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">25</div><div data-month="8" data-day="26" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="8" data-day="27" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">27</div><div data-month="8" data-day="28" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">28</div><div data-month="8" data-day="29" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">29</div><div data-month="8" data-day="30" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">30</div><div data-month="8" data-day="31" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">31</div></div></div><div class="month" data-month="9"><div class="month-title">9 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div></div><div data-month="9" data-day="1" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="9" data-day="2" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">2</div><div data-month="9" data-day="3" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">3</div><div data-month="9" data-day="4" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">4</div><div data-month="9" data-day="5" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">5</div><div data-month="9" data-day="6" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">6</div><div data-month="9" data-day="7" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">7</div><div data-month="9" data-day="8" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">8</div><div data-month="9" data-day="9" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="9" data-day="10" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">10</div><div data-month="9" data-day="11" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">11</div><div data-month="9" data-day="12" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">12</div><div data-month="9" data-day="13" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">13</div><div data-month="9" data-day="14" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">14</div><div data-month="9" data-day="15" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">15</div><div data-month="9" data-day="16" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">16</div><div data-month="9" data-day="17" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">17</div><div data-month="9" data-day="18" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">18</div><div data-month="9" data-day="19" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">19</div><div data-month="9" data-day="20" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">20</div><div data-month="9" data-day="21" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">21</div><div data-month="9" data-day="22" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">22</div><div data-month="9" data-day="23" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">23</div><div data-month="9" data-day="24" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">24</div><div data-month="9" data-day="25" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">25</div><div data-month="9" data-day="26" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="9" data-day="27" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">27</div><div data-month="9" data-day="28" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">28</div><div data-month="9" data-day="29" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">29</div><div data-month="9" data-day="30" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">30</div></div></div><div class="month" data-month="10"><div class="month-title">10 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div></div><div></div><div></div><div data-month="10" data-day="1" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="10" data-day="2" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">2</div><div data-month="10" data-day="3" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">3</div><div data-month="10" data-day="4" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">4</div><div data-month="10" data-day="5" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">5</div><div data-month="10" data-day="6" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">6</div><div data-month="10" data-day="7" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">7</div><div data-month="10" data-day="8" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">8</div><div data-month="10" data-day="9" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="10" data-day="10" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">10</div><div data-month="10" data-day="11" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">11</div><div data-month="10" data-day="12" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">12</div><div data-month="10" data-day="13" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">13</div><div data-month="10" data-day="14" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">14</div><div data-month="10" data-day="15" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">15</div><div data-month="10" data-day="16" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">16</div><div data-month="10" data-day="17" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">17</div><div data-month="10" data-day="18" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">18</div><div data-month="10" data-day="19" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">19</div><div data-month="10" data-day="20" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">20</div><div data-month="10" data-day="21" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">21</div><div data-month="10" data-day="22" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">22</div><div data-month="10" data-day="23" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">23</div><div data-month="10" data-day="24" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">24</div><div data-month="10" data-day="25" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">25</div><div data-month="10" data-day="26" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="10" data-day="27" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">27</div><div data-month="10" data-day="28" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">28</div><div data-month="10" data-day="29" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">29</div><div data-month="10" data-day="30" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">30</div><div data-month="10" data-day="31" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">31</div></div></div><div class="month" data-month="11"><div class="month-title">11 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div></div><div></div><div></div><div></div><div></div><div></div><div data-month="11" data-day="1" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="11" data-day="2" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">2</div><div data-month="11" data-day="3" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">3</div><div data-month="11" data-day="4" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">4</div><div data-month="11" data-day="5" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">5</div><div data-month="11" data-day="6" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">6</div><div data-month="11" data-day="7" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">7</div><div data-month="11" data-day="8" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">8</div><div data-month="11" data-day="9" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="11" data-day="10" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">10</div><div data-month="11" data-day="11" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">11</div><div data-month="11" data-day="12" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">12</div><div data-month="11" data-day="13" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">13</div><div data-month="11" data-day="14" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">14</div><div data-month="11" data-day="15" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">15</div><div data-month="11" data-day="16" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">16</div><div data-month="11" data-day="17" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">17</div><div data-month="11" data-day="18" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">18</div><div data-month="11" data-day="19" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">19</div><div data-month="11" data-day="20" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">20</div><div data-month="11" data-day="21" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">21</div><div data-month="11" data-day="22" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">22</div><div data-month="11" data-day="23" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">23</div><div data-month="11" data-day="24" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">24</div><div data-month="11" data-day="25" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">25</div><div data-month="11" data-day="26" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="11" data-day="27" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">27</div><div data-month="11" data-day="28" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">28</div><div data-month="11" data-day="29" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">29</div><div data-month="11" data-day="30" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">30</div></div></div><div class="month" data-month="12"><div class="month-title">12 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days"><div></div><div data-month="12" data-day="1" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">1</div><div data-month="12" data-day="2" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">2</div><div data-month="12" data-day="3" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">3</div><div data-month="12" data-day="4" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">4</div><div data-month="12" data-day="5" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">5</div><div data-month="12" data-day="6" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">6</div><div data-month="12" data-day="7" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">7</div><div data-month="12" data-day="8" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">8</div><div data-month="12" data-day="9" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">9</div><div data-month="12" data-day="10" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">10</div><div data-month="12" data-day="11" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">11</div><div data-month="12" data-day="12" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">12</div><div data-month="12" data-day="13" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">13</div><div data-month="12" data-day="14" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">14</div><div data-month="12" data-day="15" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">15</div><div data-month="12" data-day="16" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">16</div><div data-month="12" data-day="17" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">17</div><div data-month="12" data-day="18" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">18</div><div data-month="12" data-day="19" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">19</div><div data-month="12" data-day="20" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">20</div><div data-month="12" data-day="21" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">21</div><div data-month="12" data-day="22" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">22</div><div data-month="12" data-day="23" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">23</div><div data-month="12" data-day="24" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">24</div><div data-month="12" data-day="25" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">25</div><div data-month="12" data-day="26" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">26</div><div data-month="12" data-day="27" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">27</div><div data-month="12" data-day="28" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">28</div><div data-month="12" data-day="29" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">29</div><div data-month="12" data-day="30" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">30</div><div data-month="12" data-day="31" class="day   " style="border-radius:var(--r);;user-select:none;-webkit-user-select:none;">31</div></div></div></div>
+
+  <div style="text-align:center;font-size:9px;color:#666;margin-top:12px;margin-bottom:3px;letter-spacing:1px;">VOLUMEN</div>
+  <div class="legend" style="font-size:9px;gap:8px;margin:4px 0 8px;">
+    <div><span style="color:#aaa">●</span> GOTAS</div>
+    <div><span style="color:#FFCCD5">●</span> POCO</div>
+    <div><span style="color:#C71F37">●</span> MEDIO</div>
+    <div><span style="color:#640D14">●</span> MUCHO</div>
+  </div>
+
+  <div class="sync-bar">
+    <button class="sync-btn btn-stats" onclick="showStats()">
+      📊 总结
+    </button>
+    <button class="sync-btn btn-cloud" onclick="openSyncSettings()">
+      ☁️ 同步<span class="cloud-status-dot" id="cloudStatusDot"></span>
+    </button>
+    <button class="sync-btn btn-save" onclick="saveFile()">
+      💾 保存文件<span class="unsaved-dot show" id="unsavedDot"></span>
+    </button>
+  </div>
+
+  <!-- 云同步设置弹窗 -->
+  <div class="stats-overlay" id="syncOverlay" onclick="closeSyncSettings(event)">
+    <div class="stats-modal" onclick="event.stopPropagation()" style="max-width:420px;">
+      <div class="stats-header">
+        <div class="stats-title">☁️ 云端同步设置</div>
+        <button class="stats-close" onclick="closeSyncSettings()">✕</button>
+      </div>
+      <div class="stats-body">
+        <div class="sync-field">
+          <label>Gist ID</label>
+          <input type="text" id="syncGistId" class="sync-input" placeholder="例如 a1b2c3d4e5f6...">
+        </div>
+        <div class="sync-field">
+          <label>GitHub Token <span style="color:#94a3b8;font-weight:normal;">(只存在本机浏览器)</span></label>
+          <input type="password" id="syncToken" class="sync-input" placeholder="ghp_... 或 github_pat_...">
+        </div>
+        <label class="sync-auto-row">
+          <input type="checkbox" id="syncAuto" checked>
+          <span>改动后自动上传（推荐）</span>
+        </label>
+        <div class="sync-btn-row">
+          <button class="sync-action-btn act-pull" onclick="pullFromGist()">⬇️ 从云端拉取</button>
+          <button class="sync-action-btn act-push" onclick="pushToGist(true)">⬆️ 立即上传</button>
+        </div>
+        <button class="sync-save-cfg" onclick="saveSyncConfig()">💾 保存设置</button>
+        <div class="sync-log" id="syncLog">未配置</div>
+        <div class="stats-hint" style="margin-top:14px;">
+          💡 数据存在你自己的私密 Gist 里，Token 只保存在当前设备浏览器，不会写进网页文件、不会上传到 GitHub 仓库。<br>
+          💡 换设备时，在新设备填一样的 Gist ID 和 Token，点「从云端拉取」即可。<br>
+          🔒 建议把 Gist 设为 <b>Secret（私密）</b>，Token 权限只勾选 <b>gist</b>。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 总结弹窗 -->
+  <div class="stats-overlay" id="statsOverlay" onclick="closeStats(event)">
+    <div class="stats-modal" onclick="event.stopPropagation()">
+      <div class="stats-header">
+        <div class="stats-title">📊 周期总结</div>
+        <button class="stats-close" onclick="closeStats()">✕</button>
+      </div>
+      <div class="stats-body" id="statsBody">
+          <div class="stats-pred">
+            <div class="stats-pred-label">📅 预测下次经期</div>
+            <div class="stats-pred-date">2026年6月6日</div>
+            <div class="stats-pred-sub">还有 17 天 · 基于最近 6 个周期平均</div>
+          </div>
+        <div class="stats-section">周期(下次到下次开始的天数)</div>
+          <div class="stats-row">
+            <span class="stats-label">平均周期 <span class="stats-sub">(92 个)</span></span>
+            <span class="stats-value-big">25.0 天</span>
+          </div>
+          <div class="stats-row">
+            <span class="stats-label">最近 6 个平均</span>
+            <span class="stats-value">22.5 天</span>
+          </div>
+          <div class="stats-row">
+            <span class="stats-label">最短 / 最长</span>
+            <span class="stats-value">6 / 45 天</span>
+          </div>
+        <div class="stats-section">月经期(单次持续天数)</div>
+        <div class="stats-row">
+          <span class="stats-label">平均月经期 <span class="stats-sub">(93 段)</span></span>
+          <span class="stats-value-big">7.0 天</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">最近 6 段平均</span>
+          <span class="stats-value">9.0 天</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">最短 / 最长</span>
+          <span class="stats-value">1 / 15 天</span>
+        </div>
+      <div class="stats-section">总览</div>
+        <div class="stats-row">
+          <span class="stats-label">总记录段数</span>
+          <span class="stats-value">93 段</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">记录跨度</span>
+          <span class="stats-value">6.3 年(2305 天)</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">最近一次</span>
+          <span class="stats-value">2026年5月14日</span>
+        </div>
+      <div class="stats-hint">💡 周期 = 一段经期开始到下一段开始的天数<br>💡 同一段经期 = 连续(或仅相差 1 天)的有色日期</div></div>
+    </div>
+  </div>
+
+  <!-- 数据存在这里，保存时会自动更新这一行 -->
+  <script id="data-block">var ALL_DATA={"2021-1-18":2,"2021-1-19":2,"2021-1-20":2,"2021-1-21":2,"2021-1-22":2,"2021-1-23":2,"2021-1-24":2,"2021-1-25":2,"2021-1-26":2,"2021-3-4":2,"2021-3-5":2,"2021-3-6":2,"2021-3-7":2,"2021-3-8":2,"2021-3-9":2,"2021-3-10":2,"2021-3-11":2,"2021-3-12":2,"2021-4-16":2,"2021-4-17":2,"2021-4-18":2,"2021-4-19":2,"2021-4-20":2,"2021-4-21":2,"2021-4-22":2,"2021-4-23":2,"2021-4-24":2,"2021-5-29":2,"2021-5-30":2,"2021-5-31":2,"2021-6-1":2,"2021-6-2":2,"2021-6-3":2,"2021-6-4":2,"2021-6-5":2,"2021-6-6":2,"2021-7-2":2,"2021-7-3":2,"2021-7-4":2,"2021-7-5":2,"2021-7-6":2,"2021-7-7":2,"2021-7-8":2,"2021-7-9":2,"2021-7-10":2,"2021-7-11":2,"2021-8-3":2,"2021-8-4":2,"2021-8-5":2,"2021-8-6":2,"2021-8-7":2,"2021-8-8":2,"2021-8-9":2,"2021-8-10":2,"2021-8-11":2,"2021-9-5":2,"2021-9-6":2,"2021-9-7":2,"2021-9-8":2,"2021-9-9":2,"2021-9-10":2,"2021-9-11":2,"2021-9-12":2,"2021-9-13":2,"2021-10-12":2,"2021-10-13":2,"2021-10-14":2,"2021-10-15":2,"2021-10-16":2,"2021-10-17":2,"2021-10-18":2,"2021-10-19":2,"2021-10-20":2,"2021-11-14":2,"2021-11-15":2,"2021-11-16":2,"2021-11-17":2,"2021-11-18":2,"2021-11-19":2,"2021-11-20":2,"2021-11-21":2,"2021-12-20":2,"2021-12-21":2,"2021-12-22":2,"2021-12-23":2,"2021-12-24":2,"2021-12-25":2,"2021-12-26":2,"2021-12-27":2,"2022-1-19":2,"2022-1-20":2,"2022-1-21":2,"2022-1-22":2,"2022-1-23":2,"2022-1-24":2,"2022-1-25":2,"2022-1-26":2,"2022-1-27":2,"2022-2-20":2,"2022-2-21":2,"2022-2-22":2,"2022-2-23":2,"2022-2-24":2,"2022-2-25":2,"2022-2-26":2,"2022-2-27":2,"2022-3-28":2,"2022-3-29":2,"2022-3-30":2,"2022-3-31":2,"2022-4-1":2,"2022-4-2":2,"2022-4-3":2,"2022-4-4":2,"2022-4-5":2,"2022-5-1":2,"2022-5-2":2,"2022-5-3":2,"2022-5-4":2,"2022-5-5":2,"2022-5-6":2,"2022-5-7":2,"2022-5-8":2,"2022-5-9":2,"2022-5-10":2,"2022-5-11":2,"2022-5-26":2,"2022-5-27":2,"2022-5-28":2,"2022-5-29":2,"2022-5-30":2,"2022-5-31":2,"2022-6-1":2,"2022-6-2":2,"2022-6-21":2,"2022-6-22":2,"2022-6-23":2,"2022-6-24":2,"2022-6-25":2,"2022-6-26":2,"2022-6-27":2,"2022-6-28":2,"2022-6-29":2,"2022-7-8":2,"2022-7-9":2,"2022-7-10":2,"2022-7-11":2,"2022-7-12":2,"2022-7-13":2,"2022-7-14":2,"2022-7-25":2,"2022-7-26":2,"2022-7-27":2,"2022-7-28":2,"2022-7-29":2,"2022-7-30":2,"2022-7-31":2,"2022-8-1":2,"2022-8-9":2,"2022-8-10":2,"2022-8-11":2,"2022-8-12":2,"2022-8-13":2,"2022-8-14":2,"2022-8-15":2,"2022-9-7":2,"2022-9-8":2,"2022-9-9":2,"2022-9-10":2,"2022-9-11":2,"2022-9-12":2,"2022-9-13":2,"2022-9-14":2,"2022-9-15":2,"2022-10-11":2,"2022-10-12":2,"2022-10-13":2,"2022-10-14":2,"2022-10-15":2,"2022-10-16":2,"2022-10-17":2,"2022-10-18":2,"2022-11-1":2,"2022-11-2":2,"2022-11-3":2,"2022-11-4":2,"2022-11-5":2,"2022-11-12":2,"2022-11-13":2,"2022-11-14":2,"2022-11-15":2,"2022-11-16":2,"2022-11-17":2,"2022-11-18":2,"2022-11-19":2,"2022-11-20":2,"2022-11-25":2,"2022-11-26":2,"2022-11-27":2,"2022-12-1":2,"2022-12-2":2,"2022-12-3":2,"2022-12-19":2,"2022-12-20":2,"2022-12-21":2,"2022-12-22":2,"2022-12-23":2,"2022-12-24":2,"2022-12-25":2,"2022-12-26":2,"2022-12-27":2,"2022-12-28":2,"2022-12-29":2,"2022-12-30":2,"2023-1-8":2,"2023-1-9":2,"2023-1-10":2,"2023-1-11":2,"2023-1-12":2,"2023-1-13":2,"2023-1-14":2,"2023-1-15":2,"2023-1-16":2,"2023-2-7":2,"2023-2-8":2,"2023-2-9":2,"2023-2-10":2,"2023-2-11":2,"2023-2-12":2,"2023-2-13":2,"2023-2-14":2,"2023-2-15":2,"2023-3-15":2,"2023-3-16":2,"2023-3-17":2,"2023-3-18":2,"2023-3-19":2,"2023-3-20":2,"2023-3-21":2,"2023-3-22":2,"2023-4-1":2,"2023-4-2":2,"2023-4-3":2,"2023-4-4":2,"2023-4-5":2,"2023-4-26":2,"2023-4-27":2,"2023-4-28":2,"2023-4-29":2,"2023-4-30":2,"2023-5-1":2,"2023-5-2":2,"2023-5-25":2,"2023-5-26":2,"2023-5-27":2,"2023-5-28":2,"2023-5-29":2,"2023-5-30":2,"2023-5-31":2,"2023-6-1":2,"2023-6-26":2,"2023-6-27":2,"2023-6-28":2,"2023-6-29":2,"2023-6-30":2,"2023-7-1":2,"2023-7-2":2,"2023-7-3":2,"2023-7-4":2,"2023-7-5":2,"2023-7-6":2,"2023-7-7":2,"2023-7-8":2,"2023-7-9":2,"2023-8-3":2,"2023-8-4":2,"2023-8-5":2,"2023-8-6":2,"2023-8-7":2,"2023-8-8":2,"2023-8-9":2,"2023-8-10":2,"2023-8-11":2,"2023-9-3":2,"2023-9-4":2,"2023-9-5":2,"2023-9-6":2,"2023-9-7":2,"2023-9-8":2,"2023-9-9":2,"2023-9-10":2,"2023-9-11":2,"2023-9-23":2,"2023-9-24":2,"2023-9-25":2,"2023-9-26":2,"2023-9-27":2,"2023-9-28":2,"2023-9-29":2,"2023-9-30":2,"2023-10-1":2,"2023-10-17":2,"2023-10-18":2,"2023-10-19":2,"2023-10-20":2,"2023-10-21":2,"2023-10-22":2,"2023-10-23":2,"2023-10-24":2,"2023-10-25":2,"2023-11-9":2,"2023-11-10":2,"2023-11-11":2,"2023-11-12":2,"2023-11-13":2,"2023-11-14":2,"2023-11-15":2,"2023-11-16":2,"2023-12-1":2,"2023-12-2":2,"2023-12-3":2,"2023-12-4":2,"2023-12-5":2,"2023-12-6":2,"2023-12-7":2,"2024-1-6":2,"2024-1-7":2,"2024-1-8":2,"2024-1-9":2,"2024-1-10":2,"2024-1-11":2,"2024-1-12":2,"2024-1-13":2,"2024-2-1":2,"2024-2-2":2,"2024-2-3":2,"2024-2-4":2,"2024-2-5":2,"2024-2-6":2,"2024-2-7":2,"2024-2-8":2,"2024-2-9":2,"2024-3-9":2,"2024-3-10":2,"2024-3-11":2,"2024-3-12":2,"2024-3-13":2,"2024-3-14":2,"2024-3-15":2,"2024-3-16":2,"2024-3-17":2,"2024-3-18":2,"2024-3-19":2,"2024-3-20":2,"2024-4-8":2,"2024-4-9":2,"2024-4-10":2,"2024-4-11":2,"2024-4-12":2,"2024-4-13":2,"2024-4-14":2,"2024-4-15":2,"2024-4-22":2,"2024-4-23":2,"2024-4-24":2,"2024-4-25":2,"2024-4-26":2,"2024-4-27":2,"2024-4-28":2,"2024-4-29":2,"2024-4-30":2,"2024-5-11":2,"2024-5-12":2,"2024-5-13":2,"2024-5-14":2,"2024-5-15":2,"2024-5-16":2,"2024-5-17":2,"2024-5-18":2,"2024-5-24":2,"2024-5-25":2,"2024-5-26":2,"2024-5-27":2,"2024-5-28":2,"2024-5-29":2,"2024-6-13":2,"2024-6-14":2,"2024-6-15":2,"2024-6-16":2,"2024-6-17":2,"2024-6-18":2,"2024-6-19":2,"2024-6-20":2,"2024-6-21":2,"2024-6-22":2,"2024-6-23":2,"2024-7-17":2,"2024-7-18":2,"2024-7-19":2,"2024-7-20":2,"2024-7-21":2,"2024-7-22":2,"2024-7-23":2,"2024-7-24":2,"2024-8-19":2,"2024-8-20":2,"2024-8-21":2,"2024-8-22":2,"2024-8-23":2,"2024-8-24":2,"2024-8-25":2,"2024-8-26":2,"2024-9-23":2,"2024-9-24":2,"2024-9-25":2,"2024-9-26":2,"2024-9-27":2,"2024-9-28":2,"2024-9-29":2,"2024-9-30":2,"2024-10-22":2,"2024-10-23":2,"2024-10-24":2,"2024-10-25":2,"2024-10-26":2,"2024-10-27":2,"2024-10-28":2,"2024-10-29":2,"2024-10-30":2,"2024-11-19":2,"2024-11-20":2,"2024-11-21":2,"2024-11-22":2,"2024-11-23":2,"2024-11-24":2,"2024-12-22":2,"2024-12-23":2,"2024-12-24":2,"2024-12-25":2,"2024-12-26":2,"2024-12-27":2,"2024-12-28":2,"2024-12-29":2,"2025-1-21":4,"2025-1-22":1,"2025-1-23":1,"2025-1-24":1,"2025-1-25":1,"2025-1-26":1,"2025-1-27":1,"2025-1-28":1,"2025-1-29":1,"2025-2-24":1,"2025-2-25":1,"2025-2-26":1,"2025-2-27":1,"2025-2-28":1,"2025-3-1":1,"2025-3-2":1,"2025-3-3":1,"2025-4-7":1,"2025-4-8":1,"2025-4-9":1,"2025-4-10":1,"2025-4-11":1,"2025-4-12":1,"2025-4-13":1,"2025-4-14":1,"2025-5-8":1,"2025-5-9":1,"2025-5-10":1,"2025-5-11":1,"2025-5-12":1,"2025-5-13":1,"2025-5-14":1,"2025-5-15":1,"2025-6-13":1,"2025-6-14":1,"2025-6-15":1,"2025-6-16":1,"2025-6-17":1,"2025-6-18":1,"2025-6-19":1,"2025-7-26":1,"2025-7-27":1,"2025-7-28":1,"2025-7-29":1,"2025-7-30":1,"2025-7-31":1,"2025-8-1":1,"2025-8-2":1,"2025-8-3":1,"2025-8-4":1,"2025-8-10":1,"2025-8-11":1,"2025-8-12":1,"2025-8-13":1,"2025-8-14":1,"2025-8-15":1,"2025-8-16":1,"2025-8-17":1,"2025-9-5":1,"2025-9-6":1,"2025-9-7":1,"2025-9-8":1,"2025-9-9":1,"2025-9-10":1,"2025-9-11":1,"2025-9-19":1,"2025-9-21":1,"2025-10-10":1,"2025-10-11":1,"2025-10-12":1,"2025-10-13":1,"2025-10-14":1,"2025-10-15":1,"2025-10-24":1,"2025-10-25":1,"2025-10-26":1,"2025-10-27":1,"2025-10-28":1,"2025-10-29":1,"2025-10-30":1,"2025-10-31":1,"2025-11-9":1,"2025-11-10":3,"2025-11-11":2,"2025-11-12":2,"2025-11-13":1,"2025-11-14":1,"2025-11-15":1,"2025-11-16":1,"2025-12-3":1,"2026-1-1":2,"2026-1-2":2,"2026-1-3":2,"2026-1-24":2,"2026-1-25":3,"2026-2-10":2,"2026-2-11":3,"2026-2-12":2,"2026-2-13":2,"2026-2-14":2,"2026-2-15":1,"2026-3-5":3,"2026-3-6":3,"2026-3-7":2,"2026-3-8":2,"2026-4-15":1,"2026-4-16":2,"2026-4-17":3,"2026-4-30":1,"2026-5-1":3,"2026-5-2":2,"2026-5-3":2,"2026-5-4":1,"2026-5-5":1,"2026-5-15":1,"2026-5-14":4,"2026-4-29":4,"2026-5-6":1,"2026-4-20":1,"2026-4-21":1,"2026-4-24":4,"2026-4-22":4,"2026-4-23":4,"2026-4-19":1,"2026-4-18":2,"2026-4-14":1,"2026-4-13":4,"2026-3-13":4,"2026-3-12":1,"2026-3-11":1,"2026-3-10":1,"2026-3-9":1,"2026-1-22":4,"2026-1-23":1,"2026-1-26":2,"2026-1-27":1,"2026-1-28":1,"2026-1-29":4,"2026-1-30":4,"2026-1-4":1,"2026-1-5":1,"2026-1-6":1,"2026-1-7":1,"2025-12-31":1,"2025-12-1":1,"2025-12-2":1,"2025-11-30":2,"2025-11-29":2,"2025-11-28":3,"2025-11-27":3,"2025-11-26":1,"2025-3-17":4,"2025-8-8":4,"2025-8-9":4,"2025-9-4":1,"2025-9-20":1,"2025-9-22":1,"2025-9-23":1,"2025-9-24":1,"2025-9-25":1,"2025-10-1":4,"2025-10-2":4,"2025-10-3":4,"2025-10-4":4,"2025-10-5":4,"2025-10-6":4,"2025-10-7":4,"2025-10-8":4,"2025-2-8":4,"2025-6-22":4,"2025-4-6":4,"2024-2-18":4,"2024-6-29":4,"2020-1-28":1,"2020-2-29":1,"2020-4-8":1,"2020-5-8":1,"2020-6-11":1,"2020-6-26":1,"2020-7-16":1,"2020-8-2":1,"2020-8-21":1,"2020-9-21":1,"2020-11-2":1,"2020-11-15":1,"2020-12-1":1,"2020-12-20":1,"2025-6-23":4,"2025-6-24":4,"2025-9-17":4,"2025-9-18":4,"2025-10-9":4,"2025-10-23":4,"2025-11-25":4,"2025-12-15":4,"2025-12-30":4,"2026-1-20":4,"2026-1-21":4,"2026-2-9":4,"2026-5-16":3,"2026-5-17":2,"2026-5-18":2,"2026-5-19":1,"2026-5-20":1,"2026-5-21":4,"2026-5-22":4};var SYMPTOMS_LIB=["头痛","腹痛","腰酸","乳房胀痛","情绪低落","疲倦","失眠","妇科检查"];var SYMPTOMS_DATA={"2026-4-29":["妇科检查"],"2026-3-9":["妇科检查"],"2026-6-2":["腰酸"]};</script>
+
+  <script>
+    let year = 2026;
+    let unsaved = false;
+
+    function getLevel(y, m, d) { return ALL_DATA[`${y}-${m}-${d}`] || 0; }
+
+    function setLevel(y, m, d, val) {
+      const key = `${y}-${m}-${d}`;
+      if (val === 0) delete ALL_DATA[key];
+      else ALL_DATA[key] = val;
+      if (!unsaved) {
+        unsaved = true;
+        document.getElementById('unsavedDot').classList.add('show');
+      }
+    }
+
+    // ── 保存文件 ──
+    function saveFile() {
+      // 保存前先收起放大态,避免把临时 DOM(关闭按钮/色板/信息栏)写进文件
+      if (zoomedMonth !== null) unzoomMonth();
+      const dataLine = `var ALL_DATA=${JSON.stringify(ALL_DATA)};var SYMPTOMS_LIB=${JSON.stringify(SYMPTOMS_LIB)};var SYMPTOMS_DATA=${JSON.stringify(SYMPTOMS_DATA)};`;
+      const html = document.documentElement.outerHTML;
+      // 替换 data-block 脚本内容
+      const newHtml = html.replace(
+        /(<script id="data-block">)[\s\S]*?(<\/script>)/,
+        `$1${dataLine}$2`
+      );
+      const blob = new Blob([newHtml], { type: 'text/html;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'i_timeline.html';
+      a.click();
+      unsaved = false;
+      document.getElementById('unsavedDot').classList.remove('show');
+      showToast('✅ 已下载，替换旧文件后发给手机即可');
+    }
+
+    // ── 年份切换 ──
+    function changeYear(delta) {
+      year += delta;
+      document.getElementById('yearLabel').textContent = year;
+      render();
+    }
+
+    function openYearPicker() {
+      const list = document.getElementById('yearPickerList');
+      const cur = new Date().getFullYear();
+      list.innerHTML = '';
+      for (let y = cur + 2; y >= 2020; y--) {
+        const item = document.createElement('div');
+        item.className = 'year-picker-item' + (y === year ? ' active' : '');
+        item.textContent = y;
+        item.onclick = () => selectYear(y);
+        list.appendChild(item);
+      }
+      document.getElementById('yearPickerOverlay').classList.add('show');
+      setTimeout(() => {
+        const active = list.querySelector('.active');
+        if (active) active.scrollIntoView({ block: 'center' });
+      }, 50);
+    }
+
+    function closeYearPicker(e) {
+      if (e.target === document.getElementById('yearPickerOverlay'))
+        document.getElementById('yearPickerOverlay').classList.remove('show');
+    }
+
+    function selectYear(y) {
+      year = y;
+      document.getElementById('yearLabel').textContent = year;
+      document.getElementById('yearPickerOverlay').classList.remove('show');
+      render();
+    }
+
+    // ── 渲染 ──
+    function getLevelClass(l) {
+      return l===4?'level-g':l===1?'level-1':l===2?'level-2':l===3?'level-3':'';
+    }
+
+    function generateMonth(month) {
+      const firstDay = new Date(year, month-1, 1).getDay();
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+      const levels = {};
+      for (let d = 1; d <= daysInMonth; d++) levels[d] = getLevel(year, month, d);
+
+      let html = `<div class="month"><div class="month-title">${month} 月</div>
+        <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
+        <div class="days">`;
+      for (let i = 0; i < startOffset; i++) html += `<div></div>`;
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const lv = levels[day];
+        const isToday = new Date().getFullYear()===year && new Date().getMonth()+1===month && new Date().getDate()===day;
+        const hasSym = (SYMPTOMS_DATA[`${year}-${month}-${day}`] || []).length > 0;
+        const col = (startOffset + day - 1) % 7;
+        const pl = day > 1 ? levels[day-1] : 0;
+        const nl = day < daysInMonth ? levels[day+1] : 0;
+        const sl = lv>0 && pl===lv && col!==0;
+        const sr = lv>0 && nl===lv && col!==6;
+        let br = 'var(--r)', st = '', extCls = '';
+        if (lv > 0) {
+          if (sl && sr) br = '0px';
+          else if (sl)  br = '0 var(--r) var(--r) 0';
+          else if (sr)  br = 'var(--r) 0 0 var(--r)';
+          if (sl) extCls += ' ext-l';
+          if (sr) extCls += ' ext-r';
+          // 不同色相邻时（前一天有颜色但不同色），保留 2px 视觉间隙
+          const needGap = day>1 && col!==0 && pl>0 && !sl;
+          if (needGap) st = `width:calc(100% - 2px);margin-left:2px;`;
+        }
+        html += `<div data-month="${month}" data-day="${day}"
+                      class="day ${getLevelClass(lv)}${extCls} ${isToday?'today':''} ${hasSym?'has-sym':''}"
+                      style="border-radius:${br};${st};user-select:none;-webkit-user-select:none;">${day}</div>`;
+      }
+      return html + `</div></div>`;
+    }
+
+    function render() {
+      let html = '';
+      for (let m = 1; m <= 12; m++) html += generateMonth(m);
+      document.getElementById('calendar').innerHTML = html;
+      if (typeof afterRender === 'function') afterRender();
+    }
+
+    // ── 事件处理：长按取消 / 单击循环（带滑动检测防误触）──
+    let pressTimer = null;
+    let didLongPress = false;
+    let pressMonth = 0, pressDay = 0;
+    let startX = 0, startY = 0;
+    let moved = false;
+    const MOVE_THRESHOLD = 10; // 像素，超过此距离视为滑动而非点击
+
+    function setupEvents() {
+      const cal = document.getElementById('calendar');
+
+      cal.addEventListener('touchstart', e => {
+        const el = e.target.closest('[data-day]');
+        if (!el) return;
+        // 锁定：只有放大态下才允许编辑日期
+        if (zoomedMonth === null) return;
+        pressMonth = +el.dataset.month;
+        pressDay   = +el.dataset.day;
+        didLongPress = false;
+        moved = false;
+        const t = e.touches[0];
+        startX = t.clientX;
+        startY = t.clientY;
+        pressTimer = setTimeout(() => {
+          if (moved) return;
+          didLongPress = true;
+          cancelDay(pressMonth, pressDay);
+        }, 500);
+      }, { passive: true });
+
+      cal.addEventListener('touchmove', e => {
+        if (!pressDay) return;
+        const t = e.touches[0];
+        if (Math.abs(t.clientX - startX) > MOVE_THRESHOLD ||
+            Math.abs(t.clientY - startY) > MOVE_THRESHOLD) {
+          moved = true;
+          clearTimeout(pressTimer);
+        }
+      }, { passive: true });
+
+      cal.addEventListener('touchend', e => {
+        clearTimeout(pressTimer);
+        if (!moved && !didLongPress && pressDay) {
+          e.preventDefault();
+          cycleDay(pressMonth, pressDay);
+        }
+        pressDay = 0;
+      });
+
+      cal.addEventListener('touchcancel', () => {
+        clearTimeout(pressTimer); pressDay = 0;
+      });
+
+      // 桌面鼠标
+      cal.addEventListener('mousedown', e => {
+        const el = e.target.closest('[data-day]');
+        if (!el) return;
+        // 锁定：只有放大态下才允许编辑日期
+        if (zoomedMonth === null) return;
+        pressMonth = +el.dataset.month;
+        pressDay   = +el.dataset.day;
+        didLongPress = false;
+        moved = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        pressTimer = setTimeout(() => {
+          if (moved) return;
+          didLongPress = true;
+          cancelDay(pressMonth, pressDay);
+        }, 500);
+      });
+
+      cal.addEventListener('mousemove', e => {
+        if (!pressDay) return;
+        if (Math.abs(e.clientX - startX) > MOVE_THRESHOLD ||
+            Math.abs(e.clientY - startY) > MOVE_THRESHOLD) {
+          moved = true;
+          clearTimeout(pressTimer);
+        }
+      });
+
+      cal.addEventListener('mouseup', () => {
+        clearTimeout(pressTimer);
+        if (!moved && !didLongPress && pressDay) cycleDay(pressMonth, pressDay);
+        pressDay = 0;
+      });
+
+      cal.addEventListener('mouseleave', () => {
+        clearTimeout(pressTimer); pressDay = 0;
+      });
+    }
+
+    function cancelDay(month, day) {
+      if (getLevel(year, month, day) > 0) {
+        setLevel(year, month, day, 0);
+        rerenderZoomedMonth();
+        showToast('已取消');
+      }
+    }
+
+    function cycleDay(month, day) {
+      // 放大态下:单击 = 选中日期(在底部信息栏显示状态),不再直接改色
+      if (zoomedMonth !== null) {
+        selectDayForView(year, month, day);
+        return;
+      }
+      // 缩小态下被锁定,不会进来
+    }
+
+    // 选中某天用于查看/编辑(放大态下)
+    function selectDayForView(y, m, d) {
+      selectedView = { y, m, d };
+      // 只更新高亮和信息栏,不重画整月,避免闪
+      updateSelectedHighlight();
+      renderDayInfoBar();
+    }
+
+    // 给当前选中的日期上色(从底部色卡点击触发)
+    function applySelectedColor(lv) {
+      if (!selectedView) {
+        showToast('请先点击日历选择一天');
+        return;
+      }
+      const { y, m, d } = selectedView;
+      const cur = getLevel(y, m, d);
+      // 同色再点 = 取消
+      setLevel(y, m, d, cur === lv ? 0 : lv);
+      rerenderZoomedMonth();
+      // 重画后 selected-view 类会丢,需要补回去
+      updateSelectedHighlight();
+      renderDayInfoBar();
+    }
+
+    function updateSelectedHighlight() {
+      document.querySelectorAll('.day.selected-view').forEach(el => {
+        el.classList.remove('selected-view');
+      });
+      if (!selectedView) return;
+      const { y, m, d } = selectedView;
+      if (y !== year) return;
+      const el = document.querySelector(`[data-month="${m}"][data-day="${d}"]`);
+      if (el) el.classList.add('selected-view');
+    }
+
+    // 只把放大那张卡片里的 .days 内容替换掉，保留 .zoomed 类、关闭按钮和色板
+    function rerenderZoomedMonth() {
+      if (zoomedMonth === null) return;
+      const cards = document.querySelectorAll('#calendar .month');
+      const target = cards[zoomedMonth - 1];
+      if (!target) return;
+      // generateMonth 返回完整月卡 HTML，我们从中只截取 .days 段落
+      const tmp = document.createElement('div');
+      tmp.innerHTML = generateMonth(zoomedMonth);
+      const newDays = tmp.querySelector('.days');
+      const oldDays = target.querySelector('.days');
+      if (newDays && oldDays) oldDays.replaceWith(newDays);
+    }
+
+    // ── 放大某个月卡片 ──
+    let zoomedMonth = null;
+    let selectedView = null; // {y, m, d} - 当前在底部信息栏查看的日期
+
+    function zoomMonth(month) {
+      zoomedMonth = month;
+      // 进入放大态时清空选中,从干净状态开始
+      selectedView = null;
+      render();
+      document.getElementById('zoomBackdrop').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function unzoomMonth() {
+      zoomedMonth = null;
+      selectedView = null;
+      render();
+      document.getElementById('zoomBackdrop').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    function selectColor(lv) {
+      // 保留兼容性占位,新逻辑里色卡点击直接调 applySelectedColor
+      document.querySelectorAll('.swatch').forEach(s => {
+        s.classList.toggle('selected', +s.dataset.level === lv);
+      });
+    }
+
+    // 点击月份卡片任意位置 → 放大（缩小态下日期已锁定，不会被误触改色）
+    function setupZoomTriggers() {
+      document.querySelectorAll('.month').forEach(card => {
+        const m = +card.dataset.month;
+        card.onclick = (e) => {
+          // 已经放大的卡片不响应（避免重复触发）
+          if (card.classList.contains('zoomed')) return;
+          zoomMonth(m);
+        };
+      });
+    }
+
+    // 每次 render() 之后被自动调用:挂载 zoom 触发、注入放大态色板和信息栏
+    function afterRender() {
+      const cards = document.querySelectorAll('#calendar .month');
+      cards.forEach((card, idx) => { card.dataset.month = idx + 1; });
+
+      if (zoomedMonth !== null) {
+        const target = cards[zoomedMonth - 1];
+        if (target) {
+          target.classList.add('zoomed');
+          // 关闭按钮
+          const closeBtn = document.createElement('button');
+          closeBtn.className = 'zoom-close';
+          closeBtn.textContent = '✕';
+          closeBtn.onclick = (e) => { e.stopPropagation(); unzoomMonth(); };
+          target.appendChild(closeBtn);
+
+          // 色板(改造:点击即上色,不再是"选中模式")
+          const palette = document.createElement('div');
+          palette.className = 'color-palette';
+          palette.innerHTML = `
+            <div class="palette-label">先点日期选中,再点颜色 · 同色再点 = 取消</div>
+            <div class="swatch swatch-g" data-level="4"><div class="swatch-dot"></div><div class="swatch-text">GOTAS</div></div>
+            <div class="swatch swatch-1" data-level="1"><div class="swatch-dot"></div><div class="swatch-text">POCO</div></div>
+            <div class="swatch swatch-2" data-level="2"><div class="swatch-dot"></div><div class="swatch-text">MEDIO</div></div>
+            <div class="swatch swatch-3" data-level="3"><div class="swatch-dot"></div><div class="swatch-text">MUCHO</div></div>
+          `;
+          target.appendChild(palette);
+          palette.querySelectorAll('.swatch').forEach(s => {
+            s.onclick = (e) => {
+              e.stopPropagation();
+              applySelectedColor(+s.dataset.level);
+            };
+          });
+
+          // 底部信息栏(显示选中日期的状态 + 症状)
+          const infoBar = document.createElement('div');
+          infoBar.className = 'day-info-bar';
+          infoBar.id = 'dayInfoBar';
+          infoBar.onclick = (e) => e.stopPropagation();
+          target.appendChild(infoBar);
+
+          // 恢复之前选中的高亮 + 信息栏内容
+          updateSelectedHighlight();
+          renderDayInfoBar();
+        }
+      }
+      setupZoomTriggers();
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    window.addEventListener('beforeunload', e => {
+      if (unsaved) { e.preventDefault(); e.returnValue = ''; }
+    });
+
+    // Esc 关闭放大态
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && zoomedMonth !== null) unzoomMonth();
+    });
+
+    // ── 缩小态下水平滑动切换年份 ──
+    (function setupSwipeYear() {
+      let sx = 0, sy = 0, tracking = false;
+      const H_THRESHOLD = 60;   // 水平位移阈值
+      const V_TOLERANCE = 50;   // 竖直位移容忍
+
+      document.body.addEventListener('touchstart', e => {
+        if (zoomedMonth !== null) return;   // 放大态不响应
+        if (e.touches.length !== 1) return;
+        const t = e.touches[0];
+        sx = t.clientX; sy = t.clientY;
+        tracking = true;
+      }, { passive: true });
+
+      document.body.addEventListener('touchend', e => {
+        if (!tracking) return;
+        tracking = false;
+        if (zoomedMonth !== null) return;
+        const t = (e.changedTouches && e.changedTouches[0]);
+        if (!t) return;
+        const dx = t.clientX - sx;
+        const dy = t.clientY - sy;
+        // 必须主要是水平方向，且足够长
+        if (Math.abs(dx) >= H_THRESHOLD && Math.abs(dy) <= V_TOLERANCE && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          changeYear(dx < 0 ? 1 : -1);   // 左滑 → 下一年；右滑 → 上一年
+          showToast(`切换到 ${year} 年`);
+        }
+      }, { passive: true });
+
+      document.body.addEventListener('touchcancel', () => { tracking = false; });
+    })();
+
+    // ────────────────────────────────────────
+    // ── 症状标签系统(嵌入式信息栏) ──
+    // SYMPTOMS_LIB  : 标签库 ["头痛", "腰酸", ...]
+    // SYMPTOMS_DATA : 每天的症状 { "2026-5-16": ["头痛","腰酸"] }
+    // ────────────────────────────────────────
+    // selectedView 在外面已经声明,这里只用
+
+    function getSym(y, m, d) {
+      return SYMPTOMS_DATA[`${y}-${m}-${d}`] || [];
+    }
+
+    function setSym(y, m, d, list) {
+      const key = `${y}-${m}-${d}`;
+      if (!list || list.length === 0) delete SYMPTOMS_DATA[key];
+      else SYMPTOMS_DATA[key] = list;
+      markUnsaved();
+    }
+
+    function markUnsaved() {
+      if (!unsaved) {
+        unsaved = true;
+        document.getElementById('unsavedDot').classList.add('show');
+      }
+    }
+
+    // 渲染放大态下底部的"日期信息栏"
+    function renderDayInfoBar() {
+      const bar = document.getElementById('dayInfoBar');
+      if (!bar) return; // 没在放大态
+
+      if (!selectedView) {
+        bar.innerHTML = '<div class="info-empty">👆 点击上方任一日期查看 / 编辑</div>';
+        return;
+      }
+
+      const { y, m, d } = selectedView;
+      const lv = getLevel(y, m, d);
+      const today = getSym(y, m, d);
+      const lvText = { 0: '未记录', 1: 'POCO (少)', 2: 'MEDIO (中)', 3: 'MUCHO (多)', 4: 'GOTAS (点滴)' }[lv];
+
+      const todayTagsHtml = today.length === 0
+        ? '<div class="info-empty">还没有记录 — 从下方选择或新建</div>'
+        : today.map(name =>
+            `<span class="info-tag active" data-name="${escapeAttr(name)}">${escapeHtml(name)}</span>`
+          ).join('');
+
+      const notSelected = SYMPTOMS_LIB.filter(n => !today.includes(n));
+      const libTagsHtml = notSelected.length === 0
+        ? '<div class="info-empty">所有标签都已选 ✓</div>'
+        : notSelected.map(name =>
+            `<span class="info-tag" data-name="${escapeAttr(name)}">${escapeHtml(name)}<span class="del" data-action="del-from-lib">×</span></span>`
+          ).join('');
+
+      bar.innerHTML = `
+        <div class="info-date">${y}年${m}月${d}日 · ${lvText}</div>
+        <div class="info-section-title">当天症状</div>
+        <div class="info-tags" id="infoTodayTags">${todayTagsHtml}</div>
+        <div class="info-section-title">从已有标签选择</div>
+        <div class="info-tags" id="infoLibTags">${libTagsHtml}</div>
+        <div class="info-section-title">新建标签</div>
+        <div class="info-add-row">
+          <input type="text" class="info-input" id="infoInput" placeholder="例如:头痛、腰酸、情绪低落" maxlength="20">
+          <button class="info-add-btn" id="infoAddBtn">添加</button>
+          <span class="add-flash" id="addFlash">✓ 已添加</span>
+        </div>
+      `;
+
+      // 绑定事件
+      bar.querySelector('#infoTodayTags').querySelectorAll('.info-tag').forEach(el => {
+        el.onclick = (ev) => { ev.stopPropagation(); toggleSym(el.dataset.name); };
+      });
+      bar.querySelector('#infoLibTags').querySelectorAll('.info-tag').forEach(el => {
+        el.onclick = (ev) => {
+          ev.stopPropagation();
+          if (ev.target.dataset.action === 'del-from-lib') {
+            deleteFromLib(el.dataset.name);
+          } else {
+            toggleSym(el.dataset.name);
+          }
+        };
+      });
+      bar.querySelector('#infoAddBtn').onclick = (ev) => {
+        ev.stopPropagation();
+        addNewSymptom();
+      };
+      bar.querySelector('#infoInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); addNewSymptom(); }
+      });
+      bar.querySelector('#infoInput').addEventListener('click', e => e.stopPropagation());
+    }
+
+    function toggleSym(name) {
+      if (!selectedView) return;
+      const { y, m, d } = selectedView;
+      const cur = getSym(y, m, d).slice();
+      const idx = cur.indexOf(name);
+      if (idx >= 0) cur.splice(idx, 1);
+      else cur.push(name);
+      setSym(y, m, d, cur);
+      renderDayInfoBar();
+      // 更新月历上小圆点指示器
+      updateSymDot(y, m, d);
+    }
+
+    function addNewSymptom() {
+      if (!selectedView) return;
+      const input = document.getElementById('infoInput');
+      const name = (input.value || '').trim();
+      if (!name) return;
+      if (name.length > 20) { showToast('标签太长(最多 20 字)'); return; }
+      // 加入标签库(去重)
+      if (!SYMPTOMS_LIB.includes(name)) {
+        SYMPTOMS_LIB.push(name);
+        markUnsaved();
+      }
+      // 同时勾选到今天
+      const { y, m, d } = selectedView;
+      const cur = getSym(y, m, d).slice();
+      if (!cur.includes(name)) {
+        cur.push(name);
+        setSym(y, m, d, cur);
+      }
+      input.value = '';
+      // 显示"已添加"闪烁,保持焦点便于继续输入
+      flashAdded();
+      renderDayInfoBar();
+      // 重画后输入框是新的,把焦点放回去
+      const newInput = document.getElementById('infoInput');
+      if (newInput) newInput.focus();
+      updateSymDot(y, m, d);
+    }
+
+    function flashAdded() {
+      const f = document.getElementById('addFlash');
+      if (!f) return;
+      f.classList.add('show');
+      setTimeout(() => f.classList.remove('show'), 1200);
+    }
+
+    function deleteFromLib(name) {
+      if (!confirm(`确定删除标签"${name}"吗?\n所有日子里这个标签的记录也会被清除。`)) return;
+      const idx = SYMPTOMS_LIB.indexOf(name);
+      if (idx >= 0) SYMPTOMS_LIB.splice(idx, 1);
+      // 找出受影响的日期(用于更新指示器)
+      const affected = [];
+      Object.keys(SYMPTOMS_DATA).forEach(key => {
+        if (SYMPTOMS_DATA[key].includes(name)) affected.push(key);
+        const filtered = SYMPTOMS_DATA[key].filter(n => n !== name);
+        if (filtered.length === 0) delete SYMPTOMS_DATA[key];
+        else SYMPTOMS_DATA[key] = filtered;
+      });
+      markUnsaved();
+      renderDayInfoBar();
+      // 整月重画一下,刷新所有小圆点
+      rerenderZoomedMonth();
+      updateSelectedHighlight();
+    }
+
+    // 只更新某个日期的 has-sym 小圆点,避免整月重画影响视觉
+    function updateSymDot(y, m, d) {
+      if (y !== year) return;
+      const el = document.querySelector(`[data-month="${m}"][data-day="${d}"]`);
+      if (!el) return;
+      const has = (SYMPTOMS_DATA[`${y}-${m}-${d}`] || []).length > 0;
+      el.classList.toggle('has-sym', has);
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, ch => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[ch]);
+    }
+    function escapeAttr(s) { return escapeHtml(s); }
+
+    // ────────────────────────────────────────
+    // ── 周期统计 ──
+    // ────────────────────────────────────────
+
+    // 把所有有颜色的日期排序,聚合成"段"(连续日期一段)
+    // 容差 = 0:必须真正连续。如果想宽松点可以改成 1。
+    function computeCycles() {
+      const dates = [];
+      Object.keys(ALL_DATA).forEach(key => {
+        if (ALL_DATA[key] > 0) {
+          const [y, m, d] = key.split('-').map(Number);
+          dates.push(new Date(y, m - 1, d));
+        }
+      });
+      if (dates.length === 0) return { periods: [], cycles: [] };
+
+      dates.sort((a, b) => a - b);
+
+      const periods = []; // [{ start: Date, end: Date, length: 天数 }]
+      let curStart = dates[0];
+      let curEnd = dates[0];
+      const TOLERANCE_DAYS = 1; // 容差:间隔超过 1 天才算新一段
+      for (let i = 1; i < dates.length; i++) {
+        const gap = Math.round((dates[i] - curEnd) / (1000 * 60 * 60 * 24));
+        if (gap <= TOLERANCE_DAYS) {
+          curEnd = dates[i];
+        } else {
+          periods.push({
+            start: curStart, end: curEnd,
+            length: Math.round((curEnd - curStart) / 86400000) + 1
+          });
+          curStart = dates[i];
+          curEnd = dates[i];
+        }
+      }
+      periods.push({
+        start: curStart, end: curEnd,
+        length: Math.round((curEnd - curStart) / 86400000) + 1
+      });
+
+      // 周期 = 这次开始 → 下次开始 之间的天数
+      const cycles = [];
+      for (let i = 1; i < periods.length; i++) {
+        const days = Math.round((periods[i].start - periods[i-1].start) / 86400000);
+        cycles.push(days);
+      }
+      return { periods, cycles };
+    }
+
+    function showStats() {
+      const overlay = document.getElementById('statsOverlay');
+      const body = document.getElementById('statsBody');
+      const { periods, cycles } = computeCycles();
+
+      if (periods.length === 0) {
+        body.innerHTML = '<div class="stats-empty">还没有任何经期记录<br>开始记录后会显示统计</div>';
+        overlay.classList.add('show');
+        return;
+      }
+
+      // 月经期长度
+      const lengths = periods.map(p => p.length);
+      const avgLen = avg(lengths);
+      const minLen = Math.min(...lengths);
+      const maxLen = Math.max(...lengths);
+
+      // 周期:只过滤 90 天以上的(很可能是漏记跨过了整段经期)
+      // 短周期(包括 5-10 天内)保留,因为这反映真实情况
+      const validCycles = cycles.filter(c => c <= 90);
+      const allCycles = cycles;
+      const avgCyc = validCycles.length > 0 ? avg(validCycles) : null;
+      const minCyc = validCycles.length > 0 ? Math.min(...validCycles) : null;
+      const maxCyc = validCycles.length > 0 ? Math.max(...validCycles) : null;
+
+      // 最近 6 段的平均(更能反映当前状态)
+      const recentLens = lengths.slice(-6);
+      const recentLenAvg = avg(recentLens);
+      const recentCycs = validCycles.slice(-6);
+      const recentCycAvg = recentCycs.length > 0 ? avg(recentCycs) : null;
+
+      // 预测下次:基于最近周期平均
+      const lastPeriod = periods[periods.length - 1];
+      let predictedDate = null;
+      let daysUntilNext = null;
+      if (recentCycAvg) {
+        predictedDate = new Date(lastPeriod.start);
+        predictedDate.setDate(predictedDate.getDate() + Math.round(recentCycAvg));
+        daysUntilNext = Math.round((predictedDate - new Date()) / 86400000);
+      }
+
+      // 记录时间跨度
+      const firstDate = periods[0].start;
+      const lastDate = lastPeriod.end;
+      const spanDays = Math.round((lastDate - firstDate) / 86400000) + 1;
+      const spanYears = (spanDays / 365.25).toFixed(1);
+
+      let html = '';
+
+      // ── 预测块 ──
+      if (predictedDate) {
+        const passed = daysUntilNext < -3; // 已过预测日 3 天以上
+        const subText = passed
+          ? `已超过 ${Math.abs(daysUntilNext)} 天`
+          : (daysUntilNext < 0
+              ? `已过 ${Math.abs(daysUntilNext)} 天`
+              : (daysUntilNext === 0
+                  ? '就在今天'
+                  : `还有 ${daysUntilNext} 天`));
+        html += `
+          <div class="stats-pred">
+            <div class="stats-pred-label">📅 预测下次经期</div>
+            <div class="stats-pred-date">${formatDate(predictedDate)}</div>
+            <div class="stats-pred-sub">${subText} · 基于最近 ${recentCycs.length} 个周期平均</div>
+          </div>
+        `;
+      }
+
+      // ── 周期 ──
+      html += '<div class="stats-section">周期(下次到下次开始的天数)</div>';
+      if (avgCyc !== null) {
+        html += `
+          <div class="stats-row">
+            <span class="stats-label">平均周期 <span class="stats-sub">(${validCycles.length} 个)</span></span>
+            <span class="stats-value-big">${avgCyc.toFixed(1)} 天</span>
+          </div>
+          <div class="stats-row">
+            <span class="stats-label">最近 6 个平均</span>
+            <span class="stats-value">${recentCycAvg.toFixed(1)} 天</span>
+          </div>
+          <div class="stats-row">
+            <span class="stats-label">最短 / 最长</span>
+            <span class="stats-value">${minCyc} / ${maxCyc} 天</span>
+          </div>
+        `;
+        if (allCycles.length > validCycles.length) {
+          html += `<div class="stats-hint">⚠️ ${allCycles.length - validCycles.length} 个周期超过 90 天(可能漏记),已从平均值中排除</div>`;
+        }
+      } else {
+        html += '<div class="stats-row"><span class="stats-label">周期数据不足</span><span class="stats-value">—</span></div>';
+      }
+
+      // ── 月经期 ──
+      html += '<div class="stats-section">月经期(单次持续天数)</div>';
+      html += `
+        <div class="stats-row">
+          <span class="stats-label">平均月经期 <span class="stats-sub">(${lengths.length} 段)</span></span>
+          <span class="stats-value-big">${avgLen.toFixed(1)} 天</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">最近 6 段平均</span>
+          <span class="stats-value">${recentLenAvg.toFixed(1)} 天</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">最短 / 最长</span>
+          <span class="stats-value">${minLen} / ${maxLen} 天</span>
+        </div>
+      `;
+
+      // ── 总览 ──
+      html += '<div class="stats-section">总览</div>';
+      html += `
+        <div class="stats-row">
+          <span class="stats-label">总记录段数</span>
+          <span class="stats-value">${periods.length} 段</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">记录跨度</span>
+          <span class="stats-value">${spanYears} 年(${spanDays} 天)</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">最近一次</span>
+          <span class="stats-value">${formatDate(lastPeriod.start)}</span>
+        </div>
+      `;
+
+      html += `<div class="stats-hint">💡 周期 = 一段经期开始到下一段开始的天数<br>💡 同一段经期 = 连续(或仅相差 1 天)的有色日期</div>`;
+
+      body.innerHTML = html;
+      overlay.classList.add('show');
+    }
+
+    function closeStats(e) {
+      if (e && e.target && e.target.id && e.target.id !== 'statsOverlay') return;
+      document.getElementById('statsOverlay').classList.remove('show');
+    }
+
+    function avg(arr) {
+      return arr.reduce((a, b) => a + b, 0) / arr.length;
+    }
+
+    function formatDate(d) {
+      return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+    }
+
+    // ════════════════════════════════════════
+    // ── Gist 云同步模块 ──
+    // 配置存 localStorage（不写进网页文件、不进 GitHub 仓库）
+    // ════════════════════════════════════════
+    const SYNC_FILENAME = 'i_timeline_data.json';
+    let syncCfg = { gistId: '', token: '', auto: true };
+    let autoPushTimer = null;
+    let pulling = false;
+
+    function loadSyncConfig() {
+      try {
+        const raw = localStorage.getItem('itimeline_sync_cfg');
+        if (raw) syncCfg = Object.assign(syncCfg, JSON.parse(raw));
+      } catch (e) {}
+    }
+
+    function setCloudDot(state) { // '', 'ok', 'err', 'busy'
+      const dot = document.getElementById('cloudStatusDot');
+      if (!dot) return;
+      dot.className = 'cloud-status-dot' + (state ? ' ' + state : '');
+    }
+
+    function setSyncLog(msg, cls) {
+      const el = document.getElementById('syncLog');
+      if (!el) return;
+      el.textContent = msg;
+      el.className = 'sync-log' + (cls ? ' ' + cls : '');
+    }
+
+    function openSyncSettings() {
+      document.getElementById('syncGistId').value = syncCfg.gistId || '';
+      document.getElementById('syncToken').value = syncCfg.token || '';
+      document.getElementById('syncAuto').checked = syncCfg.auto !== false;
+      setSyncLog(syncCfg.gistId && syncCfg.token ? '已配置' : '未配置',
+                 syncCfg.gistId && syncCfg.token ? 'ok' : '');
+      document.getElementById('syncOverlay').classList.add('show');
+    }
+    function closeSyncSettings(e) {
+      if (e && e.target && e.target.id !== 'syncOverlay') return;
+      document.getElementById('syncOverlay').classList.remove('show');
+    }
+
+    function saveSyncConfig() {
+      syncCfg.gistId = document.getElementById('syncGistId').value.trim();
+      syncCfg.token  = document.getElementById('syncToken').value.trim();
+      syncCfg.auto   = document.getElementById('syncAuto').checked;
+      try { localStorage.setItem('itimeline_sync_cfg', JSON.stringify(syncCfg)); } catch(e){}
+      setSyncLog('✅ 设置已保存到本机', 'ok');
+      setCloudDot(syncCfg.gistId && syncCfg.token ? 'ok' : '');
+    }
+
+    function buildPayload() {
+      return JSON.stringify({
+        ALL_DATA: ALL_DATA,
+        SYMPTOMS_LIB: SYMPTOMS_LIB,
+        SYMPTOMS_DATA: SYMPTOMS_DATA,
+        _updatedAt: new Date().toISOString()
+      });
+    }
+
+    async function pushToGist(manual) {
+      if (!syncCfg.gistId || !syncCfg.token) {
+        if (manual) setSyncLog('请先填写 Gist ID 和 Token', 'err');
+        return;
+      }
+      setCloudDot('busy');
+      if (manual) setSyncLog('上传中…');
+      try {
+        const res = await fetch(`https://api.github.com/gists/${syncCfg.gistId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': 'token ' + syncCfg.token,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ files: { [SYNC_FILENAME]: { content: buildPayload() } } })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        setCloudDot('ok');
+        const t = new Date().toLocaleTimeString();
+        setSyncLog('✅ 已上传到云端 · ' + t, 'ok');
+      } catch (err) {
+        setCloudDot('err');
+        setSyncLog('❌ 上传失败：' + err.message + '（检查 Token/Gist ID/网络）', 'err');
+      }
+    }
+
+    async function pullFromGist() {
+      if (!syncCfg.gistId || !syncCfg.token) {
+        setSyncLog('请先填写 Gist ID 和 Token', 'err');
+        return;
+      }
+      setCloudDot('busy');
+      setSyncLog('拉取中…');
+      pulling = true;
+      try {
+        const res = await fetch(`https://api.github.com/gists/${syncCfg.gistId}`, {
+          headers: {
+            'Authorization': 'token ' + syncCfg.token,
+            'Accept': 'application/vnd.github+json'
+          }
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const gist = await res.json();
+        const file = gist.files && gist.files[SYNC_FILENAME];
+        if (!file) {
+          setCloudDot('ok');
+          setSyncLog('☁️ 云端还没有数据，点「立即上传」初始化', '');
+          pulling = false;
+          return;
+        }
+        let content = file.content;
+        // 大文件 Gist 会截断，用 raw_url 取完整内容
+        if (file.truncated && file.raw_url) {
+          const r2 = await fetch(file.raw_url);
+          content = await r2.text();
+        }
+        const data = JSON.parse(content);
+        // 整体替换本地数据
+        for (const k in ALL_DATA) delete ALL_DATA[k];
+        Object.assign(ALL_DATA, data.ALL_DATA || {});
+        SYMPTOMS_LIB.length = 0;
+        (data.SYMPTOMS_LIB || []).forEach(x => SYMPTOMS_LIB.push(x));
+        for (const k in SYMPTOMS_DATA) delete SYMPTOMS_DATA[k];
+        Object.assign(SYMPTOMS_DATA, data.SYMPTOMS_DATA || {});
+        render();
+        setCloudDot('ok');
+        const when = data._updatedAt ? new Date(data._updatedAt).toLocaleString() : '';
+        setSyncLog('✅ 已从云端拉取' + (when ? ' · 云端更新于 ' + when : ''), 'ok');
+      } catch (err) {
+        setCloudDot('err');
+        setSyncLog('❌ 拉取失败：' + err.message, 'err');
+      }
+      pulling = false;
+    }
+
+    // 改动后自动上传（防抖 3 秒）。接到原有的 markUnsaved 之后
+    function scheduleAutoPush() {
+      if (!syncCfg.auto || !syncCfg.gistId || !syncCfg.token) return;
+      if (pulling) return; // 拉取过程中产生的变动不回传
+      clearTimeout(autoPushTimer);
+      setCloudDot('busy');
+      autoPushTimer = setTimeout(() => pushToGist(false), 3000);
+    }
+
+    // 包装原有的 markUnsaved：在原逻辑基础上追加自动上传
+    const _origMarkUnsaved = markUnsaved;
+    markUnsaved = function() {
+      _origMarkUnsaved();
+      scheduleAutoPush();
+    };
+    // setLevel 走的是内联的 unsaved 标记，这里也包一层确保覆盖
+    const _origSetLevel = setLevel;
+    setLevel = function(y, m, d, val) {
+      _origSetLevel(y, m, d, val);
+      scheduleAutoPush();
+    };
+
+    // 启动：加载配置 + 自动拉取一次
+    loadSyncConfig();
+    if (syncCfg.gistId && syncCfg.token) {
+      setCloudDot('ok');
+      // 页面打开时自动从云端同步最新数据
+      window.addEventListener('load', () => { pullFromGist(); });
+    }
+
+    render();
+    setupEvents();
+  </script>
+
+
+</body></html>
