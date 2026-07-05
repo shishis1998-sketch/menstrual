@@ -103,18 +103,18 @@
       background: #6366f1; box-shadow: 0 0 0 2px white; display: inline-block;
     }
     .sym-row {
-      display: flex; align-items: flex-start; gap: 10px; padding: 6px 2px;
+      display: flex; align-items: center; gap: 10px; padding: 7px 2px;
     }
     .sym-row + .sym-row { border-top: 1px dashed #f0f0f0; }
-    .sym-date {
-      flex: 0 0 76px;   /* 固定宽度,让后面的状态标签左边全部对齐在一条线上 */
-      white-space: nowrap;
-      font-size: 13px; font-weight: 600; color: #1a1a1a;
+    /* 症状名列:固定宽度,让后面的日期左边对齐在一条线上 */
+    .sym-name { flex: 0 0 96px; }
+    .sym-days {
+      flex: 1; font-size: 13px; color: #1a1a1a; line-height: 1.5;
     }
-    .sym-tags { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; }
     .sym-tag {
+      display: inline-block;
       font-size: 12px; padding: 3px 9px; border-radius: 12px;
-      background: #eef0ff; color: #4f46e5; white-space: nowrap;
+      background: #eef0ff; color: #4f46e5; word-break: break-all;
     }
     .month {
       background: white; border-radius: 10px;
@@ -1068,33 +1068,39 @@
       setupZoomTriggers();
     }
 
-    // 生成某月“有症状的日子”列表(只读,仅日期+症状);无则返回 null
+    // 把升序日期数组压成区间文本: [23,24,25,26,27]->"23-27日"; [4,13]->"4日、13日"
+    function formatDayRanges(days) {
+      const parts = [];
+      let start = days[0], prev = days[0];
+      for (let i = 1; i <= days.length; i++) {
+        const d = days[i];
+        if (d === prev + 1) { prev = d; continue; }
+        parts.push(start === prev ? `${start}日` : `${start}–${prev}日`);
+        start = d; prev = d;
+      }
+      return parts.join('、');
+    }
+
+    // 生成某月“本月状态记录”(按症状,只读);无则返回 null
+    // 每个症状一行:列出它出现的日子,连续的并成区间,不连续用顿号
     function buildMonthSymList(m) {
       const daysInMonth = new Date(year, m, 0).getDate();
-      // 收集有症状的日子
-      const items = [];
+      // 症状 → { days:[升序], first:首次出现日 }
+      const map = new Map();
       for (let d = 1; d <= daysInMonth; d++) {
-        const syms = getSym(year, m, d);
-        if (!syms.length) continue;
-        // key 与顺序无关,用于判断“状态完全相同”
-        items.push({ d, syms, key: syms.slice().sort().join('') });
-      }
-      if (!items.length) return null;
-      // 合并:相邻日期 + 状态完全相同 → 并成一个区间
-      const groups = [];
-      for (const it of items) {
-        const last = groups[groups.length - 1];
-        if (last && it.d === last.end + 1 && it.key === last.key) {
-          last.end = it.d;
-        } else {
-          groups.push({ start: it.d, end: it.d, key: it.key, syms: it.syms });
+        for (const name of getSym(year, m, d)) {
+          let e = map.get(name);
+          if (!e) { e = { days: [], first: d }; map.set(name, e); }
+          e.days.push(d);
         }
       }
-      const rows = groups.map(g => {
-        const dateText = g.start === g.end ? `${g.start}日` : `${g.start}–${g.end}日`;
-        const tags = g.syms.map(s => `<span class="sym-tag">${escapeHtml(s)}</span>`).join('');
-        return `<div class="sym-row"><span class="sym-date">${dateText}</span><span class="sym-tags">${tags}</span></div>`;
-      });
+      if (map.size === 0) return null;
+      // 按首次出现日期先后排序
+      const entries = [...map.entries()].sort((a, b) => a[1].first - b[1].first);
+      const rows = entries.map(([name, e]) =>
+        `<div class="sym-row"><span class="sym-name"><span class="sym-tag">${escapeHtml(name)}</span></span>` +
+        `<span class="sym-days">${formatDayRanges(e.days)}</span></div>`
+      );
       const el = document.createElement('div');
       el.className = 'sym-list';
       el.innerHTML = `<div class="sym-list-title">本月状态记录</div>${rows.join('')}`;
