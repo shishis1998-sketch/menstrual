@@ -107,7 +107,8 @@
     }
     .sym-row + .sym-row { border-top: 1px dashed #f0f0f0; }
     .sym-date {
-      flex: 0 0 auto; min-width: 42px;
+      flex: 0 0 76px;   /* 固定宽度,让后面的状态标签左边全部对齐在一条线上 */
+      white-space: nowrap;
       font-size: 13px; font-weight: 600; color: #1a1a1a;
     }
     .sym-tags { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; }
