@@ -315,6 +315,9 @@
       height: 30px;
       font-size: 16px;
       margin: 0 !important;
+      /* 关掉格子自身的几何过渡(宽高/字号),否则会各自“延展放大”盖住整卡弹出;
+         只保留颜色/描边淡入,点色时仍平滑 */
+      transition: background-color 0.2s, box-shadow 0.2s;
     }
 
     .zoom-close {
