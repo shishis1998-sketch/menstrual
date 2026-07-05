@@ -1069,14 +1069,30 @@
     // 生成某月“有症状的日子”列表(只读,仅日期+症状);无则返回 null
     function buildMonthSymList(m) {
       const daysInMonth = new Date(year, m, 0).getDate();
-      const rows = [];
+      // 收集有症状的日子
+      const items = [];
       for (let d = 1; d <= daysInMonth; d++) {
         const syms = getSym(year, m, d);
         if (!syms.length) continue;
-        const tags = syms.map(s => `<span class="sym-tag">${escapeHtml(s)}</span>`).join('');
-        rows.push(`<div class="sym-row"><span class="sym-date">${d}日</span><span class="sym-tags">${tags}</span></div>`);
+        // key 与顺序无关,用于判断“状态完全相同”
+        items.push({ d, syms, key: syms.slice().sort().join('') });
       }
-      if (!rows.length) return null;
+      if (!items.length) return null;
+      // 合并:相邻日期 + 状态完全相同 → 并成一个区间
+      const groups = [];
+      for (const it of items) {
+        const last = groups[groups.length - 1];
+        if (last && it.d === last.end + 1 && it.key === last.key) {
+          last.end = it.d;
+        } else {
+          groups.push({ start: it.d, end: it.d, key: it.key, syms: it.syms });
+        }
+      }
+      const rows = groups.map(g => {
+        const dateText = g.start === g.end ? `${g.start}日` : `${g.start}–${g.end}日`;
+        const tags = g.syms.map(s => `<span class="sym-tag">${escapeHtml(s)}</span>`).join('');
+        return `<div class="sym-row"><span class="sym-date">${dateText}</span><span class="sym-tags">${tags}</span></div>`;
+      });
       const el = document.createElement('div');
       el.className = 'sym-list';
       el.innerHTML = `<div class="sym-list-title">本月状态记录</div>${rows.join('')}`;
