@@ -8,6 +8,9 @@
       background: #f9fafb;
       margin: 0;
       padding: 8px 0 30px;
+      /* 双指手势由脚本接管为“列数缩放”,禁用浏览器默认的整页捏合缩放;
+         pan-y 保留纵向滚动 */
+      touch-action: pan-y;
     }
     .header { text-align: center; margin-bottom: 6px; }
     h1 { color: #1a1a1a; font-size: 20px; margin: 0 0 3px 0; }
@@ -48,6 +51,30 @@
     .calendar-container {
       display: grid; grid-template-columns: repeat(2, 1fr);
       gap: 18px; margin: 0 30px;
+    }
+
+    /* ── 双指放大:整体切到单列,所有月份一起变大(边距/卡片间距沿用原值) ── */
+    .calendar-container.one-col { grid-template-columns: 1fr; }
+    .calendar-container.one-col .month { padding: 14px 12px 14px; border-radius: 12px; }
+    .calendar-container.one-col .month-title { font-size: 20px; margin-bottom: 10px; }
+    .calendar-container.one-col .weekdays {
+      grid-template-columns: repeat(7, 1fr);
+      font-size: 13px; margin-bottom: 8px;
+    }
+    .calendar-container.one-col .days {
+      grid-template-columns: repeat(7, 1fr);
+      grid-auto-rows: auto; min-height: 0;
+      row-gap: 6px; padding: 0 4px;
+    }
+    .calendar-container.one-col .day {
+      --r: 13px;
+      width: 100% !important;
+      height: 34px; font-size: 16px;
+      margin: 0 !important;
+    }
+    .calendar-container.one-col .day.has-sym::after {
+      width: 7px; height: 7px; top: 5px; right: 5px;
+      box-shadow: 0 0 0 2px white;
     }
     .month {
       background: white; border-radius: 10px;
@@ -1035,6 +1062,69 @@
       }, { passive: true });
 
       document.body.addEventListener('touchcancel', () => { tracking = false; });
+    })();
+
+    // ── 双指捏合缩放:张开→单列(放大),捏合→双列(还原) ──
+    (function setupPinchColumns() {
+      const cal = document.getElementById('calendar');
+      const OUT = 1.25;   // 张开到 1.25 倍 → 切单列
+      const IN  = 0.80;   // 捏合到 0.80 倍 → 回双列
+
+      function setOneCol(on) {
+        if (zoomedMonth !== null) return;        // 单月编辑放大态不参与
+        const isOne = cal.classList.contains('one-col');
+        if (on && !isOne) {
+          cal.classList.add('one-col');
+          showToast('放大 · 每行一个月');
+        } else if (!on && isOne) {
+          cal.classList.remove('one-col');
+          showToast('还原 · 每行两个月');
+        }
+      }
+
+      // —— 通用触摸(Android / Chrome)——
+      let startDist = 0, active = false;
+      const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+
+      document.addEventListener('touchstart', e => {
+        if (zoomedMonth !== null) return;
+        if (e.touches.length === 2) {
+          active = true;
+          startDist = dist(e.touches[0], e.touches[1]);
+        }
+      }, { passive: true });
+
+      document.addEventListener('touchmove', e => {
+        if (zoomedMonth !== null) return;
+        if (e.touches.length === 2) {
+          e.preventDefault();                    // 拦掉浏览器整页缩放
+          if (!active || !startDist) { active = true; startDist = dist(e.touches[0], e.touches[1]); return; }
+          const ratio = dist(e.touches[0], e.touches[1]) / startDist;
+          if (ratio > OUT) setOneCol(true);
+          else if (ratio < IN) setOneCol(false);
+        }
+      }, { passive: false });
+
+      document.addEventListener('touchend', e => {
+        if (e.touches.length < 2) { active = false; startDist = 0; }
+      }, { passive: true });
+      document.addEventListener('touchcancel', () => { active = false; startDist = 0; }, { passive: true });
+
+      // —— iOS Safari 的 gesture 事件(自带 scale)——
+      document.addEventListener('gesturestart', e => {
+        if (zoomedMonth !== null) return;
+        e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('gesturechange', e => {
+        if (zoomedMonth !== null) return;
+        e.preventDefault();
+        if (e.scale > OUT) setOneCol(true);
+        else if (e.scale < IN) setOneCol(false);
+      }, { passive: false });
+      document.addEventListener('gestureend', e => {
+        if (zoomedMonth !== null) return;
+        e.preventDefault();
+      }, { passive: false });
     })();
 
     // ────────────────────────────────────────
