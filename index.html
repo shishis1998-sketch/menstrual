@@ -634,6 +634,28 @@
     .about-row .v { color: #1a1a1a; font-weight: 600; }
     .about-note { font-size: 12px; color: #94a3b8; line-height: 1.7; margin-top: 16px;
       background: #f8fafc; border-radius: 10px; padding: 12px 14px; }
+
+    /* ── 整页模式：把弹窗改成占满屏幕、直接展示的页面（无遮罩、无浮层卡片） ── */
+    .stats-overlay.as-page { background: #f9fafb; padding: 0;
+      -webkit-backdrop-filter: none; backdrop-filter: none; z-index: 70; }
+    .stats-overlay.as-page.show { display: block; }
+    .stats-overlay.as-page .stats-modal {
+      width: 100%; max-width: none; height: 100%; max-height: none;
+      border-radius: 0; box-shadow: none; animation: none;
+      background: #f9fafb; display: flex; flex-direction: column;
+    }
+    .stats-overlay.as-page .stats-header {
+      background: #f9fafb; border-bottom: 1px solid #eef0f2;
+      padding: calc(14px + env(safe-area-inset-top)) 18px 14px;
+    }
+    .stats-overlay.as-page .stats-title { font-size: 20px; }
+    .stats-overlay.as-page .stats-body { flex: 1; overflow-y: auto; padding-bottom: 110px; }
+    /* 顶层页(统计/同步/我的)右上角为“返回日历”；二级页(色卡/关于)为“返回” */
+    .page-back {
+      background: #f1f5f9; border: none; border-radius: 16px;
+      height: 28px; padding: 0 12px; font-size: 13px; color: #475569;
+      cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px;
+    }
   </style>
 </head>
 <body style="">
@@ -698,12 +720,12 @@
     <div><span style="color:#640D14">●</span> MUCHO</div>
   </div>
 
-  <!-- 云同步设置弹窗 -->
-  <div class="stats-overlay" id="syncOverlay" onclick="closeSyncSettings(event)">
-    <div class="stats-modal" onclick="event.stopPropagation()" style="max-width:380px;">
+  <!-- 云端同步（整页） -->
+  <div class="stats-overlay as-page" id="syncOverlay">
+    <div class="stats-modal">
       <div class="stats-header">
-        <div class="stats-title">☁️ 云端同步设置</div>
-        <button class="stats-close" onclick="closeSyncSettings()">✕</button>
+        <div class="stats-title">☁️ 云端同步</div>
+        <button class="page-back" onclick="navCalendar()">‹ 日历</button>
       </div>
       <div class="stats-body">
         <div class="sync-field">
@@ -733,12 +755,12 @@
     </div>
   </div>
 
-  <!-- 总结弹窗 -->
-  <div class="stats-overlay" id="statsOverlay" onclick="closeStats(event)">
-    <div class="stats-modal" onclick="event.stopPropagation()">
+  <!-- 周期总结（整页） -->
+  <div class="stats-overlay as-page" id="statsOverlay">
+    <div class="stats-modal">
       <div class="stats-header">
         <div class="stats-title">📊 周期总结</div>
-        <button class="stats-close" onclick="closeStats()">✕</button>
+        <button class="page-back" onclick="navCalendar()">‹ 日历</button>
       </div>
       <div class="stats-body" id="statsBody">
           <div class="stats-pred">
@@ -789,12 +811,12 @@
     </div>
   </div>
 
-  <!-- “我的”页面 -->
-  <div class="stats-overlay" id="meOverlay" onclick="closeMe(event)">
-    <div class="stats-modal" onclick="event.stopPropagation()" style="max-width:380px;">
+  <!-- “我的”（整页） -->
+  <div class="stats-overlay as-page" id="meOverlay">
+    <div class="stats-modal">
       <div class="stats-header">
         <div class="stats-title">👤 我的</div>
-        <button class="stats-close" onclick="closeMe()">✕</button>
+        <button class="page-back" onclick="navCalendar()">‹ 日历</button>
       </div>
       <div class="stats-body">
         <div class="me-overview" id="meOverview"></div>
@@ -809,7 +831,7 @@
             <span class="me-txt">导入数据（文件 / 云端备份）</span>
             <span class="me-arrow">›</span>
           </button>
-          <button class="me-btn" onclick="closeMe();openSyncSettings()">
+          <button class="me-btn" onclick="openSyncSettings()">
             <span class="me-ic">☁️</span>
             <span class="me-txt">云端同步设置</span>
             <span class="cloud-status-dot" id="cloudStatusDot" style="margin-right:8px;"></span>
@@ -820,7 +842,7 @@
             <span class="me-txt">色卡自定义（名称 / 颜色）</span>
             <span class="me-arrow">›</span>
           </button>
-          <button class="me-btn" onclick="closeMe();showStats()">
+          <button class="me-btn" onclick="showStats()">
             <span class="me-ic">📊</span>
             <span class="me-txt">周期总结与统计</span>
             <span class="me-arrow">›</span>
@@ -842,12 +864,12 @@
   </div>
   <input type="file" id="importFile" accept=".html,.json,.txt,text/html,application/json" style="display:none" onchange="handleImportFile(this)">
 
-  <!-- 色卡自定义 -->
-  <div class="stats-overlay" id="colorOverlay" onclick="closeColorEditor(event)">
-    <div class="stats-modal" onclick="event.stopPropagation()" style="max-width:380px;">
+  <!-- 色卡自定义（整页 · 我的的二级页） -->
+  <div class="stats-overlay as-page" id="colorOverlay">
+    <div class="stats-modal">
       <div class="stats-header">
         <div class="stats-title">🎨 色卡自定义</div>
-        <button class="stats-close" onclick="closeColorEditor()">✕</button>
+        <button class="page-back" onclick="openMe()">‹ 我的</button>
       </div>
       <div class="stats-body">
         <div id="ceRows"></div>
@@ -860,12 +882,12 @@
     </div>
   </div>
 
-  <!-- 关于 -->
-  <div class="stats-overlay" id="aboutOverlay" onclick="closeAbout(event)">
-    <div class="stats-modal" onclick="event.stopPropagation()" style="max-width:360px;">
+  <!-- 关于（整页 · 我的的二级页） -->
+  <div class="stats-overlay as-page" id="aboutOverlay">
+    <div class="stats-modal">
       <div class="stats-header">
         <div class="stats-title">ℹ️ 关于</div>
-        <button class="stats-close" onclick="closeAbout()">✕</button>
+        <button class="page-back" onclick="openMe()">‹ 我的</button>
       </div>
       <div class="stats-body">
         <div class="about-logo">🌸</div>
@@ -1654,7 +1676,7 @@
 
       if (periods.length === 0) {
         body.innerHTML = '<div class="stats-empty">还没有任何经期记录<br>开始记录后会显示统计</div>';
-        overlay.classList.add('show');
+        switchToPage('statsOverlay', 'stat');
         return;
       }
 
@@ -1808,7 +1830,7 @@
       html += `<div class="stats-hint">💡 周期 = 一段经期开始到下一段开始的天数<br>💡 同一段经期 = 连续(或仅相差 1 天)的有色日期</div>`;
 
       body.innerHTML = html;
-      overlay.classList.add('show');
+      switchToPage('statsOverlay', 'stat');
     }
 
     function closeStats(e) {
@@ -1906,7 +1928,7 @@
           <span class="ce-tag">${LEVEL_SUFFIX[l]}</span>
         </div>
       `).join('');
-      document.getElementById('colorOverlay').classList.add('show');
+      switchToPage('colorOverlay', 'me');
     }
     function closeColorEditor(e) {
       if (!e || e.target === document.getElementById('colorOverlay'))
@@ -1923,7 +1945,7 @@
       applyPalette();
       markUnsaved();
       render();
-      closeColorEditor();
+      openMe();               // 保存后返回“我的”整页
       showToast('🎨 色卡已更新');
     }
     function resetColorEditor() {
@@ -1993,7 +2015,7 @@
         `<div class="about-row"><span class="k">记症状天数</span><span class="v">${Object.keys(SYMPTOMS_DATA).length} 天</span></div>` +
         `<div class="about-row"><span class="k">最近一次记录</span><span class="v">${latest}</span></div>` +
         `<div class="about-row"><span class="k">云端同步</span><span class="v">${(syncCfg.gistId && syncCfg.token) ? '已配置' : '未配置'}</span></div>`;
-      document.getElementById('aboutOverlay').classList.add('show');
+      switchToPage('aboutOverlay', 'me');
     }
     function closeAbout(e) {
       if (!e || e.target === document.getElementById('aboutOverlay'))
@@ -2035,7 +2057,7 @@
       document.getElementById('syncAuto').checked = syncCfg.auto !== false;
       setSyncLog(syncCfg.gistId && syncCfg.token ? '已配置' : '未配置',
                  syncCfg.gistId && syncCfg.token ? 'ok' : '');
-      document.getElementById('syncOverlay').classList.add('show');
+      switchToPage('syncOverlay', 'sync');
     }
     function closeSyncSettings(e) {
       if (e && e.target && e.target.id !== 'syncOverlay') return;
@@ -2200,12 +2222,37 @@
   </nav>
 
   <script>
-    // 底部导航：日历回顶 & “记录”跳到今天所在月份并放大
+    // ── 底部导航：整页视图切换（不再是弹窗） ──
+    const PAGE_IDS = ['statsOverlay', 'syncOverlay', 'meOverlay', 'colorOverlay', 'aboutOverlay'];
+    const TAB_INDEX = { cal: 0, stat: 1, sync: 2, me: 3 };  // .bnav-tab 顺序：日历/统计/同步/我的
+    function hideAllPages() {
+      PAGE_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('show'); });
+    }
+    function setActiveTab(tab) {
+      const tabs = document.querySelectorAll('.bottom-nav .bnav-tab');
+      tabs.forEach((t, i) => t.classList.toggle('on', i === TAB_INDEX[tab]));
+    }
+    // 切到某个整页：隐藏其它页 → 显示目标页 → 顶部对齐 → 高亮对应标签
+    function switchToPage(id, tab) {
+      if (typeof zoomedMonth !== 'undefined' && zoomedMonth) unzoomMonth();
+      hideAllPages();
+      const el = document.getElementById(id);
+      el.classList.add('show');
+      const body = el.querySelector('.stats-body');
+      if (body) body.scrollTop = 0;
+      setActiveTab(tab);
+    }
+
+    // 日历标签 / 返回日历
     function navCalendar() {
       if (typeof zoomedMonth !== 'undefined' && zoomedMonth) unzoomMonth();
+      hideAllPages();
+      setActiveTab('cal');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     function recordToday() {
+      hideAllPages();
+      setActiveTab('cal');
       const now = new Date();
       if (now.getFullYear() !== year) {           // 若不在今年，先切回今年
         year = now.getFullYear();
@@ -2227,7 +2274,7 @@
         `<div class="me-ov-item"><div class="me-ov-num">${symKinds}</div><div class="me-ov-lbl">症状种类</div></div>`;
       // 同步“我的”里云端状态点
       setCloudDot(syncCfg && syncCfg.gistId && syncCfg.token ? 'ok' : '');
-      document.getElementById('meOverlay').classList.add('show');
+      switchToPage('meOverlay', 'me');
     }
     function closeMe(e) {
       if (!e || e.target === document.getElementById('meOverlay'))
