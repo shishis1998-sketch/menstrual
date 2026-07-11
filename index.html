@@ -518,6 +518,159 @@
       60%  { transform: translateY(-50%) scale(1.1); }
       100% { transform: translateY(-50%) scale(1); }
     }
+
+    /* ── 底部导航栏（方案 C · 中央凸起） ── */
+    body { padding-bottom: 96px; }          /* 给固定导航让出空间，避免遮住同步栏 */
+    .bottom-nav {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
+      background: #fff;
+      border-top: 1px solid #eef0f2;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.05);
+      display: flex; align-items: flex-end;
+      padding: 8px 0 calc(10px + env(safe-area-inset-bottom));
+    }
+    .bnav-tab {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; gap: 3px;
+      color: #b6bcc4; font-size: 10px; cursor: pointer;
+      background: none; border: none; font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bnav-tab svg { width: 24px; height: 24px; }
+    .bnav-tab svg [stroke] { stroke: #b6bcc4; }
+    .bnav-tab.on { color: #C71F37; }
+    .bnav-tab.on svg [stroke] { stroke: #C71F37; }
+    .bnav-fab {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      background: none; border: none; cursor: pointer; font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bnav-fab .fab-btn {
+      width: 56px; height: 56px; border-radius: 50%; margin-top: -30px;
+      background: linear-gradient(135deg, #e13a54, #C71F37);
+      box-shadow: 0 8px 18px rgba(199,31,55,0.4);
+      display: flex; align-items: center; justify-content: center; color: #fff;
+      transition: transform 0.15s;
+    }
+    .bnav-fab:active .fab-btn { transform: scale(0.92); }
+    .bnav-fab .fab-lbl { font-size: 10px; color: #C71F37; margin-top: 4px; font-weight: 600; }
+    /* “我的”标签上的未保存小红点 */
+    .bnav-tab { position: relative; }
+    .bnav-dot {
+      position: absolute; top: 4px; right: calc(50% - 16px);
+      width: 7px; height: 7px; background: #f43f5e; border-radius: 50%;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .bnav-dot.show { opacity: 1; }
+
+    /* ── “我的”页面 ── */
+    .me-overview {
+      display: flex; text-align: center;
+      background: linear-gradient(135deg, #fef2f4, #fce7eb);
+      border-radius: 12px; padding: 14px 8px; margin-bottom: 16px;
+    }
+    .me-ov-item { flex: 1; }
+    .me-ov-item + .me-ov-item { border-left: 1px solid #f6d5dd; }
+    .me-ov-num { font-size: 22px; font-weight: bold; color: #C71F37; }
+    .me-ov-lbl { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    .me-list { display: flex; flex-direction: column; gap: 10px; }
+    .me-btn {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; padding: 13px 14px; border: none; border-radius: 10px;
+      background: #f8fafc; color: #1a1a1a; font-size: 14px; font-family: inherit;
+      cursor: pointer; text-align: left;
+    }
+    .me-btn:active { background: #eef2f7; }
+    .me-btn .me-ic { font-size: 18px; width: 22px; text-align: center; }
+    .me-btn .me-txt { flex: 1; }
+    .me-btn .me-arrow { color: #cbd5e1; font-size: 16px; }
+    .me-btn.primary { background: #C71F37; color: #fff; font-weight: bold; }
+    .me-btn.primary:active { background: #a81a2e; }
+    .me-btn.danger { background: #fff1f2; color: #e11d48; }
+    .me-btn.danger:active { background: #ffe4e6; }
+    .me-cloud-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      background: #94a3b8;
+    }
+    .me-cloud-dot.ok { background: #4ade80; }
+    .me-cloud-dot.err { background: #f87171; }
+    .me-cloud-dot.busy { background: #fbbf24; animation: cloudPulse 0.8s infinite; }
+    .me-foot { text-align: center; font-size: 11px; color: #cbd5e1; margin-top: 18px; }
+
+    /* ── 色卡自定义 ── */
+    .ce-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 4px; border-bottom: 1px solid #f1f5f9;
+    }
+    .ce-color {
+      width: 40px; height: 40px; padding: 0; border: none; border-radius: 10px;
+      background: none; cursor: pointer; flex: 0 0 auto;
+      -webkit-appearance: none; appearance: none;
+    }
+    .ce-color::-webkit-color-swatch-wrapper { padding: 0; }
+    .ce-color::-webkit-color-swatch { border: 1px solid #e2e8f0; border-radius: 10px; }
+    .ce-name {
+      flex: 1; min-width: 0; box-sizing: border-box;
+      padding: 9px 11px; border: 1px solid #e2e8f0; border-radius: 8px;
+      font-size: 14px; font-family: inherit; outline: none;
+    }
+    .ce-name:focus { border-color: #C71F37; }
+    .ce-tag { flex: 0 0 44px; font-size: 11px; color: #94a3b8; text-align: center; }
+    .ce-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .ce-actions button {
+      flex: 1; padding: 11px 0; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .ce-reset { background: #f1f5f9; color: #475569; }
+    .ce-save { background: #C71F37; color: #fff; }
+    .ce-hint { font-size: 11px; color: #94a3b8; margin-top: 12px; line-height: 1.6; }
+
+    /* ── 关于 ── */
+    .about-logo { text-align: center; font-size: 40px; margin: 4px 0 2px; }
+    .about-name { text-align: center; font-size: 17px; font-weight: bold; color: #1a1a1a; }
+    .about-ver { text-align: center; font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
+    .about-row { display: flex; justify-content: space-between; padding: 8px 2px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+    .about-row .k { color: #64748b; }
+    .about-row .v { color: #1a1a1a; font-weight: 600; }
+    .about-note { font-size: 12px; color: #94a3b8; line-height: 1.7; margin-top: 16px;
+      background: #f8fafc; border-radius: 10px; padding: 12px 14px; }
+
+    /* ── 整页模式：把弹窗改成占满屏幕、直接展示的页面（无遮罩、无浮层卡片） ── */
+    .stats-overlay.as-page { background: #f9fafb; padding: 0;
+      -webkit-backdrop-filter: none; backdrop-filter: none; z-index: 70; }
+    .stats-overlay.as-page.show { display: block; }
+    .stats-overlay.as-page .stats-modal {
+      width: 100%; max-width: none; height: 100%; max-height: none;
+      border-radius: 0; box-shadow: none; animation: none;
+      background: #f9fafb; display: flex; flex-direction: column;
+    }
+    /* 整页切换：淡入 + 轻微上滑 */
+    @keyframes pageIn {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .stats-overlay.as-page.show .stats-modal {
+      animation: pageIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    /* 页头随内容一起淡入,但固定不上滑,避免返回按钮抖动 */
+    .stats-overlay.as-page.show .stats-header { animation: pageHeadIn 0.28s ease; }
+    @keyframes pageHeadIn { from { opacity: 0; } to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      .stats-overlay.as-page.show .stats-modal,
+      .stats-overlay.as-page.show .stats-header { animation: none; }
+    }
+    .stats-overlay.as-page .stats-header {
+      background: #f9fafb; border-bottom: 1px solid #eef0f2;
+      padding: calc(14px + env(safe-area-inset-top)) 18px 14px;
+    }
+    .stats-overlay.as-page .stats-title { font-size: 20px; }
+    .stats-overlay.as-page .stats-body { flex: 1; overflow-y: auto; padding-bottom: 110px; }
+    /* 顶层页(统计/同步/我的)右上角为“返回日历”；二级页(色卡/关于)为“返回” */
+    .page-back {
+      background: #f1f5f9; border: none; border-radius: 16px;
+      height: 28px; padding: 0 12px; font-size: 13px; color: #475569;
+      cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px;
+    }
   </style>
 </head>
 <body style="">
@@ -582,24 +735,12 @@
     <div><span style="color:#640D14">●</span> MUCHO</div>
   </div>
 
-  <div class="sync-bar">
-    <button class="sync-btn btn-stats" onclick="showStats()">
-      📊 总结
-    </button>
-    <button class="sync-btn btn-cloud" onclick="openSyncSettings()">
-      ☁️ 同步<span class="cloud-status-dot" id="cloudStatusDot"></span>
-    </button>
-    <button class="sync-btn btn-save" onclick="saveFile()">
-      💾 保存文件<span class="unsaved-dot show" id="unsavedDot"></span>
-    </button>
-  </div>
-
-  <!-- 云同步设置弹窗 -->
-  <div class="stats-overlay" id="syncOverlay" onclick="closeSyncSettings(event)">
-    <div class="stats-modal" onclick="event.stopPropagation()" style="max-width:380px;">
+  <!-- 云端同步（整页） -->
+  <div class="stats-overlay as-page" id="syncOverlay">
+    <div class="stats-modal">
       <div class="stats-header">
-        <div class="stats-title">☁️ 云端同步设置</div>
-        <button class="stats-close" onclick="closeSyncSettings()">✕</button>
+        <div class="stats-title">☁️ 云端同步</div>
+        <button class="page-back" onclick="navCalendar()">‹ 日历</button>
       </div>
       <div class="stats-body">
         <div class="sync-field">
@@ -629,12 +770,12 @@
     </div>
   </div>
 
-  <!-- 总结弹窗 -->
-  <div class="stats-overlay" id="statsOverlay" onclick="closeStats(event)">
-    <div class="stats-modal" onclick="event.stopPropagation()">
+  <!-- 周期总结（整页） -->
+  <div class="stats-overlay as-page" id="statsOverlay">
+    <div class="stats-modal">
       <div class="stats-header">
         <div class="stats-title">📊 周期总结</div>
-        <button class="stats-close" onclick="closeStats()">✕</button>
+        <button class="page-back" onclick="navCalendar()">‹ 日历</button>
       </div>
       <div class="stats-body" id="statsBody">
           <div class="stats-pred">
@@ -685,6 +826,97 @@
     </div>
   </div>
 
+  <!-- “我的”（整页） -->
+  <div class="stats-overlay as-page" id="meOverlay">
+    <div class="stats-modal">
+      <div class="stats-header">
+        <div class="stats-title">👤 我的</div>
+        <button class="page-back" onclick="navCalendar()">‹ 日历</button>
+      </div>
+      <div class="stats-body">
+        <div class="me-overview" id="meOverview"></div>
+        <div class="me-list">
+          <button class="me-btn primary" onclick="saveFile()">
+            <span class="me-ic">💾</span>
+            <span class="me-txt">保存文件到本地<span class="unsaved-dot" id="unsavedDot"></span></span>
+            <span class="me-arrow" style="color:rgba(255,255,255,0.7)">›</span>
+          </button>
+          <button class="me-btn" onclick="importData()">
+            <span class="me-ic">📥</span>
+            <span class="me-txt">导入数据（文件 / 云端备份）</span>
+            <span class="me-arrow">›</span>
+          </button>
+          <button class="me-btn" onclick="openSyncSettings()">
+            <span class="me-ic">☁️</span>
+            <span class="me-txt">云端同步设置</span>
+            <span class="cloud-status-dot" id="cloudStatusDot" style="margin-right:8px;"></span>
+            <span class="me-arrow">›</span>
+          </button>
+          <button class="me-btn" onclick="openColorEditor()">
+            <span class="me-ic">🎨</span>
+            <span class="me-txt">色卡自定义（名称 / 颜色）</span>
+            <span class="me-arrow">›</span>
+          </button>
+          <button class="me-btn" onclick="showStats()">
+            <span class="me-ic">📊</span>
+            <span class="me-txt">周期总结与统计</span>
+            <span class="me-arrow">›</span>
+          </button>
+          <button class="me-btn" onclick="openAbout()">
+            <span class="me-ic">ℹ️</span>
+            <span class="me-txt">关于</span>
+            <span class="me-arrow">›</span>
+          </button>
+          <button class="me-btn danger" onclick="clearAllData()">
+            <span class="me-ic">🗑️</span>
+            <span class="me-txt">清空全部记录</span>
+            <span class="me-arrow" style="color:#fca5a5">›</span>
+          </button>
+        </div>
+        <div class="me-foot">经期日历 · 数据仅存本机与你的云端 Gist</div>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="importFile" accept=".html,.json,.txt,text/html,application/json" style="display:none" onchange="handleImportFile(this)">
+
+  <!-- 色卡自定义（整页 · 我的的二级页） -->
+  <div class="stats-overlay as-page" id="colorOverlay">
+    <div class="stats-modal">
+      <div class="stats-header">
+        <div class="stats-title">🎨 色卡自定义</div>
+        <button class="page-back" onclick="openMe()">‹ 我的</button>
+      </div>
+      <div class="stats-body">
+        <div id="ceRows"></div>
+        <div class="ce-actions">
+          <button class="ce-reset" onclick="resetColorEditor()">恢复默认</button>
+          <button class="ce-save" onclick="saveColorEditor()">保存</button>
+        </div>
+        <div class="ce-hint">💡 名称与颜色会立刻应用到日历、图例和记录色板。<br>💡 设置保存在本机；导出文件或云端同步后也会带上。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关于（整页 · 我的的二级页） -->
+  <div class="stats-overlay as-page" id="aboutOverlay">
+    <div class="stats-modal">
+      <div class="stats-header">
+        <div class="stats-title">ℹ️ 关于</div>
+        <button class="page-back" onclick="openMe()">‹ 我的</button>
+      </div>
+      <div class="stats-body">
+        <div class="about-logo">🌸</div>
+        <div class="about-name">经期日历</div>
+        <div class="about-ver" id="aboutVer">版本 1.0</div>
+        <div id="aboutRows"></div>
+        <div class="about-note">
+          🔒 你的数据只保存在<b>本机浏览器</b>和你自己配置的 <b>GitHub Gist</b> 云端，不会上传到任何其他服务器。<br><br>
+          💾 建议改动后点「保存文件到本地」导出备份，或开启云端同步自动上传。
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 数据存在这里，保存时会自动更新这一行 -->
   <script id="data-block">var ALL_DATA={"2021-1-18":2,"2021-1-19":2,"2021-1-20":2,"2021-1-21":2,"2021-1-22":2,"2021-1-23":2,"2021-1-24":2,"2021-1-25":2,"2021-1-26":2,"2021-3-4":2,"2021-3-5":2,"2021-3-6":2,"2021-3-7":2,"2021-3-8":2,"2021-3-9":2,"2021-3-10":2,"2021-3-11":2,"2021-3-12":2,"2021-4-16":2,"2021-4-17":2,"2021-4-18":2,"2021-4-19":2,"2021-4-20":2,"2021-4-21":2,"2021-4-22":2,"2021-4-23":2,"2021-4-24":2,"2021-5-29":2,"2021-5-30":2,"2021-5-31":2,"2021-6-1":2,"2021-6-2":2,"2021-6-3":2,"2021-6-4":2,"2021-6-5":2,"2021-6-6":2,"2021-7-2":2,"2021-7-3":2,"2021-7-4":2,"2021-7-5":2,"2021-7-6":2,"2021-7-7":2,"2021-7-8":2,"2021-7-9":2,"2021-7-10":2,"2021-7-11":2,"2021-8-3":2,"2021-8-4":2,"2021-8-5":2,"2021-8-6":2,"2021-8-7":2,"2021-8-8":2,"2021-8-9":2,"2021-8-10":2,"2021-8-11":2,"2021-9-5":2,"2021-9-6":2,"2021-9-7":2,"2021-9-8":2,"2021-9-9":2,"2021-9-10":2,"2021-9-11":2,"2021-9-12":2,"2021-9-13":2,"2021-10-12":2,"2021-10-13":2,"2021-10-14":2,"2021-10-15":2,"2021-10-16":2,"2021-10-17":2,"2021-10-18":2,"2021-10-19":2,"2021-10-20":2,"2021-11-14":2,"2021-11-15":2,"2021-11-16":2,"2021-11-17":2,"2021-11-18":2,"2021-11-19":2,"2021-11-20":2,"2021-11-21":2,"2021-12-20":2,"2021-12-21":2,"2021-12-22":2,"2021-12-23":2,"2021-12-24":2,"2021-12-25":2,"2021-12-26":2,"2021-12-27":2,"2022-1-19":2,"2022-1-20":2,"2022-1-21":2,"2022-1-22":2,"2022-1-23":2,"2022-1-24":2,"2022-1-25":2,"2022-1-26":2,"2022-1-27":2,"2022-2-20":2,"2022-2-21":2,"2022-2-22":2,"2022-2-23":2,"2022-2-24":2,"2022-2-25":2,"2022-2-26":2,"2022-2-27":2,"2022-3-28":2,"2022-3-29":2,"2022-3-30":2,"2022-3-31":2,"2022-4-1":2,"2022-4-2":2,"2022-4-3":2,"2022-4-4":2,"2022-4-5":2,"2022-5-1":2,"2022-5-2":2,"2022-5-3":2,"2022-5-4":2,"2022-5-5":2,"2022-5-6":2,"2022-5-7":2,"2022-5-8":2,"2022-5-9":2,"2022-5-10":2,"2022-5-11":2,"2022-5-26":2,"2022-5-27":2,"2022-5-28":2,"2022-5-29":2,"2022-5-30":2,"2022-5-31":2,"2022-6-1":2,"2022-6-2":2,"2022-6-21":2,"2022-6-22":2,"2022-6-23":2,"2022-6-24":2,"2022-6-25":2,"2022-6-26":2,"2022-6-27":2,"2022-6-28":2,"2022-6-29":2,"2022-7-8":2,"2022-7-9":2,"2022-7-10":2,"2022-7-11":2,"2022-7-12":2,"2022-7-13":2,"2022-7-14":2,"2022-7-25":2,"2022-7-26":2,"2022-7-27":2,"2022-7-28":2,"2022-7-29":2,"2022-7-30":2,"2022-7-31":2,"2022-8-1":2,"2022-8-9":2,"2022-8-10":2,"2022-8-11":2,"2022-8-12":2,"2022-8-13":2,"2022-8-14":2,"2022-8-15":2,"2022-9-7":2,"2022-9-8":2,"2022-9-9":2,"2022-9-10":2,"2022-9-11":2,"2022-9-12":2,"2022-9-13":2,"2022-9-14":2,"2022-9-15":2,"2022-10-11":2,"2022-10-12":2,"2022-10-13":2,"2022-10-14":2,"2022-10-15":2,"2022-10-16":2,"2022-10-17":2,"2022-10-18":2,"2022-11-1":2,"2022-11-2":2,"2022-11-3":2,"2022-11-4":2,"2022-11-5":2,"2022-11-12":2,"2022-11-13":2,"2022-11-14":2,"2022-11-15":2,"2022-11-16":2,"2022-11-17":2,"2022-11-18":2,"2022-11-19":2,"2022-11-20":2,"2022-11-25":2,"2022-11-26":2,"2022-11-27":2,"2022-12-1":2,"2022-12-2":2,"2022-12-3":2,"2022-12-19":2,"2022-12-20":2,"2022-12-21":2,"2022-12-22":2,"2022-12-23":2,"2022-12-24":2,"2022-12-25":2,"2022-12-26":2,"2022-12-27":2,"2022-12-28":2,"2022-12-29":2,"2022-12-30":2,"2023-1-8":2,"2023-1-9":2,"2023-1-10":2,"2023-1-11":2,"2023-1-12":2,"2023-1-13":2,"2023-1-14":2,"2023-1-15":2,"2023-1-16":2,"2023-2-7":2,"2023-2-8":2,"2023-2-9":2,"2023-2-10":2,"2023-2-11":2,"2023-2-12":2,"2023-2-13":2,"2023-2-14":2,"2023-2-15":2,"2023-3-15":2,"2023-3-16":2,"2023-3-17":2,"2023-3-18":2,"2023-3-19":2,"2023-3-20":2,"2023-3-21":2,"2023-3-22":2,"2023-4-1":2,"2023-4-2":2,"2023-4-3":2,"2023-4-4":2,"2023-4-5":2,"2023-4-26":2,"2023-4-27":2,"2023-4-28":2,"2023-4-29":2,"2023-4-30":2,"2023-5-1":2,"2023-5-2":2,"2023-5-25":2,"2023-5-26":2,"2023-5-27":2,"2023-5-28":2,"2023-5-29":2,"2023-5-30":2,"2023-5-31":2,"2023-6-1":2,"2023-6-26":2,"2023-6-27":2,"2023-6-28":2,"2023-6-29":2,"2023-6-30":2,"2023-7-1":2,"2023-7-2":2,"2023-7-3":2,"2023-7-4":2,"2023-7-5":2,"2023-7-6":2,"2023-7-7":2,"2023-7-8":2,"2023-7-9":2,"2023-8-3":2,"2023-8-4":2,"2023-8-5":2,"2023-8-6":2,"2023-8-7":2,"2023-8-8":2,"2023-8-9":2,"2023-8-10":2,"2023-8-11":2,"2023-9-3":2,"2023-9-4":2,"2023-9-5":2,"2023-9-6":2,"2023-9-7":2,"2023-9-8":2,"2023-9-9":2,"2023-9-10":2,"2023-9-11":2,"2023-9-23":2,"2023-9-24":2,"2023-9-25":2,"2023-9-26":2,"2023-9-27":2,"2023-9-28":2,"2023-9-29":2,"2023-9-30":2,"2023-10-1":2,"2023-10-17":2,"2023-10-18":2,"2023-10-19":2,"2023-10-20":2,"2023-10-21":2,"2023-10-22":2,"2023-10-23":2,"2023-10-24":2,"2023-10-25":2,"2023-11-9":2,"2023-11-10":2,"2023-11-11":2,"2023-11-12":2,"2023-11-13":2,"2023-11-14":2,"2023-11-15":2,"2023-11-16":2,"2023-12-1":2,"2023-12-2":2,"2023-12-3":2,"2023-12-4":2,"2023-12-5":2,"2023-12-6":2,"2023-12-7":2,"2024-1-6":2,"2024-1-7":2,"2024-1-8":2,"2024-1-9":2,"2024-1-10":2,"2024-1-11":2,"2024-1-12":2,"2024-1-13":2,"2024-2-1":2,"2024-2-2":2,"2024-2-3":2,"2024-2-4":2,"2024-2-5":2,"2024-2-6":2,"2024-2-7":2,"2024-2-8":2,"2024-2-9":2,"2024-3-9":2,"2024-3-10":2,"2024-3-11":2,"2024-3-12":2,"2024-3-13":2,"2024-3-14":2,"2024-3-15":2,"2024-3-16":2,"2024-3-17":2,"2024-3-18":2,"2024-3-19":2,"2024-3-20":2,"2024-4-8":2,"2024-4-9":2,"2024-4-10":2,"2024-4-11":2,"2024-4-12":2,"2024-4-13":2,"2024-4-14":2,"2024-4-15":2,"2024-4-22":2,"2024-4-23":2,"2024-4-24":2,"2024-4-25":2,"2024-4-26":2,"2024-4-27":2,"2024-4-28":2,"2024-4-29":2,"2024-4-30":2,"2024-5-11":2,"2024-5-12":2,"2024-5-13":2,"2024-5-14":2,"2024-5-15":2,"2024-5-16":2,"2024-5-17":2,"2024-5-18":2,"2024-5-24":2,"2024-5-25":2,"2024-5-26":2,"2024-5-27":2,"2024-5-28":2,"2024-5-29":2,"2024-6-13":2,"2024-6-14":2,"2024-6-15":2,"2024-6-16":2,"2024-6-17":2,"2024-6-18":2,"2024-6-19":2,"2024-6-20":2,"2024-6-21":2,"2024-6-22":2,"2024-6-23":2,"2024-7-17":2,"2024-7-18":2,"2024-7-19":2,"2024-7-20":2,"2024-7-21":2,"2024-7-22":2,"2024-7-23":2,"2024-7-24":2,"2024-8-19":2,"2024-8-20":2,"2024-8-21":2,"2024-8-22":2,"2024-8-23":2,"2024-8-24":2,"2024-8-25":2,"2024-8-26":2,"2024-9-23":2,"2024-9-24":2,"2024-9-25":2,"2024-9-26":2,"2024-9-27":2,"2024-9-28":2,"2024-9-29":2,"2024-9-30":2,"2024-10-22":2,"2024-10-23":2,"2024-10-24":2,"2024-10-25":2,"2024-10-26":2,"2024-10-27":2,"2024-10-28":2,"2024-10-29":2,"2024-10-30":2,"2024-11-19":2,"2024-11-20":2,"2024-11-21":2,"2024-11-22":2,"2024-11-23":2,"2024-11-24":2,"2024-12-22":2,"2024-12-23":2,"2024-12-24":2,"2024-12-25":2,"2024-12-26":2,"2024-12-27":2,"2024-12-28":2,"2024-12-29":2,"2025-1-21":4,"2025-1-22":1,"2025-1-23":1,"2025-1-24":1,"2025-1-25":1,"2025-1-26":1,"2025-1-27":1,"2025-1-28":1,"2025-1-29":1,"2025-2-24":1,"2025-2-25":1,"2025-2-26":1,"2025-2-27":1,"2025-2-28":1,"2025-3-1":1,"2025-3-2":1,"2025-3-3":1,"2025-4-7":1,"2025-4-8":1,"2025-4-9":1,"2025-4-10":1,"2025-4-11":1,"2025-4-12":1,"2025-4-13":1,"2025-4-14":1,"2025-5-8":1,"2025-5-9":1,"2025-5-10":1,"2025-5-11":1,"2025-5-12":1,"2025-5-13":1,"2025-5-14":1,"2025-5-15":1,"2025-6-13":1,"2025-6-14":1,"2025-6-15":1,"2025-6-16":1,"2025-6-17":1,"2025-6-18":1,"2025-6-19":1,"2025-7-26":1,"2025-7-27":1,"2025-7-28":1,"2025-7-29":1,"2025-7-30":1,"2025-7-31":1,"2025-8-1":1,"2025-8-2":1,"2025-8-3":1,"2025-8-4":1,"2025-8-10":1,"2025-8-11":1,"2025-8-12":1,"2025-8-13":1,"2025-8-14":1,"2025-8-15":1,"2025-8-16":1,"2025-8-17":1,"2025-9-5":1,"2025-9-6":1,"2025-9-7":1,"2025-9-8":1,"2025-9-9":1,"2025-9-10":1,"2025-9-11":1,"2025-9-19":1,"2025-9-21":1,"2025-10-10":1,"2025-10-11":1,"2025-10-12":1,"2025-10-13":1,"2025-10-14":1,"2025-10-15":1,"2025-10-24":1,"2025-10-25":1,"2025-10-26":1,"2025-10-27":1,"2025-10-28":1,"2025-10-29":1,"2025-10-30":1,"2025-10-31":1,"2025-11-9":1,"2025-11-10":3,"2025-11-11":2,"2025-11-12":2,"2025-11-13":1,"2025-11-14":1,"2025-11-15":1,"2025-11-16":1,"2025-12-3":1,"2026-1-1":2,"2026-1-2":2,"2026-1-3":2,"2026-1-24":2,"2026-1-25":3,"2026-2-10":2,"2026-2-11":3,"2026-2-12":2,"2026-2-13":2,"2026-2-14":2,"2026-2-15":1,"2026-3-5":3,"2026-3-6":3,"2026-3-7":2,"2026-3-8":2,"2026-4-15":1,"2026-4-16":2,"2026-4-17":3,"2026-4-30":1,"2026-5-1":3,"2026-5-2":2,"2026-5-3":2,"2026-5-4":1,"2026-5-5":1,"2026-5-15":1,"2026-5-14":4,"2026-4-29":4,"2026-5-6":1,"2026-4-20":1,"2026-4-21":1,"2026-4-24":4,"2026-4-22":4,"2026-4-23":4,"2026-4-19":1,"2026-4-18":2,"2026-4-14":1,"2026-4-13":4,"2026-3-13":4,"2026-3-12":1,"2026-3-11":1,"2026-3-10":1,"2026-3-9":1,"2026-1-22":4,"2026-1-23":1,"2026-1-26":2,"2026-1-27":1,"2026-1-28":1,"2026-1-29":4,"2026-1-30":4,"2026-1-4":1,"2026-1-5":1,"2026-1-6":1,"2026-1-7":1,"2025-12-31":1,"2025-12-1":1,"2025-12-2":1,"2025-11-30":2,"2025-11-29":2,"2025-11-28":3,"2025-11-27":3,"2025-11-26":1,"2025-3-17":4,"2025-8-8":4,"2025-8-9":4,"2025-9-4":1,"2025-9-20":1,"2025-9-22":1,"2025-9-23":1,"2025-9-24":1,"2025-9-25":1,"2025-10-1":4,"2025-10-2":4,"2025-10-3":4,"2025-10-4":4,"2025-10-5":4,"2025-10-6":4,"2025-10-7":4,"2025-10-8":4,"2025-2-8":4,"2025-6-22":4,"2025-4-6":4,"2024-2-18":4,"2024-6-29":4,"2020-1-28":1,"2020-2-29":1,"2020-4-8":1,"2020-5-8":1,"2020-6-11":1,"2020-6-26":1,"2020-7-16":1,"2020-8-2":1,"2020-8-21":1,"2020-9-21":1,"2020-11-2":1,"2020-11-15":1,"2020-12-1":1,"2020-12-20":1,"2025-6-23":4,"2025-6-24":4,"2025-9-17":4,"2025-9-18":4,"2025-10-9":4,"2025-10-23":4,"2025-11-25":4,"2025-12-15":4,"2025-12-30":4,"2026-1-20":4,"2026-1-21":4,"2026-2-9":4,"2026-5-16":3,"2026-5-17":2,"2026-5-18":2,"2026-5-19":1,"2026-5-20":1,"2026-5-21":4,"2026-5-22":4};var SYMPTOMS_LIB=["头痛","腹痛","腰酸","乳房胀痛","情绪低落","疲倦","失眠","妇科检查"];var SYMPTOMS_DATA={"2026-4-29":["妇科检查"],"2026-3-9":["妇科检查"],"2026-6-2":["腰酸"]};</script>
 
@@ -700,7 +932,7 @@
       else ALL_DATA[key] = val;
       if (!unsaved) {
         unsaved = true;
-        document.getElementById('unsavedDot').classList.add('show');
+        setUnsavedDots(true);
       }
     }
 
@@ -708,7 +940,7 @@
     function saveFile() {
       // 保存前先收起放大态,避免把临时 DOM(关闭按钮/色板/信息栏)写进文件
       if (zoomedMonth !== null) unzoomMonth();
-      const dataLine = `var ALL_DATA=${JSON.stringify(ALL_DATA)};var SYMPTOMS_LIB=${JSON.stringify(SYMPTOMS_LIB)};var SYMPTOMS_DATA=${JSON.stringify(SYMPTOMS_DATA)};`;
+      const dataLine = `var ALL_DATA=${JSON.stringify(ALL_DATA)};var SYMPTOMS_LIB=${JSON.stringify(SYMPTOMS_LIB)};var SYMPTOMS_DATA=${JSON.stringify(SYMPTOMS_DATA)};var SAVED_PALETTE=${JSON.stringify(PALETTE)};`;
       const html = document.documentElement.outerHTML;
       // 替换 data-block 脚本内容
       const newHtml = html.replace(
@@ -721,7 +953,7 @@
       a.download = 'i_timeline.html';
       a.click();
       unsaved = false;
-      document.getElementById('unsavedDot').classList.remove('show');
+      setUnsavedDots(false);
       showToast('✅ 已下载，替换旧文件后发给手机即可');
     }
 
@@ -1032,10 +1264,10 @@
           palette.className = 'color-palette';
           palette.innerHTML = `
             <div class="palette-label">先点日期选中,再点颜色 · 同色再点 = 取消</div>
-            <div class="swatch swatch-g" data-level="4"><div class="swatch-dot"></div><div class="swatch-text">GOTAS</div></div>
-            <div class="swatch swatch-1" data-level="1"><div class="swatch-dot"></div><div class="swatch-text">POCO</div></div>
-            <div class="swatch swatch-2" data-level="2"><div class="swatch-dot"></div><div class="swatch-text">MEDIO</div></div>
-            <div class="swatch swatch-3" data-level="3"><div class="swatch-dot"></div><div class="swatch-text">MUCHO</div></div>
+            <div class="swatch swatch-g" data-level="4"><div class="swatch-dot"></div><div class="swatch-text">${escapeHtml(PALETTE[4].name)}</div></div>
+            <div class="swatch swatch-1" data-level="1"><div class="swatch-dot"></div><div class="swatch-text">${escapeHtml(PALETTE[1].name)}</div></div>
+            <div class="swatch swatch-2" data-level="2"><div class="swatch-dot"></div><div class="swatch-text">${escapeHtml(PALETTE[2].name)}</div></div>
+            <div class="swatch swatch-3" data-level="3"><div class="swatch-dot"></div><div class="swatch-text">${escapeHtml(PALETTE[3].name)}</div></div>
           `;
           target.appendChild(palette);
           palette.querySelectorAll('.swatch').forEach(s => {
@@ -1105,6 +1337,14 @@
       el.className = 'sym-list';
       el.innerHTML = `<div class="sym-list-title">本月状态记录</div>${rows.join('')}`;
       return el;
+    }
+
+    // 未保存指示点：同时更新“我的”按钮里的点和底部导航“我的”标签上的点
+    function setUnsavedDots(show) {
+      ['unsavedDot', 'meNavDot'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('show', show);
+      });
     }
 
     function showToast(msg) {
@@ -1239,7 +1479,7 @@
     function markUnsaved() {
       if (!unsaved) {
         unsaved = true;
-        document.getElementById('unsavedDot').classList.add('show');
+        setUnsavedDots(true);
       }
     }
 
@@ -1256,7 +1496,7 @@
       const { y, m, d } = selectedView;
       const lv = getLevel(y, m, d);
       const today = getSym(y, m, d);
-      const lvText = { 0: '未记录', 1: 'POCO (少)', 2: 'MEDIO (中)', 3: 'MUCHO (多)', 4: 'GOTAS (点滴)' }[lv];
+      const lvText = levelName(lv);
 
       const todayTagsHtml = today.length === 0
         ? '<div class="info-empty">还没有记录 — 从下方选择或新建</div>'
@@ -1451,7 +1691,7 @@
 
       if (periods.length === 0) {
         body.innerHTML = '<div class="stats-empty">还没有任何经期记录<br>开始记录后会显示统计</div>';
-        overlay.classList.add('show');
+        switchToPage('statsOverlay', 'stat');
         return;
       }
 
@@ -1605,7 +1845,7 @@
       html += `<div class="stats-hint">💡 周期 = 一段经期开始到下一段开始的天数<br>💡 同一段经期 = 连续(或仅相差 1 天)的有色日期</div>`;
 
       body.innerHTML = html;
-      overlay.classList.add('show');
+      switchToPage('statsOverlay', 'stat');
     }
 
     function closeStats(e) {
@@ -1619,6 +1859,182 @@
 
     function formatDate(d) {
       return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+    }
+
+    // ════════════════════════════════════════
+    // ── 色卡（名称 + 颜色）自定义 ──
+    // 四档：1=POCO 2=MEDIO 3=MUCHO 4=GOTAS(点滴)
+    // ════════════════════════════════════════
+    const PALETTE_ORDER = [4, 1, 2, 3];               // 图例/色板显示顺序
+    const LEVEL_CLASS = { 1: 'level-1', 2: 'level-2', 3: 'level-3', 4: 'level-g' };
+    const SWATCH_CLASS = { 1: 'swatch-1', 2: 'swatch-2', 3: 'swatch-3', 4: 'swatch-g' };
+    const LEVEL_SUFFIX = { 1: '(少)', 2: '(中)', 3: '(多)', 4: '(点滴)' };
+    const DEFAULT_PALETTE = {
+      1: { name: 'POCO',  color: '#ffd5dc' },
+      2: { name: 'MEDIO', color: '#cf4865' },
+      3: { name: 'MUCHO', color: '#834047' },
+      4: { name: 'GOTAS', color: '#dbdbdf' }
+    };
+    let PALETTE = JSON.parse(JSON.stringify(DEFAULT_PALETTE));
+
+    function loadPalette() {
+      // 优先级：默认 → 文件内嵌(SAVED_PALETTE) → 本机 localStorage
+      if (typeof SAVED_PALETTE !== 'undefined' && SAVED_PALETTE) PALETTE = mergePalette(SAVED_PALETTE);
+      try {
+        const raw = localStorage.getItem('itimeline_palette');
+        if (raw) PALETTE = mergePalette(JSON.parse(raw));
+      } catch (e) {}
+    }
+    function savePalette() {
+      try { localStorage.setItem('itimeline_palette', JSON.stringify(PALETTE)); } catch (e) {}
+    }
+    function mergePalette(src) {
+      const out = JSON.parse(JSON.stringify(DEFAULT_PALETTE));
+      [1, 2, 3, 4].forEach(l => {
+        if (src && src[l]) {
+          if (src[l].name)  out[l].name  = String(src[l].name).slice(0, 12);
+          if (src[l].color) out[l].color = src[l].color;
+        }
+      });
+      return out;
+    }
+    // 依据背景色亮度自动决定文字用深色还是白色
+    function textOn(hex) {
+      const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+      if (!m) return '#333';
+      const n = parseInt(m[1], 16);
+      const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return lum > 0.6 ? '#3a2a2e' : '#ffffff';
+    }
+    // 把当前色卡应用到：日历格子/色板/图例
+    function applyPalette() {
+      let css = '';
+      [1, 2, 3, 4].forEach(l => {
+        const c = PALETTE[l].color;
+        css += `.${LEVEL_CLASS[l]}{background-color:${c};color:${textOn(c)};--c:${c};}`;
+        css += `.${SWATCH_CLASS[l]} .swatch-dot{background:${c};}`;
+      });
+      let style = document.getElementById('paletteOverride');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'paletteOverride';
+        document.head.appendChild(style);
+      }
+      style.textContent = css;
+      // 图例（页面可能有多处 .legend）
+      document.querySelectorAll('.legend').forEach(leg => {
+        leg.innerHTML = PALETTE_ORDER.map(l =>
+          `<div><span style="color:${PALETTE[l].color}">●</span> ${escapeHtml(PALETTE[l].name)}</div>`
+        ).join('');
+      });
+    }
+    function levelName(lv) {
+      return lv === 0 ? '未记录' : `${PALETTE[lv] ? PALETTE[lv].name : ''} ${LEVEL_SUFFIX[lv] || ''}`.trim();
+    }
+
+    // ── 色卡自定义弹窗 ──
+    function openColorEditor() {
+      const rows = document.getElementById('ceRows');
+      rows.innerHTML = PALETTE_ORDER.map(l => `
+        <div class="ce-row">
+          <input type="color" class="ce-color" id="ceColor${l}" value="${PALETTE[l].color}">
+          <input type="text" class="ce-name" id="ceName${l}" maxlength="12" value="${escapeAttr(PALETTE[l].name)}">
+          <span class="ce-tag">${LEVEL_SUFFIX[l]}</span>
+        </div>
+      `).join('');
+      switchToPage('colorOverlay', 'me');
+    }
+    function closeColorEditor(e) {
+      if (!e || e.target === document.getElementById('colorOverlay'))
+        document.getElementById('colorOverlay').classList.remove('show');
+    }
+    function saveColorEditor() {
+      PALETTE_ORDER.forEach(l => {
+        const c = document.getElementById('ceColor' + l).value;
+        const n = document.getElementById('ceName' + l).value.trim();
+        PALETTE[l].color = c;
+        PALETTE[l].name = n || DEFAULT_PALETTE[l].name;
+      });
+      savePalette();
+      applyPalette();
+      markUnsaved();
+      render();
+      openMe();               // 保存后返回“我的”整页
+      showToast('🎨 色卡已更新');
+    }
+    function resetColorEditor() {
+      PALETTE = JSON.parse(JSON.stringify(DEFAULT_PALETTE));
+      savePalette();
+      applyPalette();
+      markUnsaved();
+      render();
+      openColorEditor();   // 重新填入默认值
+      showToast('已恢复默认色卡');
+    }
+
+    // ── 导入数据 ──
+    function importData() { document.getElementById('importFile').click(); }
+    function parseImport(text) {
+      try { const j = JSON.parse(text); if (j && j.ALL_DATA) return j; } catch (e) {}
+      const m = text.match(/var ALL_DATA=(\{[\s\S]*?\});var SYMPTOMS_LIB=(\[[\s\S]*?\]);var SYMPTOMS_DATA=(\{[\s\S]*?\});/);
+      if (m) {
+        const out = { ALL_DATA: JSON.parse(m[1]), SYMPTOMS_LIB: JSON.parse(m[2]), SYMPTOMS_DATA: JSON.parse(m[3]) };
+        const pm = text.match(/var SAVED_PALETTE=(\{.*?\}\});/);
+        if (pm) { try { out.PALETTE = JSON.parse(pm[1]); } catch (e) {} }
+        return out;
+      }
+      return null;
+    }
+    function handleImportFile(input) {
+      const f = input.files && input.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = parseImport(reader.result);
+          if (!data) { showToast('❌ 无法识别该文件内容'); input.value = ''; return; }
+          const days = Object.keys(data.ALL_DATA || {}).length;
+          if (!confirm(`将用导入的数据覆盖当前全部记录（约 ${days} 天）。确定吗？`)) { input.value = ''; return; }
+          for (const k in ALL_DATA) delete ALL_DATA[k];
+          Object.assign(ALL_DATA, data.ALL_DATA || {});
+          SYMPTOMS_LIB.length = 0;
+          (data.SYMPTOMS_LIB || []).forEach(x => SYMPTOMS_LIB.push(x));
+          for (const k in SYMPTOMS_DATA) delete SYMPTOMS_DATA[k];
+          Object.assign(SYMPTOMS_DATA, data.SYMPTOMS_DATA || {});
+          if (data.PALETTE) { PALETTE = mergePalette(data.PALETTE); savePalette(); applyPalette(); }
+          markUnsaved();
+          render();
+          openMe();
+          showToast('✅ 已导入 ' + days + ' 天记录');
+        } catch (err) {
+          showToast('❌ 导入失败：' + err.message);
+        }
+        input.value = '';
+      };
+      reader.readAsText(f);
+    }
+
+    // ── 关于 ──
+    function openAbout() {
+      const days = Object.keys(ALL_DATA).length;
+      const dates = Object.keys(ALL_DATA);
+      let latest = '—';
+      if (dates.length) {
+        const ts = dates.map(k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d).getTime(); });
+        latest = formatDate(new Date(Math.max(...ts)));
+      }
+      document.getElementById('aboutRows').innerHTML =
+        `<div class="about-row"><span class="k">已记录天数</span><span class="v">${days} 天</span></div>` +
+        `<div class="about-row"><span class="k">症状种类</span><span class="v">${SYMPTOMS_LIB.length} 种</span></div>` +
+        `<div class="about-row"><span class="k">记症状天数</span><span class="v">${Object.keys(SYMPTOMS_DATA).length} 天</span></div>` +
+        `<div class="about-row"><span class="k">最近一次记录</span><span class="v">${latest}</span></div>` +
+        `<div class="about-row"><span class="k">云端同步</span><span class="v">${(syncCfg.gistId && syncCfg.token) ? '已配置' : '未配置'}</span></div>`;
+      switchToPage('aboutOverlay', 'me');
+    }
+    function closeAbout(e) {
+      if (!e || e.target === document.getElementById('aboutOverlay'))
+        document.getElementById('aboutOverlay').classList.remove('show');
     }
 
     // ════════════════════════════════════════
@@ -1656,7 +2072,7 @@
       document.getElementById('syncAuto').checked = syncCfg.auto !== false;
       setSyncLog(syncCfg.gistId && syncCfg.token ? '已配置' : '未配置',
                  syncCfg.gistId && syncCfg.token ? 'ok' : '');
-      document.getElementById('syncOverlay').classList.add('show');
+      switchToPage('syncOverlay', 'sync');
     }
     function closeSyncSettings(e) {
       if (e && e.target && e.target.id !== 'syncOverlay') return;
@@ -1677,6 +2093,7 @@
         ALL_DATA: ALL_DATA,
         SYMPTOMS_LIB: SYMPTOMS_LIB,
         SYMPTOMS_DATA: SYMPTOMS_DATA,
+        PALETTE: PALETTE,
         _updatedAt: new Date().toISOString()
       });
     }
@@ -1746,6 +2163,7 @@
         (data.SYMPTOMS_LIB || []).forEach(x => SYMPTOMS_LIB.push(x));
         for (const k in SYMPTOMS_DATA) delete SYMPTOMS_DATA[k];
         Object.assign(SYMPTOMS_DATA, data.SYMPTOMS_DATA || {});
+        if (data.PALETTE) { PALETTE = mergePalette(data.PALETTE); savePalette(); applyPalette(); }
         render();
         setCloudDot('ok');
         const when = data._updatedAt ? new Date(data._updatedAt).toLocaleString() : '';
@@ -1780,6 +2198,8 @@
     };
 
     // 启动：加载配置 + 自动拉取一次
+    loadPalette();
+    applyPalette();
     loadSyncConfig();
     if (syncCfg.gistId && syncCfg.token) {
       setCloudDot('ok');
@@ -1791,5 +2211,99 @@
     setupEvents();
   </script>
 
+  <!-- ── 底部导航栏（方案 C · 中央凸起） ── -->
+  <nav class="bottom-nav">
+    <button class="bnav-tab on" onclick="navCalendar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>
+      <span>日历</span>
+    </button>
+    <button class="bnav-tab" onclick="showStats()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" stroke-linecap="round"/></svg>
+      <span>统计</span>
+    </button>
+    <button class="bnav-fab" onclick="recordToday()">
+      <span class="fab-btn"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+      <span class="fab-lbl">记录</span>
+    </button>
+    <button class="bnav-tab" onclick="openSyncSettings()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 12a8 8 0 0113.5-5.5L20 9M20 4v5h-5M20 12a8 8 0 01-13.5 5.5L4 15M4 20v-5h5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>同步</span>
+    </button>
+    <button class="bnav-tab" onclick="openMe()">
+      <span class="bnav-dot" id="meNavDot"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0" stroke-linecap="round"/></svg>
+      <span>我的</span>
+    </button>
+  </nav>
+
+  <script>
+    // ── 底部导航：整页视图切换（不再是弹窗） ──
+    const PAGE_IDS = ['statsOverlay', 'syncOverlay', 'meOverlay', 'colorOverlay', 'aboutOverlay'];
+    const TAB_INDEX = { cal: 0, stat: 1, sync: 2, me: 3 };  // .bnav-tab 顺序：日历/统计/同步/我的
+    function hideAllPages() {
+      PAGE_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('show'); });
+    }
+    function setActiveTab(tab) {
+      const tabs = document.querySelectorAll('.bottom-nav .bnav-tab');
+      tabs.forEach((t, i) => t.classList.toggle('on', i === TAB_INDEX[tab]));
+    }
+    // 切到某个整页：隐藏其它页 → 显示目标页 → 顶部对齐 → 高亮对应标签
+    function switchToPage(id, tab) {
+      if (typeof zoomedMonth !== 'undefined' && zoomedMonth) unzoomMonth();
+      hideAllPages();
+      const el = document.getElementById(id);
+      el.classList.add('show');
+      const body = el.querySelector('.stats-body');
+      if (body) body.scrollTop = 0;
+      setActiveTab(tab);
+    }
+
+    // 日历标签 / 返回日历
+    function navCalendar() {
+      if (typeof zoomedMonth !== 'undefined' && zoomedMonth) unzoomMonth();
+      hideAllPages();
+      setActiveTab('cal');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function recordToday() {
+      hideAllPages();
+      setActiveTab('cal');
+      const now = new Date();
+      if (now.getFullYear() !== year) {           // 若不在今年，先切回今年
+        year = now.getFullYear();
+        document.getElementById('yearLabel').textContent = year;
+        render();
+      }
+      zoomMonth(now.getMonth() + 1);              // 放大今天所在的月份，进入记录流程
+    }
+
+    // “我的”页面
+    function openMe() {
+      if (typeof zoomedMonth !== 'undefined' && zoomedMonth) unzoomMonth();
+      const days = Object.keys(ALL_DATA).length;
+      const symDays = Object.keys(SYMPTOMS_DATA).length;
+      const symKinds = SYMPTOMS_LIB.length;
+      document.getElementById('meOverview').innerHTML =
+        `<div class="me-ov-item"><div class="me-ov-num">${days}</div><div class="me-ov-lbl">已记录天数</div></div>` +
+        `<div class="me-ov-item"><div class="me-ov-num">${symDays}</div><div class="me-ov-lbl">记症状天数</div></div>` +
+        `<div class="me-ov-item"><div class="me-ov-num">${symKinds}</div><div class="me-ov-lbl">症状种类</div></div>`;
+      // 同步“我的”里云端状态点
+      setCloudDot(syncCfg && syncCfg.gistId && syncCfg.token ? 'ok' : '');
+      switchToPage('meOverlay', 'me');
+    }
+    function closeMe(e) {
+      if (!e || e.target === document.getElementById('meOverlay'))
+        document.getElementById('meOverlay').classList.remove('show');
+    }
+    function clearAllData() {
+      if (!confirm('确定清空全部经期与症状记录吗？此操作不可撤销，清空后记得“保存文件”或同步到云端才会生效到备份。')) return;
+      for (const k in ALL_DATA) delete ALL_DATA[k];
+      for (const k in SYMPTOMS_DATA) delete SYMPTOMS_DATA[k];
+      markUnsaved();
+      render();
+      openMe();                    // 刷新概览数字
+      showToast('🗑️ 已清空全部记录');
+    }
+  </script>
 
 </body></html>
