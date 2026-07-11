@@ -596,6 +596,44 @@
     .me-cloud-dot.err { background: #f87171; }
     .me-cloud-dot.busy { background: #fbbf24; animation: cloudPulse 0.8s infinite; }
     .me-foot { text-align: center; font-size: 11px; color: #cbd5e1; margin-top: 18px; }
+
+    /* ── 色卡自定义 ── */
+    .ce-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 4px; border-bottom: 1px solid #f1f5f9;
+    }
+    .ce-color {
+      width: 40px; height: 40px; padding: 0; border: none; border-radius: 10px;
+      background: none; cursor: pointer; flex: 0 0 auto;
+      -webkit-appearance: none; appearance: none;
+    }
+    .ce-color::-webkit-color-swatch-wrapper { padding: 0; }
+    .ce-color::-webkit-color-swatch { border: 1px solid #e2e8f0; border-radius: 10px; }
+    .ce-name {
+      flex: 1; min-width: 0; box-sizing: border-box;
+      padding: 9px 11px; border: 1px solid #e2e8f0; border-radius: 8px;
+      font-size: 14px; font-family: inherit; outline: none;
+    }
+    .ce-name:focus { border-color: #C71F37; }
+    .ce-tag { flex: 0 0 44px; font-size: 11px; color: #94a3b8; text-align: center; }
+    .ce-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .ce-actions button {
+      flex: 1; padding: 11px 0; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .ce-reset { background: #f1f5f9; color: #475569; }
+    .ce-save { background: #C71F37; color: #fff; }
+    .ce-hint { font-size: 11px; color: #94a3b8; margin-top: 12px; line-height: 1.6; }
+
+    /* ── 关于 ── */
+    .about-logo { text-align: center; font-size: 40px; margin: 4px 0 2px; }
+    .about-name { text-align: center; font-size: 17px; font-weight: bold; color: #1a1a1a; }
+    .about-ver { text-align: center; font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
+    .about-row { display: flex; justify-content: space-between; padding: 8px 2px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+    .about-row .k { color: #64748b; }
+    .about-row .v { color: #1a1a1a; font-weight: 600; }
+    .about-note { font-size: 12px; color: #94a3b8; line-height: 1.7; margin-top: 16px;
+      background: #f8fafc; border-radius: 10px; padding: 12px 14px; }
   </style>
 </head>
 <body style="">
@@ -766,15 +804,30 @@
             <span class="me-txt">保存文件到本地<span class="unsaved-dot" id="unsavedDot"></span></span>
             <span class="me-arrow" style="color:rgba(255,255,255,0.7)">›</span>
           </button>
+          <button class="me-btn" onclick="importData()">
+            <span class="me-ic">📥</span>
+            <span class="me-txt">导入数据（文件 / 云端备份）</span>
+            <span class="me-arrow">›</span>
+          </button>
           <button class="me-btn" onclick="closeMe();openSyncSettings()">
             <span class="me-ic">☁️</span>
             <span class="me-txt">云端同步设置</span>
             <span class="cloud-status-dot" id="cloudStatusDot" style="margin-right:8px;"></span>
             <span class="me-arrow">›</span>
           </button>
+          <button class="me-btn" onclick="openColorEditor()">
+            <span class="me-ic">🎨</span>
+            <span class="me-txt">色卡自定义（名称 / 颜色）</span>
+            <span class="me-arrow">›</span>
+          </button>
           <button class="me-btn" onclick="closeMe();showStats()">
             <span class="me-ic">📊</span>
             <span class="me-txt">周期总结与统计</span>
+            <span class="me-arrow">›</span>
+          </button>
+          <button class="me-btn" onclick="openAbout()">
+            <span class="me-ic">ℹ️</span>
+            <span class="me-txt">关于</span>
             <span class="me-arrow">›</span>
           </button>
           <button class="me-btn danger" onclick="clearAllData()">
@@ -784,6 +837,45 @@
           </button>
         </div>
         <div class="me-foot">经期日历 · 数据仅存本机与你的云端 Gist</div>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="importFile" accept=".html,.json,.txt,text/html,application/json" style="display:none" onchange="handleImportFile(this)">
+
+  <!-- 色卡自定义 -->
+  <div class="stats-overlay" id="colorOverlay" onclick="closeColorEditor(event)">
+    <div class="stats-modal" onclick="event.stopPropagation()" style="max-width:380px;">
+      <div class="stats-header">
+        <div class="stats-title">🎨 色卡自定义</div>
+        <button class="stats-close" onclick="closeColorEditor()">✕</button>
+      </div>
+      <div class="stats-body">
+        <div id="ceRows"></div>
+        <div class="ce-actions">
+          <button class="ce-reset" onclick="resetColorEditor()">恢复默认</button>
+          <button class="ce-save" onclick="saveColorEditor()">保存</button>
+        </div>
+        <div class="ce-hint">💡 名称与颜色会立刻应用到日历、图例和记录色板。<br>💡 设置保存在本机；导出文件或云端同步后也会带上。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关于 -->
+  <div class="stats-overlay" id="aboutOverlay" onclick="closeAbout(event)">
+    <div class="stats-modal" onclick="event.stopPropagation()" style="max-width:360px;">
+      <div class="stats-header">
+        <div class="stats-title">ℹ️ 关于</div>
+        <button class="stats-close" onclick="closeAbout()">✕</button>
+      </div>
+      <div class="stats-body">
+        <div class="about-logo">🌸</div>
+        <div class="about-name">经期日历</div>
+        <div class="about-ver" id="aboutVer">版本 1.0</div>
+        <div id="aboutRows"></div>
+        <div class="about-note">
+          🔒 你的数据只保存在<b>本机浏览器</b>和你自己配置的 <b>GitHub Gist</b> 云端，不会上传到任何其他服务器。<br><br>
+          💾 建议改动后点「保存文件到本地」导出备份，或开启云端同步自动上传。
+        </div>
       </div>
     </div>
   </div>
@@ -811,7 +903,7 @@
     function saveFile() {
       // 保存前先收起放大态,避免把临时 DOM(关闭按钮/色板/信息栏)写进文件
       if (zoomedMonth !== null) unzoomMonth();
-      const dataLine = `var ALL_DATA=${JSON.stringify(ALL_DATA)};var SYMPTOMS_LIB=${JSON.stringify(SYMPTOMS_LIB)};var SYMPTOMS_DATA=${JSON.stringify(SYMPTOMS_DATA)};`;
+      const dataLine = `var ALL_DATA=${JSON.stringify(ALL_DATA)};var SYMPTOMS_LIB=${JSON.stringify(SYMPTOMS_LIB)};var SYMPTOMS_DATA=${JSON.stringify(SYMPTOMS_DATA)};var SAVED_PALETTE=${JSON.stringify(PALETTE)};`;
       const html = document.documentElement.outerHTML;
       // 替换 data-block 脚本内容
       const newHtml = html.replace(
@@ -1135,10 +1227,10 @@
           palette.className = 'color-palette';
           palette.innerHTML = `
             <div class="palette-label">先点日期选中,再点颜色 · 同色再点 = 取消</div>
-            <div class="swatch swatch-g" data-level="4"><div class="swatch-dot"></div><div class="swatch-text">GOTAS</div></div>
-            <div class="swatch swatch-1" data-level="1"><div class="swatch-dot"></div><div class="swatch-text">POCO</div></div>
-            <div class="swatch swatch-2" data-level="2"><div class="swatch-dot"></div><div class="swatch-text">MEDIO</div></div>
-            <div class="swatch swatch-3" data-level="3"><div class="swatch-dot"></div><div class="swatch-text">MUCHO</div></div>
+            <div class="swatch swatch-g" data-level="4"><div class="swatch-dot"></div><div class="swatch-text">${escapeHtml(PALETTE[4].name)}</div></div>
+            <div class="swatch swatch-1" data-level="1"><div class="swatch-dot"></div><div class="swatch-text">${escapeHtml(PALETTE[1].name)}</div></div>
+            <div class="swatch swatch-2" data-level="2"><div class="swatch-dot"></div><div class="swatch-text">${escapeHtml(PALETTE[2].name)}</div></div>
+            <div class="swatch swatch-3" data-level="3"><div class="swatch-dot"></div><div class="swatch-text">${escapeHtml(PALETTE[3].name)}</div></div>
           `;
           target.appendChild(palette);
           palette.querySelectorAll('.swatch').forEach(s => {
@@ -1367,7 +1459,7 @@
       const { y, m, d } = selectedView;
       const lv = getLevel(y, m, d);
       const today = getSym(y, m, d);
-      const lvText = { 0: '未记录', 1: 'POCO (少)', 2: 'MEDIO (中)', 3: 'MUCHO (多)', 4: 'GOTAS (点滴)' }[lv];
+      const lvText = levelName(lv);
 
       const todayTagsHtml = today.length === 0
         ? '<div class="info-empty">还没有记录 — 从下方选择或新建</div>'
@@ -1733,6 +1825,182 @@
     }
 
     // ════════════════════════════════════════
+    // ── 色卡（名称 + 颜色）自定义 ──
+    // 四档：1=POCO 2=MEDIO 3=MUCHO 4=GOTAS(点滴)
+    // ════════════════════════════════════════
+    const PALETTE_ORDER = [4, 1, 2, 3];               // 图例/色板显示顺序
+    const LEVEL_CLASS = { 1: 'level-1', 2: 'level-2', 3: 'level-3', 4: 'level-g' };
+    const SWATCH_CLASS = { 1: 'swatch-1', 2: 'swatch-2', 3: 'swatch-3', 4: 'swatch-g' };
+    const LEVEL_SUFFIX = { 1: '(少)', 2: '(中)', 3: '(多)', 4: '(点滴)' };
+    const DEFAULT_PALETTE = {
+      1: { name: 'POCO',  color: '#ffd5dc' },
+      2: { name: 'MEDIO', color: '#cf4865' },
+      3: { name: 'MUCHO', color: '#834047' },
+      4: { name: 'GOTAS', color: '#dbdbdf' }
+    };
+    let PALETTE = JSON.parse(JSON.stringify(DEFAULT_PALETTE));
+
+    function loadPalette() {
+      // 优先级：默认 → 文件内嵌(SAVED_PALETTE) → 本机 localStorage
+      if (typeof SAVED_PALETTE !== 'undefined' && SAVED_PALETTE) PALETTE = mergePalette(SAVED_PALETTE);
+      try {
+        const raw = localStorage.getItem('itimeline_palette');
+        if (raw) PALETTE = mergePalette(JSON.parse(raw));
+      } catch (e) {}
+    }
+    function savePalette() {
+      try { localStorage.setItem('itimeline_palette', JSON.stringify(PALETTE)); } catch (e) {}
+    }
+    function mergePalette(src) {
+      const out = JSON.parse(JSON.stringify(DEFAULT_PALETTE));
+      [1, 2, 3, 4].forEach(l => {
+        if (src && src[l]) {
+          if (src[l].name)  out[l].name  = String(src[l].name).slice(0, 12);
+          if (src[l].color) out[l].color = src[l].color;
+        }
+      });
+      return out;
+    }
+    // 依据背景色亮度自动决定文字用深色还是白色
+    function textOn(hex) {
+      const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+      if (!m) return '#333';
+      const n = parseInt(m[1], 16);
+      const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return lum > 0.6 ? '#3a2a2e' : '#ffffff';
+    }
+    // 把当前色卡应用到：日历格子/色板/图例
+    function applyPalette() {
+      let css = '';
+      [1, 2, 3, 4].forEach(l => {
+        const c = PALETTE[l].color;
+        css += `.${LEVEL_CLASS[l]}{background-color:${c};color:${textOn(c)};--c:${c};}`;
+        css += `.${SWATCH_CLASS[l]} .swatch-dot{background:${c};}`;
+      });
+      let style = document.getElementById('paletteOverride');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'paletteOverride';
+        document.head.appendChild(style);
+      }
+      style.textContent = css;
+      // 图例（页面可能有多处 .legend）
+      document.querySelectorAll('.legend').forEach(leg => {
+        leg.innerHTML = PALETTE_ORDER.map(l =>
+          `<div><span style="color:${PALETTE[l].color}">●</span> ${escapeHtml(PALETTE[l].name)}</div>`
+        ).join('');
+      });
+    }
+    function levelName(lv) {
+      return lv === 0 ? '未记录' : `${PALETTE[lv] ? PALETTE[lv].name : ''} ${LEVEL_SUFFIX[lv] || ''}`.trim();
+    }
+
+    // ── 色卡自定义弹窗 ──
+    function openColorEditor() {
+      const rows = document.getElementById('ceRows');
+      rows.innerHTML = PALETTE_ORDER.map(l => `
+        <div class="ce-row">
+          <input type="color" class="ce-color" id="ceColor${l}" value="${PALETTE[l].color}">
+          <input type="text" class="ce-name" id="ceName${l}" maxlength="12" value="${escapeAttr(PALETTE[l].name)}">
+          <span class="ce-tag">${LEVEL_SUFFIX[l]}</span>
+        </div>
+      `).join('');
+      document.getElementById('colorOverlay').classList.add('show');
+    }
+    function closeColorEditor(e) {
+      if (!e || e.target === document.getElementById('colorOverlay'))
+        document.getElementById('colorOverlay').classList.remove('show');
+    }
+    function saveColorEditor() {
+      PALETTE_ORDER.forEach(l => {
+        const c = document.getElementById('ceColor' + l).value;
+        const n = document.getElementById('ceName' + l).value.trim();
+        PALETTE[l].color = c;
+        PALETTE[l].name = n || DEFAULT_PALETTE[l].name;
+      });
+      savePalette();
+      applyPalette();
+      markUnsaved();
+      render();
+      closeColorEditor();
+      showToast('🎨 色卡已更新');
+    }
+    function resetColorEditor() {
+      PALETTE = JSON.parse(JSON.stringify(DEFAULT_PALETTE));
+      savePalette();
+      applyPalette();
+      markUnsaved();
+      render();
+      openColorEditor();   // 重新填入默认值
+      showToast('已恢复默认色卡');
+    }
+
+    // ── 导入数据 ──
+    function importData() { document.getElementById('importFile').click(); }
+    function parseImport(text) {
+      try { const j = JSON.parse(text); if (j && j.ALL_DATA) return j; } catch (e) {}
+      const m = text.match(/var ALL_DATA=(\{[\s\S]*?\});var SYMPTOMS_LIB=(\[[\s\S]*?\]);var SYMPTOMS_DATA=(\{[\s\S]*?\});/);
+      if (m) {
+        const out = { ALL_DATA: JSON.parse(m[1]), SYMPTOMS_LIB: JSON.parse(m[2]), SYMPTOMS_DATA: JSON.parse(m[3]) };
+        const pm = text.match(/var SAVED_PALETTE=(\{.*?\}\});/);
+        if (pm) { try { out.PALETTE = JSON.parse(pm[1]); } catch (e) {} }
+        return out;
+      }
+      return null;
+    }
+    function handleImportFile(input) {
+      const f = input.files && input.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = parseImport(reader.result);
+          if (!data) { showToast('❌ 无法识别该文件内容'); input.value = ''; return; }
+          const days = Object.keys(data.ALL_DATA || {}).length;
+          if (!confirm(`将用导入的数据覆盖当前全部记录（约 ${days} 天）。确定吗？`)) { input.value = ''; return; }
+          for (const k in ALL_DATA) delete ALL_DATA[k];
+          Object.assign(ALL_DATA, data.ALL_DATA || {});
+          SYMPTOMS_LIB.length = 0;
+          (data.SYMPTOMS_LIB || []).forEach(x => SYMPTOMS_LIB.push(x));
+          for (const k in SYMPTOMS_DATA) delete SYMPTOMS_DATA[k];
+          Object.assign(SYMPTOMS_DATA, data.SYMPTOMS_DATA || {});
+          if (data.PALETTE) { PALETTE = mergePalette(data.PALETTE); savePalette(); applyPalette(); }
+          markUnsaved();
+          render();
+          openMe();
+          showToast('✅ 已导入 ' + days + ' 天记录');
+        } catch (err) {
+          showToast('❌ 导入失败：' + err.message);
+        }
+        input.value = '';
+      };
+      reader.readAsText(f);
+    }
+
+    // ── 关于 ──
+    function openAbout() {
+      const days = Object.keys(ALL_DATA).length;
+      const dates = Object.keys(ALL_DATA);
+      let latest = '—';
+      if (dates.length) {
+        const ts = dates.map(k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d).getTime(); });
+        latest = formatDate(new Date(Math.max(...ts)));
+      }
+      document.getElementById('aboutRows').innerHTML =
+        `<div class="about-row"><span class="k">已记录天数</span><span class="v">${days} 天</span></div>` +
+        `<div class="about-row"><span class="k">症状种类</span><span class="v">${SYMPTOMS_LIB.length} 种</span></div>` +
+        `<div class="about-row"><span class="k">记症状天数</span><span class="v">${Object.keys(SYMPTOMS_DATA).length} 天</span></div>` +
+        `<div class="about-row"><span class="k">最近一次记录</span><span class="v">${latest}</span></div>` +
+        `<div class="about-row"><span class="k">云端同步</span><span class="v">${(syncCfg.gistId && syncCfg.token) ? '已配置' : '未配置'}</span></div>`;
+      document.getElementById('aboutOverlay').classList.add('show');
+    }
+    function closeAbout(e) {
+      if (!e || e.target === document.getElementById('aboutOverlay'))
+        document.getElementById('aboutOverlay').classList.remove('show');
+    }
+
+    // ════════════════════════════════════════
     // ── Gist 云同步模块 ──
     // 配置存 localStorage（不写进网页文件、不进 GitHub 仓库）
     // ════════════════════════════════════════
@@ -1788,6 +2056,7 @@
         ALL_DATA: ALL_DATA,
         SYMPTOMS_LIB: SYMPTOMS_LIB,
         SYMPTOMS_DATA: SYMPTOMS_DATA,
+        PALETTE: PALETTE,
         _updatedAt: new Date().toISOString()
       });
     }
@@ -1857,6 +2126,7 @@
         (data.SYMPTOMS_LIB || []).forEach(x => SYMPTOMS_LIB.push(x));
         for (const k in SYMPTOMS_DATA) delete SYMPTOMS_DATA[k];
         Object.assign(SYMPTOMS_DATA, data.SYMPTOMS_DATA || {});
+        if (data.PALETTE) { PALETTE = mergePalette(data.PALETTE); savePalette(); applyPalette(); }
         render();
         setCloudDot('ok');
         const when = data._updatedAt ? new Date(data._updatedAt).toLocaleString() : '';
@@ -1891,6 +2161,8 @@
     };
 
     // 启动：加载配置 + 自动拉取一次
+    loadPalette();
+    applyPalette();
     loadSyncConfig();
     if (syncCfg.gistId && syncCfg.token) {
       setCloudDot('ok');
