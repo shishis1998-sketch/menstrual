@@ -639,6 +639,25 @@
     .about-note { font-size: 12px; color: #94a3b8; line-height: 1.7; margin-top: 16px;
       background: #f8fafc; border-radius: 10px; padding: 12px 14px; }
 
+    /* ── 预测圆盘（经期段 + 倒计时） ── */
+    .pred-dial-wrap { text-align: center; margin: 2px 0 18px; }
+    .pred-dial { position: relative; width: 220px; height: 220px; margin: 0 auto; }
+    .pred-dial svg { width: 220px; height: 220px; display: block; }
+    .pd-arc { transition: stroke-dasharray 0.6s ease; }
+    .pd-center { position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; pointer-events: none; }
+    .pd-top { font-size: 12px; color: #8a8f98; letter-spacing: 1px; }
+    .pd-num { font-size: 52px; font-weight: 800; color: #3a3a3a; line-height: 1; margin-top: 2px; }
+    .pd-num small { font-size: 18px; font-weight: 600; margin-left: 2px; }
+    .pd-date { margin-top: 8px; font-size: 12px; color: #94a3b8; }
+    .pd-pill { margin-top: 8px; font-size: 12px; font-weight: 600; padding: 3px 12px;
+      border-radius: 12px; background: #fff0f3; color: #C71F37; }
+    .pd-legend { display: flex; justify-content: center; gap: 18px; margin-top: 12px;
+      font-size: 12px; color: #64748b; }
+    .pd-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+      margin-right: 5px; vertical-align: middle; }
+    .pd-note { font-size: 11px; color: #b6bcc4; margin-top: 8px; }
+
     /* ── 整页模式：把弹窗改成占满屏幕、直接展示的页面（无遮罩、无浮层卡片） ── */
     .stats-overlay.as-page { background: #f9fafb; padding: 0;
       -webkit-backdrop-filter: none; backdrop-filter: none; z-index: 70; }
@@ -1688,6 +1707,44 @@
       return { periods, cycles };
     }
 
+    // 预测圆盘：只画真实的“经期”段 + 倒计时（不推算排卵）
+    function buildPredictionDial(opts) {
+      const { daysUntilNext, predictedDate, cycLen, periodLen, dotFrac, inPeriod, curDayInPeriod } = opts;
+      const cx = 110, cy = 110, r = 88, sw = 13, gap = 0.5;
+      const redLen = Math.min(periodLen, cycLen - gap - 0.5);
+      const track = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f1e3e6" stroke-width="${sw}"/>`;
+      const redArc = `<circle class="pd-arc" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#C71F37"
+        stroke-width="${sw}" stroke-linecap="round" pathLength="${cycLen}"
+        stroke-dasharray="${redLen.toFixed(2)} ${(cycLen - redLen).toFixed(2)}" stroke-dashoffset="0"/>`;
+      const ang = dotFrac * 2 * Math.PI - Math.PI / 2;
+      const dx = cx + r * Math.cos(ang), dy = cy + r * Math.sin(ang);
+      const dot = `<circle cx="${dx.toFixed(1)}" cy="${dy.toFixed(1)}" r="7" fill="#fff" stroke="#C71F37" stroke-width="2"/>`;
+      const svg = `<svg viewBox="0 0 220 220"><g transform="rotate(-90 ${cx} ${cy})">${track}${redArc}</g>${dot}</svg>`;
+      const predShort = `${predictedDate.getMonth() + 1}月${predictedDate.getDate()}日`;
+      const bigNum = daysUntilNext === 0 ? '今天' : daysUntilNext;
+      const numHtml = daysUntilNext === 0
+        ? `<div class="pd-num" style="font-size:38px;">预计今天</div>`
+        : `<div class="pd-num">${daysUntilNext}<small>天</small></div>`;
+      const pill = inPeriod ? `<div class="pd-pill">🌸 经期中 · 第 ${curDayInPeriod} 天</div>` : '';
+      return `
+        <div class="pred-dial-wrap">
+          <div class="pred-dial">
+            ${svg}
+            <div class="pd-center">
+              <div class="pd-top">距离下次经期</div>
+              ${numHtml}
+              <div class="pd-date">预计 ${predShort}</div>
+              ${pill}
+            </div>
+          </div>
+          <div class="pd-legend">
+            <span><i style="background:#C71F37"></i>经期(${Math.round(periodLen)}天)</span>
+            <span><i style="background:#fff;border:1.5px solid #C71F37"></i>今天</span>
+          </div>
+          <div class="pd-note">环长 = 最近平均周期 ${cycLen} 天 · 红色为经期天数</div>
+        </div>`;
+    }
+
     function showStats() {
       const overlay = document.getElementById('statsOverlay');
       const body = document.getElementById('statsBody');
@@ -1748,18 +1805,23 @@
 
       let html = '';
 
-      // ── 预测块 ──
+      // ── 预测圆盘（经期段 + 倒计时） ──
       if (predictedDate) {
-        const subText = daysUntilNext === 0
-          ? '预计就在今天'
-          : `还有 ${daysUntilNext} 天`;
-        html += `
-          <div class="stats-pred">
-            <div class="stats-pred-label">📅 预测下次经期</div>
-            <div class="stats-pred-date">${formatDate(predictedDate)}</div>
-            <div class="stats-pred-sub">${subText} · 基于最近 ${recentCycs.length} 个周期平均</div>
-          </div>
-        `;
+        const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+        const cycLen = Math.max(2, Math.round(recentCycAvg || avgCyc));
+        const periodLen = Math.min(cycLen - 1, Math.max(1, Math.round(recentLenAvg || avgLen)));
+        // 本周期起点 = 预测日回退一个周期；今天在周期内的天数 → 圆点位置
+        const cycleStart = new Date(predictedDate);
+        cycleStart.setDate(cycleStart.getDate() - cycLen);
+        let cycleDay = Math.round((today0 - cycleStart) / 86400000);
+        cycleDay = Math.max(0, Math.min(cycLen, cycleDay));
+        const dotFrac = cycleDay / cycLen;
+        // 是否正处于最近一段经期内（用真实记录判断）
+        const lpStart = new Date(lastPeriod.start); lpStart.setHours(0, 0, 0, 0);
+        const lpEnd = new Date(lastPeriod.end); lpEnd.setHours(0, 0, 0, 0);
+        const inPeriod = today0 >= lpStart && today0 <= lpEnd;
+        const curDayInPeriod = inPeriod ? Math.round((today0 - lpStart) / 86400000) + 1 : 0;
+        html += buildPredictionDial({ daysUntilNext, predictedDate, cycLen, periodLen, dotFrac, inPeriod, curDayInPeriod });
       }
 
       // ── 周期 ──
