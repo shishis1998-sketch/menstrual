@@ -4,6 +4,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>经期日历</title>
   <style>
+    /* ═══════════════════════════════════════════════════════════════
+       间距系统 · Spacing System  (v1)
+       基于 4px 基准单位的 11 级刻度,四个页面共用同一套内外边距节奏。
+       组件只引用 --sp-* 令牌,不再写死像素。规范详见仓库 DESIGN.md。
+
+         令牌      数值    典型用途
+         --sp-1    4px    图标与文字、紧邻元素的贴合间隙
+         --sp-2    8px    标签内边距、chip 间距
+         --sp-3    12px   卡片内边距、列表项间距
+         --sp-4    16px   页面外边距(左右留白)← --page-gutter
+         --sp-5    20px   卡片外边距、区块底部留白
+         --sp-6    24px   分区标题上间距
+         --sp-8    32px   大区块之间
+         --sp-10   40px   页面段落之间
+         --sp-12   48px   空状态、居中提示
+         --sp-16   64px   页面级大间隔
+         --sp-20   80px   顶/底安全区、超大留白
+       ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --sp-1: 4px;   --sp-2: 8px;   --sp-3: 12px;  --sp-4: 16px;
+      --sp-5: 20px;  --sp-6: 24px;  --sp-8: 32px;  --sp-10: 40px;
+      --sp-12: 48px; --sp-16: 64px; --sp-20: 80px;
+      /* 四个页面统一的水平外边距 */
+      --page-gutter: var(--sp-4);   /* 16px */
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       background: #f9fafb;
@@ -23,7 +48,7 @@
     }
     .home-header {
       background: #f9fafb;
-      padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
+      padding: calc(10px + env(safe-area-inset-top)) var(--page-gutter) 10px;
       display: flex; flex-direction: column; align-items: center; gap: 8px;
     }
     .home-header h1 { margin: 0; }
@@ -32,7 +57,7 @@
     /* 首页症状标签条(复用 .hm-chip 单个样式) */
     .home-chips {
       display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-      padding: 8px 16px 12px; background: #f9fafb;
+      padding: 8px var(--page-gutter) 12px; background: #f9fafb;
       box-shadow: 0 8px 8px -8px rgba(15,23,42,.12);
     }
     .home-chips::-webkit-scrollbar { display: none; }
@@ -72,7 +97,7 @@
     }
     .calendar-container {
       display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 18px; margin: 0 30px;
+      gap: 18px; margin: 0 var(--page-gutter);
     }
 
     /* ── 双指放大:整体切到单列,所有月份一起变大(边距/卡片间距沿用原值) ── */
@@ -248,7 +273,7 @@
     .stats-header {
       display: flex; justify-content: space-between;
       align-items: center;
-      padding: 14px 18px;
+      padding: 14px var(--page-gutter);
       border-bottom: 1px solid #f1f5f9;
     }
     .stats-title {
@@ -260,7 +285,7 @@
       font-size: 16px; cursor: pointer; color: #555;
     }
     .stats-body {
-      padding: 14px 18px 20px;
+      padding: 14px var(--page-gutter) var(--sp-5);
       overflow-y: auto;
     }
     .stats-row {
@@ -280,8 +305,8 @@
     .stats-section {
       font-size: 13px; color: #64748b;
       font-weight: 600;
-      margin: 22px 0 6px;
-      padding-bottom: 6px;
+      margin: var(--sp-6) 0 var(--sp-2);
+      padding-bottom: var(--sp-2);
       border-bottom: 2px solid #e2e8f0;
     }
     .stats-section:first-child { margin-top: 0; }
@@ -600,7 +625,7 @@
     .me-overview {
       display: flex; text-align: center;
       background: linear-gradient(135deg, #fef2f4, #fce7eb);
-      border-radius: 12px; padding: 14px 8px; margin-bottom: 16px;
+      border-radius: 12px; padding: var(--sp-3) var(--sp-2); margin-bottom: var(--sp-4);
     }
     .me-ov-item { flex: 1; }
     .me-ov-item + .me-ov-item { border-left: 1px solid #f6d5dd; }
@@ -609,7 +634,7 @@
     .me-list { display: flex; flex-direction: column; gap: 10px; }
     .me-btn {
       display: flex; align-items: center; gap: 12px;
-      width: 100%; padding: 13px 14px; border: none; border-radius: 10px;
+      width: 100%; padding: 13px var(--sp-3); border: none; border-radius: 10px;
       background: #f8fafc; color: #1a1a1a; font-size: 14px; font-family: inherit;
       cursor: pointer; text-align: left;
     }
@@ -715,12 +740,12 @@
       position: relative;
       justify-content: center;            /* 标题统一居中 */
       background: #f9fafb; border-bottom: 1px solid #eef0f2;
-      padding: calc(14px + env(safe-area-inset-top)) 18px 14px;
+      padding: calc(14px + env(safe-area-inset-top)) var(--page-gutter) 14px;
     }
     .stats-overlay.as-page .stats-title { font-size: 20px; text-align: center; }
     /* 二级页返回按钮固定在右侧,且与标题垂直居中对齐,不挤动标题 */
     .stats-overlay.as-page .page-back {
-      position: absolute; right: 18px;
+      position: absolute; right: var(--page-gutter);
       top: calc(14px + env(safe-area-inset-top)); bottom: 14px;
       margin: auto 0; height: 28px;
     }
@@ -753,7 +778,7 @@
     /* 症状标签横条：往下滑时也吸顶停留，随时知道当前看的是哪个标签 */
     .hm-chips { display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
       position: sticky; top: 0; z-index: 6; background: #f9fafb;
-      margin: 0 -18px 14px; padding: 10px 18px;
+      margin: 0 calc(-1 * var(--page-gutter)) 14px; padding: 10px var(--page-gutter);
       box-shadow: 0 8px 8px -8px rgba(15,23,42,.12); }
     .hm-chips::-webkit-scrollbar { display: none; }
     .hm-chip {
