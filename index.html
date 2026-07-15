@@ -16,6 +16,17 @@
     .header { text-align: center; margin-bottom: 6px; }
     h1 { color: #1a1a1a; font-size: 20px; margin: 0 0 3px 0; }
     .subtitle { color: #666; font-size: 11px; }
+    /* 首页顶部:标题 + 年份置顶停留,风格与热力图页一致 */
+    .home-header {
+      position: sticky; top: 0; z-index: 50;
+      background: #f9fafb; border-bottom: 1px solid #eef0f2;
+      padding: calc(10px + env(safe-area-inset-top)) 18px 12px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      margin: -8px 0 8px;
+    }
+    .home-header h1 { margin: 0; }
+    .home-year { cursor: pointer; }
+    .home-subtitle { text-align: center; margin: 0 0 10px; }
     .year-switcher {
       display: flex; align-items: center; justify-content: center;
       gap: 16px; margin: 4px 0 8px;
@@ -759,15 +770,15 @@
   </style>
 </head>
 <body style="">
-  <div class="header">
+  <div class="home-header">
     <h1>经期日历</h1>
-    <p class="subtitle">点击月份放大 · 选色再点日期 · 改后记得保存</p>
+    <div class="hm-yearbar">
+      <button class="hm-nav" onclick="changeYear(-1)">‹</button>
+      <div class="hm-year home-year" id="yearLabel" onclick="openYearPicker()">2026</div>
+      <button class="hm-nav" onclick="changeYear(1)">›</button>
+    </div>
   </div>
-  <div class="year-switcher">
-    <button class="year-btn" onclick="changeYear(-1)">‹</button>
-    <div class="year-label" id="yearLabel" onclick="openYearPicker()">2026</div>
-    <button class="year-btn" onclick="changeYear(1)">›</button>
-  </div>
+  <p class="subtitle home-subtitle">点击月份放大 · 选色再点日期 · 改后记得保存</p>
 
   <div class="year-picker-overlay" id="yearPickerOverlay" onclick="closeYearPicker(event)">
     <div class="year-picker-sheet">
