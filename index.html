@@ -701,15 +701,23 @@
       --hm0: #ecedf0; --hm1: #cfe1d7; --hm2: #86b5a0; --hm3: #407f66; --hm4: #164a3b;
       --hm-accent: #1c5a48;
     }
-    .hm-yearbar { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 2px 0 2px; }
+    /* 页头：标题在上、年份在下，整块置顶不随内容滚动 */
+    .hm-header { flex-direction: column; align-items: center; gap: 10px; }
+    .hm-yearbar { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 0; }
     .hm-year { font-size: 20px; font-weight: bold; color: #1a1a1a; min-width: 66px; text-align: center; }
     .hm-nav {
       background: #f1f5f9; border: none; border-radius: 50%; width: 30px; height: 30px;
       font-size: 16px; color: #64748b; cursor: pointer; line-height: 1;
     }
     .hm-nav:active { background: #e2e8f0; }
-    .hm-sub { text-align: center; font-size: 12px; color: #94a3b8; margin-bottom: 14px; }
-    .hm-chips { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; -webkit-overflow-scrolling: touch; }
+    /* 让吸顶标签条紧贴页头,顶部留白改由 hm-sub 承担,避免滚动内容从缝里露出 */
+    .heatmap-page .stats-body { padding-top: 0; }
+    .hm-sub { text-align: center; font-size: 12px; color: #94a3b8; margin: 14px 0; }
+    /* 症状标签横条：往下滑时也吸顶停留，随时知道当前看的是哪个标签 */
+    .hm-chips { display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      position: sticky; top: 0; z-index: 6; background: #f9fafb;
+      margin: 0 -18px 14px; padding: 10px 18px;
+      box-shadow: 0 8px 8px -8px rgba(15,23,42,.12); }
     .hm-chips::-webkit-scrollbar { display: none; }
     .hm-chip {
       flex: 0 0 auto; font-size: 12.5px; padding: 6px 13px; border-radius: 999px;
@@ -808,7 +816,7 @@
   <div class="stats-overlay as-page" id="syncOverlay">
     <div class="stats-modal">
       <div class="stats-header">
-        <div class="stats-title">☁️ 云端同步</div>
+        <div class="stats-title">云端同步</div>
         <button class="page-back" onclick="openMe()">‹ 我的</button>
       </div>
       <div class="stats-body">
@@ -842,16 +850,15 @@
   <!-- 标签热力图（整页） -->
   <div class="stats-overlay as-page heatmap-page" id="heatmapOverlay">
     <div class="stats-modal">
-      <div class="stats-header">
-        <div class="stats-title">🌿 标签热力图</div>
-        <button class="page-back" onclick="navCalendar()">‹ 日历</button>
-      </div>
-      <div class="stats-body">
+      <div class="stats-header hm-header">
+        <div class="stats-title">标签热力图</div>
         <div class="hm-yearbar">
           <button class="hm-nav" onclick="heatYearShift(-1)">‹</button>
           <div class="hm-year" id="hmYear">2026</div>
           <button class="hm-nav" onclick="heatYearShift(1)">›</button>
         </div>
+      </div>
+      <div class="stats-body">
         <div class="hm-sub">每一格 = 那天记的标签，越多越深</div>
         <div class="hm-chips" id="hmChips"></div>
         <div id="hmContent"></div>
@@ -863,8 +870,7 @@
   <div class="stats-overlay as-page" id="statsOverlay">
     <div class="stats-modal">
       <div class="stats-header">
-        <div class="stats-title">📊 周期总结</div>
-        <button class="page-back" onclick="navCalendar()">‹ 日历</button>
+        <div class="stats-title">周期总结</div>
       </div>
       <div class="stats-body" id="statsBody">
           <div class="stats-pred">
@@ -919,8 +925,7 @@
   <div class="stats-overlay as-page" id="meOverlay">
     <div class="stats-modal">
       <div class="stats-header">
-        <div class="stats-title">👤 我的</div>
-        <button class="page-back" onclick="navCalendar()">‹ 日历</button>
+        <div class="stats-title">我的</div>
       </div>
       <div class="stats-body">
         <div class="me-overview" id="meOverview"></div>
@@ -972,7 +977,7 @@
   <div class="stats-overlay as-page" id="colorOverlay">
     <div class="stats-modal">
       <div class="stats-header">
-        <div class="stats-title">🎨 色卡自定义</div>
+        <div class="stats-title">色卡自定义</div>
         <button class="page-back" onclick="openMe()">‹ 我的</button>
       </div>
       <div class="stats-body">
@@ -990,7 +995,7 @@
   <div class="stats-overlay as-page" id="aboutOverlay">
     <div class="stats-modal">
       <div class="stats-header">
-        <div class="stats-title">ℹ️ 关于</div>
+        <div class="stats-title">关于</div>
         <button class="page-back" onclick="openMe()">‹ 我的</button>
       </div>
       <div class="stats-body">
