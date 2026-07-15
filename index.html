@@ -683,10 +683,18 @@
       .stats-overlay.as-page.show .stats-header { animation: none; }
     }
     .stats-overlay.as-page .stats-header {
+      position: relative;
+      justify-content: center;            /* 标题统一居中 */
       background: #f9fafb; border-bottom: 1px solid #eef0f2;
       padding: calc(14px + env(safe-area-inset-top)) 18px 14px;
     }
-    .stats-overlay.as-page .stats-title { font-size: 20px; }
+    .stats-overlay.as-page .stats-title { font-size: 20px; text-align: center; }
+    /* 二级页返回按钮固定在右侧,且与标题垂直居中对齐,不挤动标题 */
+    .stats-overlay.as-page .page-back {
+      position: absolute; right: 18px;
+      top: calc(14px + env(safe-area-inset-top)); bottom: 14px;
+      margin: auto 0; height: 28px;
+    }
     .stats-overlay.as-page .stats-body { flex: 1; overflow-y: auto; padding-bottom: 110px; }
     /* 顶层页(统计/同步/我的)右上角为“返回日历”；二级页(色卡/关于)为“返回” */
     .page-back {
