@@ -16,17 +16,27 @@
     .header { text-align: center; margin-bottom: 6px; }
     h1 { color: #1a1a1a; font-size: 20px; margin: 0 0 3px 0; }
     .subtitle { color: #666; font-size: 11px; }
-    /* 首页顶部:标题 + 年份置顶停留,风格与热力图页一致 */
-    .home-header {
+    /* 首页顶部:标题 + 年份 + 症状标签条 整块置顶停留,风格与热力图页一致 */
+    .home-sticky {
       position: sticky; top: 0; z-index: 50;
-      background: #f9fafb; border-bottom: 1px solid #eef0f2;
-      padding: calc(10px + env(safe-area-inset-top)) 18px 12px;
+      background: #f9fafb; margin: -8px 0 8px;
+    }
+    .home-header {
+      background: #f9fafb;
+      padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
       display: flex; flex-direction: column; align-items: center; gap: 8px;
-      margin: -8px 0 8px;
     }
     .home-header h1 { margin: 0; }
     .home-year { cursor: pointer; }
     .home-subtitle { text-align: center; margin: 0 0 10px; }
+    /* 首页症状标签条(复用 .hm-chip 单个样式) */
+    .home-chips {
+      display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      padding: 8px 16px 12px; background: #f9fafb;
+      box-shadow: 0 8px 8px -8px rgba(15,23,42,.12);
+    }
+    .home-chips::-webkit-scrollbar { display: none; }
+    .home-chips .hm-chip.on { background: #C71F37; color: #fff; font-weight: 600; }
     .year-switcher {
       display: flex; align-items: center; justify-content: center;
       gap: 16px; margin: 4px 0 8px;
@@ -128,36 +138,38 @@
       background: #eef0ff; color: #4f46e5; word-break: break-all;
     }
     .month {
-      background: white; border-radius: 10px;
-      padding: 8px 6px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+      background: transparent; border-radius: 10px;
+      padding: 4px 2px 10px; box-shadow: none;
     }
     .month-title { text-align: center; font-size: 14px; font-weight: bold; color: #1a1a1a; margin-bottom: 4px; }
     .weekdays {
       display: grid; grid-template-columns: repeat(7, 20px);
       text-align: center; font-size: 11px; color: #999;
-      margin-bottom: 3px; justify-content: center;
+      margin-bottom: 3px; justify-content: center; column-gap: 2px;
     }
     .days {
       display: grid; grid-template-columns: repeat(7, 20px);
-      row-gap: 3px; justify-content: center; padding: 0 2px;
-      grid-auto-rows: 16px;
-      min-height: 111px;  /* 6 行高度，让所有月份等高（5周月份底部留白） */
+      row-gap: 3px; column-gap: 2px; justify-content: center; padding: 0;
+      grid-auto-rows: 20px;
+      min-height: 134px;  /* 6 行方格，让所有月份等高（5周月份底部留白） */
     }
     .day {
       --r: 8px;
       width: 100%; height: 100%;
       display: flex;
       align-items: center; justify-content: center;
-      border-radius: 8px; font-size: 11px; cursor: pointer;
+      border-radius: 5px; font-size: 11px; cursor: pointer;
       /* 只过渡颜色/描边/hover 缩放;不要过渡宽高字号,否则放大切换时格子会各自
          “延展放大”,盖住整卡的弹出效果。尺寸瞬间到位,弹出交给整卡动画 */
       transition: background-color 0.2s, box-shadow 0.2s, transform 0.15s;
       box-sizing: border-box;
       background-clip: padding-box;
+      background: #f5f6f8;   /* 空格浅灰底(更淡),扁平化后仍能看出日历骨架 */
       color: #333;
     }
     .day:hover { transform: scale(1.05); }
-    .level-g { background-color: #dbdbdf; color: #555; --c: #dbdbdf; }
+    /* 点滴(灰)加内描边,与浅灰空格区分开,不被色卡自定义覆盖 */
+    .level-g { background-color: #dbdbdf; color: #555; --c: #dbdbdf; box-shadow: inset 0 0 0 1.5px rgba(74,81,88,.42); }
     .level-1 { background-color: #ffd5dc; color: #640D14; --c: #ffd5dc; }
     .level-2 { background-color: #cf4865; color: white; --c: #cf4865; }
     .level-3 { background-color: #834047; color: white; --c: #834047; }
@@ -168,6 +180,9 @@
     .day.ext-r { box-shadow:  3px 0 0 0 var(--c); }
     .day.ext-l.ext-r { box-shadow: -3px 0 0 0 var(--c), 3px 0 0 0 var(--c); }
     .today { outline: 2px solid #eab308; outline-offset: -2px; color: #eab308 !important; }
+    /* 症状标签筛选:命中当天描红,其余淡出 */
+    .calendar-container.sym-on .day:not(.sym-hit) { opacity: .28; }
+    .day.sym-hit { outline: 2px solid #C71F37; outline-offset: -2px; z-index: 3; }
     .sync-bar {
       display: flex; justify-content: center; gap: 10px;
       margin: 12px 30px 6px;
@@ -337,6 +352,7 @@
       max-height: 88vh;
       overflow-y: auto;
       z-index: 95;
+      background: #fff; border-radius: 16px;
       padding: 18px 14px 14px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.25);
       animation: zoomPop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -369,6 +385,8 @@
       font-size: 16px;
       margin: 0 !important;
     }
+    /* 扁平方格:放大态圆角固定(不再依赖内联 var(--r)) */
+    .calendar-container.one-col .day, .month.zoomed .day { border-radius: 8px; }
 
     .zoom-close {
       position: absolute; top: 8px; right: 12px;
@@ -770,13 +788,16 @@
   </style>
 </head>
 <body style="">
-  <div class="home-header">
-    <h1>经期日历</h1>
-    <div class="hm-yearbar">
-      <button class="hm-nav" onclick="changeYear(-1)">‹</button>
-      <div class="hm-year home-year" id="yearLabel" onclick="openYearPicker()">2026</div>
-      <button class="hm-nav" onclick="changeYear(1)">›</button>
+  <div class="home-sticky">
+    <div class="home-header">
+      <h1>经期日历</h1>
+      <div class="hm-yearbar">
+        <button class="hm-nav" onclick="changeYear(-1)">‹</button>
+        <div class="hm-year home-year" id="yearLabel" onclick="openYearPicker()">2026</div>
+        <button class="hm-nav" onclick="changeYear(1)">›</button>
+      </div>
     </div>
+    <div class="home-chips" id="homeChips"></div>
   </div>
   <p class="subtitle home-subtitle">点击月份放大 · 选色再点日期 · 改后记得保存</p>
 
@@ -1112,6 +1133,26 @@
       return l===4?'level-g':l===1?'level-1':l===2?'level-2':l===3?'level-3':'';
     }
 
+    // 首页症状标签筛选(置顶标签条)：'全部' 或某个标签名 → 高亮当年记过该标签的日期
+    let homeSymFilter = '全部';
+    function renderHomeChips() {
+      const box = document.getElementById('homeChips');
+      if (!box) return;
+      if (!SYMPTOMS_LIB || SYMPTOMS_LIB.length === 0) { box.style.display = 'none'; return; }
+      box.style.display = '';
+      const names = ['全部'].concat(SYMPTOMS_LIB);
+      box.innerHTML = names.map(n =>
+        `<button class="hm-chip${n === homeSymFilter ? ' on' : ''}" data-name="${escapeAttr(n)}">${escapeHtml(n)}</button>`
+      ).join('');
+      box.querySelectorAll('.hm-chip').forEach(el => {
+        el.onclick = () => setHomeSymFilter(el.dataset.name);
+      });
+    }
+    function setHomeSymFilter(name) {
+      homeSymFilter = (homeSymFilter === name && name !== '全部') ? '全部' : name;
+      render();
+    }
+
     function generateMonth(month) {
       const firstDay = new Date(year, month-1, 1).getDay();
       const daysInMonth = new Date(year, month, 0).getDate();
@@ -1127,26 +1168,13 @@
       for (let day = 1; day <= daysInMonth; day++) {
         const lv = levels[day];
         const isToday = new Date().getFullYear()===year && new Date().getMonth()+1===month && new Date().getDate()===day;
-        const hasSym = (SYMPTOMS_DATA[`${year}-${month}-${day}`] || []).length > 0;
-        const col = (startOffset + day - 1) % 7;
-        const pl = day > 1 ? levels[day-1] : 0;
-        const nl = day < daysInMonth ? levels[day+1] : 0;
-        const sl = lv>0 && pl===lv && col!==0;
-        const sr = lv>0 && nl===lv && col!==6;
-        let br = 'var(--r)', st = '', extCls = '';
-        if (lv > 0) {
-          if (sl && sr) br = '0px';
-          else if (sl)  br = '0 var(--r) var(--r) 0';
-          else if (sr)  br = 'var(--r) 0 0 var(--r)';
-          if (sl) extCls += ' ext-l';
-          if (sr) extCls += ' ext-r';
-          // 不同色相邻时（前一天有颜色但不同色），保留 2px 视觉间隙
-          const needGap = day>1 && col!==0 && pl>0 && !sl;
-          if (needGap) st = `width:calc(100% - 2px);margin-left:2px;`;
-        }
+        const symList = SYMPTOMS_DATA[`${year}-${month}-${day}`] || [];
+        const hasSym = symList.length > 0;
+        const symHit = homeSymFilter && homeSymFilter !== '全部' && symList.includes(homeSymFilter);
+        // 扁平方格：不再拼接胶囊，每格独立圆角小方块，风格与热力图一致
         html += `<div data-month="${month}" data-day="${day}"
-                      class="day ${getLevelClass(lv)}${extCls} ${isToday?'today':''} ${hasSym?'has-sym':''}"
-                      style="border-radius:${br};${st};user-select:none;-webkit-user-select:none;">${day}</div>`;
+                      class="day ${getLevelClass(lv)} ${isToday?'today':''} ${hasSym?'has-sym':''} ${symHit?'sym-hit':''}"
+                      style="user-select:none;-webkit-user-select:none;">${day}</div>`;
       }
       return html + `</div></div>`;
     }
@@ -1154,7 +1182,10 @@
     function render() {
       let html = '';
       for (let m = 1; m <= 12; m++) html += generateMonth(m);
-      document.getElementById('calendar').innerHTML = html;
+      const cal = document.getElementById('calendar');
+      cal.innerHTML = html;
+      cal.classList.toggle('sym-on', !!homeSymFilter && homeSymFilter !== '全部');
+      renderHomeChips();
       if (typeof afterRender === 'function') afterRender();
     }
 
