@@ -818,11 +818,11 @@
     .hm-nav:active { background: var(--line); }
     /* 让吸顶标签条紧贴页头,顶部留白改由 hm-sub 承担,避免滚动内容从缝里露出 */
     .heatmap-page .stats-body { padding-top: 0; }
-    .hm-sub { text-align: center; font-size: var(--fs-footnote); color: var(--faint); margin: 14px 0; }
+    .hm-sub { text-align: center; font-size: var(--fs-footnote); color: var(--faint); margin: 0 0 14px; }
     /* 症状标签横条：往下滑时也吸顶停留，随时知道当前看的是哪个标签 */
     .hm-chips { display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
       position: sticky; top: 0; z-index: 6; background: var(--bg);
-      margin: 0 calc(-1 * var(--page-gutter)) 14px; padding: 10px var(--page-gutter);
+      margin: 10px calc(-1 * var(--page-gutter)) 14px; padding: 10px var(--page-gutter);
       box-shadow: var(--shadow-card); }
     .hm-chips::-webkit-scrollbar { display: none; }
     .hm-chip {
@@ -968,8 +968,8 @@
         </div>
       </div>
       <div class="stats-body">
-        <div class="hm-sub">每一格 = 那天记的标签，越多越深</div>
         <div class="hm-chips" id="hmChips"></div>
+        <div class="hm-sub">每一格 = 那天记的标签，越多越深</div>
         <div id="hmContent"></div>
       </div>
     </div>
