@@ -838,11 +838,11 @@
     .hm-year-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 14px; }
     .hm-mini .mt { font-size: var(--fs-callout); color: var(--ink); font-weight: bold; margin-bottom: 5px; text-align: center; }
     .hm-mini .wk, .hm-mini .dd { display: grid; grid-template-columns: repeat(7, 21px); gap: 2px; justify-content: center; }
-    .hm-mini .wk div { text-align: center; font-size: var(--fs-micro); color: var(--disabled); margin-bottom: 2px; }
+    .hm-mini .wk div { text-align: center; font-size: var(--fs-footnote); color: var(--faint); margin-bottom: 2px; }
     .hm-cellwrap { aspect-ratio: 1; }
     .hm-cell {
       width: 100%; height: 100%; border-radius: 3px; background: var(--hm0);
-      display: flex; align-items: center; justify-content: center; font-size: 8.5px; color: var(--muted);
+      display: flex; align-items: center; justify-content: center; font-size: var(--fs-footnote); color: var(--muted);
     }
     .hm-cell.dark { color: rgba(255,255,255,.92); }
     .hm-cell.empty { background: transparent; }
