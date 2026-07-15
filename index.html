@@ -694,6 +694,52 @@
       height: 28px; padding: 0 12px; font-size: 13px; color: #475569;
       cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px;
     }
+
+    /* ── 标签热力图（墨绿）── */
+    .heatmap-page {
+      /* 墨绿单色色阶：浅→深 */
+      --hm0: #ecedf0; --hm1: #cfe1d7; --hm2: #86b5a0; --hm3: #407f66; --hm4: #164a3b;
+      --hm-accent: #1c5a48;
+    }
+    .hm-yearbar { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 2px 0 2px; }
+    .hm-year { font-size: 20px; font-weight: bold; color: #1a1a1a; min-width: 66px; text-align: center; }
+    .hm-nav {
+      background: #f1f5f9; border: none; border-radius: 50%; width: 30px; height: 30px;
+      font-size: 16px; color: #64748b; cursor: pointer; line-height: 1;
+    }
+    .hm-nav:active { background: #e2e8f0; }
+    .hm-sub { text-align: center; font-size: 12px; color: #94a3b8; margin-bottom: 14px; }
+    .hm-chips { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; -webkit-overflow-scrolling: touch; }
+    .hm-chips::-webkit-scrollbar { display: none; }
+    .hm-chip {
+      flex: 0 0 auto; font-size: 12.5px; padding: 6px 13px; border-radius: 999px;
+      background: #f1f5f9; color: #64748b; white-space: nowrap; cursor: pointer; border: none; font-family: inherit;
+    }
+    .hm-chip.on { background: var(--hm-accent); color: #fff; font-weight: 600; }
+    .hm-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 18px; }
+    .hm-tile { background: #f7f8fa; border-radius: 14px; padding: 12px 6px; text-align: center; }
+    .hm-tile .n { font-size: 18px; font-weight: 800; color: var(--hm-accent); line-height: 1.15; }
+    .hm-tile .n small { font-size: 12px; font-weight: 700; }
+    .hm-tile .l { font-size: 10.5px; color: #64748b; margin-top: 4px; }
+    .hm-year-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 14px; }
+    .hm-mini .mt { font-size: 12px; color: #475569; font-weight: 600; margin-bottom: 5px; padding-left: 2px; }
+    .hm-mini .wk, .hm-mini .dd { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .hm-mini .wk div { text-align: center; font-size: 8px; color: #b6bcc4; margin-bottom: 2px; }
+    .hm-cellwrap { aspect-ratio: 1; }
+    .hm-cell {
+      width: 100%; height: 100%; border-radius: 3px; background: var(--hm0);
+      display: flex; align-items: center; justify-content: center; font-size: 8.5px; color: #64748b;
+    }
+    .hm-cell.dark { color: rgba(255,255,255,.92); }
+    .hm-cell.empty { background: transparent; }
+    .hm-dist { margin-top: 20px; padding-top: 16px; border-top: 1px solid #eef0f3; }
+    .hm-distbar { display: flex; height: 9px; border-radius: 5px; overflow: hidden; margin-bottom: 12px; }
+    .hm-distbar div:not(:last-child) { margin-right: 1px; }
+    .hm-distlegend { display: flex; flex-direction: column; gap: 7px; }
+    .hm-dl { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b; }
+    .hm-dl .sw { width: 12px; height: 12px; border-radius: 4px; flex: 0 0 auto; }
+    .hm-dl b { color: #1a1a1a; }
+    .hm-empty { text-align: center; color: #94a3b8; font-size: 13px; padding: 40px 10px; line-height: 1.8; }
   </style>
 </head>
 <body style="">
@@ -763,7 +809,7 @@
     <div class="stats-modal">
       <div class="stats-header">
         <div class="stats-title">☁️ 云端同步</div>
-        <button class="page-back" onclick="navCalendar()">‹ 日历</button>
+        <button class="page-back" onclick="openMe()">‹ 我的</button>
       </div>
       <div class="stats-body">
         <div class="sync-field">
@@ -789,6 +835,26 @@
           💡 换设备时，在新设备填一样的 Gist ID 和 Token，点「从云端拉取」即可。<br>
           🔒 建议把 Gist 设为 <b>Secret（私密）</b>，Token 权限只勾选 <b>gist</b>。
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 标签热力图（整页） -->
+  <div class="stats-overlay as-page heatmap-page" id="heatmapOverlay">
+    <div class="stats-modal">
+      <div class="stats-header">
+        <div class="stats-title">🌿 标签热力图</div>
+        <button class="page-back" onclick="navCalendar()">‹ 日历</button>
+      </div>
+      <div class="stats-body">
+        <div class="hm-yearbar">
+          <button class="hm-nav" onclick="heatYearShift(-1)">‹</button>
+          <div class="hm-year" id="hmYear">2026</div>
+          <button class="hm-nav" onclick="heatYearShift(1)">›</button>
+        </div>
+        <div class="hm-sub">每一格 = 那天记的标签，越多越深</div>
+        <div class="hm-chips" id="hmChips"></div>
+        <div id="hmContent"></div>
       </div>
     </div>
   </div>
@@ -2138,7 +2204,7 @@
       document.getElementById('syncAuto').checked = syncCfg.auto !== false;
       setSyncLog(syncCfg.gistId && syncCfg.token ? '已配置' : '未配置',
                  syncCfg.gistId && syncCfg.token ? 'ok' : '');
-      switchToPage('syncOverlay', 'sync');
+      switchToPage('syncOverlay', 'me');   // 同步现为“我的”的二级页
     }
     function closeSyncSettings(e) {
       if (e && e.target && e.target.id !== 'syncOverlay') return;
@@ -2293,10 +2359,10 @@
       <span class="fab-btn"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
       <span class="fab-lbl">记录</span>
     </button>
-    <button class="bnav-tab" onclick="openSyncSettings()">
-      <svg class="ic-line" viewBox="0 0 24 24" stroke-width="1.7" stroke-linejoin="round"><path d="M7 18h9.5a3.5 3.5 0 0 0 .3-6.98A5.5 5.5 0 0 0 6.4 9.3 3.9 3.9 0 0 0 7 18z"/></svg>
-      <svg class="ic-fill" viewBox="0 0 24 24"><path d="M7 18.2h9.6a3.6 3.6 0 0 0 .3-7.18A5.6 5.6 0 0 0 6.4 9.1 4 4 0 0 0 7 18.2z"/></svg>
-      <span>同步</span>
+    <button class="bnav-tab" onclick="openHeatmap()">
+      <svg class="ic-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg>
+      <svg class="ic-fill" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg>
+      <span>热力图</span>
     </button>
     <button class="bnav-tab" onclick="openMe()">
       <span class="bnav-dot" id="meNavDot"></span>
@@ -2308,8 +2374,8 @@
 
   <script>
     // ── 底部导航：整页视图切换（不再是弹窗） ──
-    const PAGE_IDS = ['statsOverlay', 'syncOverlay', 'meOverlay', 'colorOverlay', 'aboutOverlay'];
-    const TAB_INDEX = { cal: 0, stat: 1, sync: 2, me: 3 };  // .bnav-tab 顺序：日历/统计/同步/我的
+    const PAGE_IDS = ['statsOverlay', 'syncOverlay', 'meOverlay', 'colorOverlay', 'aboutOverlay', 'heatmapOverlay'];
+    const TAB_INDEX = { cal: 0, stat: 1, heat: 2, me: 3 };  // .bnav-tab 顺序：日历/统计/热力图/我的
     function hideAllPages() {
       PAGE_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('show'); });
     }
@@ -2373,6 +2439,130 @@
       render();
       openMe();                    // 刷新概览数字
       showToast('🗑️ 已清空全部记录');
+    }
+
+    // ── 标签热力图 ──
+    // 复用 SYMPTOMS_DATA：{ "2026-5-16": ["头痛","腰酸"] }
+    // “全部”模式：格子深浅 = 当天标签数量；单标签模式：有该标签 = 深绿，无 = 灰
+    let heatYear = new Date().getFullYear();
+    let heatFilter = '全部';   // '全部' 或某个标签名
+    const HM_WK = ['一','二','三','四','五','六','日'];
+    const HM_RAMP = ['var(--hm0)','var(--hm1)','var(--hm2)','var(--hm3)','var(--hm4)'];
+
+    function openHeatmap() {
+      if (typeof zoomedMonth !== 'undefined' && zoomedMonth) unzoomMonth();
+      // 若过滤的标签已被删除，退回“全部”
+      if (heatFilter !== '全部' && !SYMPTOMS_LIB.includes(heatFilter)) heatFilter = '全部';
+      renderHeatmap();
+      switchToPage('heatmapOverlay', 'heat');
+    }
+    function heatYearShift(delta) { heatYear += delta; renderHeatmap(); }
+    function setHeatFilter(name) { heatFilter = name; renderHeatmap(); }
+
+    // 某天在当前过滤下的“强度等级”(0=无, 1..4)
+    function hmDayLevel(list) {
+      if (!list || list.length === 0) return 0;
+      if (heatFilter === '全部') return Math.min(4, list.length);
+      return list.includes(heatFilter) ? 3 : 0;   // 单标签：出现 = 中深绿
+    }
+
+    function renderHeatmap() {
+      document.getElementById('hmYear').textContent = heatYear;
+
+      // 标签筛选 chips
+      const chips = document.getElementById('hmChips');
+      const names = ['全部'].concat(SYMPTOMS_LIB);
+      chips.innerHTML = names.map(n =>
+        `<button class="hm-chip${n === heatFilter ? ' on' : ''}" data-name="${escapeAttr(n)}">${escapeHtml(n)}</button>`
+      ).join('');
+      chips.querySelectorAll('.hm-chip').forEach(el => {
+        el.onclick = () => setHeatFilter(el.dataset.name);
+      });
+
+      const content = document.getElementById('hmContent');
+
+      // 没有任何症状记录时的空状态
+      if (Object.keys(SYMPTOMS_DATA).length === 0) {
+        content.innerHTML = `<div class="hm-empty">今年还没有标签记录 🌱<br>在日历里点某天、记录「头痛 / 腹痛…」<br>用一阵子这里就会长出热力图</div>`;
+        return;
+      }
+
+      // 遍历当年每一天，统计等级分布 + tile 数据
+      const levelDays = [0,0,0,0,0];   // 各等级的“天数”
+      let totalInstances = 0;          // 标签出现总次数（全部模式）
+      let symDays = 0;                 // 有记录的天数
+      let tagDays = 0;                 // 单标签模式：出现天数
+      let lastTagKey = null;           // 单标签：最近一次
+      const tagCount = {};             // 全部模式：各标签出现天数 → 找最常见
+
+      let gridHtml = '';
+      for (let mo = 0; mo < 12; mo++) {
+        const lead = (new Date(heatYear, mo, 1).getDay() + 6) % 7;   // 周一起始
+        const dim = new Date(heatYear, mo + 1, 0).getDate();
+        gridHtml += `<div class="hm-mini"><div class="mt">${mo + 1}月</div>` +
+                    `<div class="wk">${HM_WK.map(w => `<div>${w}</div>`).join('')}</div><div class="dd">`;
+        for (let i = 0; i < lead; i++) gridHtml += '<div class="hm-cellwrap"><div class="hm-cell empty"></div></div>';
+        for (let d = 1; d <= dim; d++) {
+          const key = `${heatYear}-${mo + 1}-${d}`;
+          const list = SYMPTOMS_DATA[key] || [];
+          const lv = hmDayLevel(list);
+          levelDays[lv]++;
+          if (list.length) {
+            symDays++;
+            totalInstances += list.length;
+            list.forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1; });
+            if (heatFilter !== '全部' && list.includes(heatFilter)) { tagDays++; lastTagKey = key; }
+          }
+          const dark = lv >= 3 ? ' dark' : '';
+          gridHtml += `<div class="hm-cellwrap"><div class="hm-cell${dark}" style="background:${HM_RAMP[lv]}">${d}</div></div>`;
+        }
+        gridHtml += '</div></div>';
+      }
+
+      // 顶部三个数字
+      let tiles;
+      if (heatFilter === '全部') {
+        let topTag = '—', topN = 0;
+        Object.keys(tagCount).forEach(t => { if (tagCount[t] > topN) { topN = tagCount[t]; topTag = t; } });
+        tiles = [
+          { n: `${totalInstances}<small> 次</small>`, l: `${heatYear} 年记录` },
+          { n: `${symDays}<small> 天</small>`, l: '有记录天数' },
+          { n: `${escapeHtml(topTag)}`, l: '最常出现' },
+        ];
+      } else {
+        const daysInYear = ((heatYear % 4 === 0 && heatYear % 100 !== 0) || heatYear % 400 === 0) ? 366 : 365;
+        let lastTxt = '—';
+        if (lastTagKey) { const p = lastTagKey.split('-'); lastTxt = `${p[1]}月${p[2]}日`; }
+        tiles = [
+          { n: `${tagDays}<small> 天</small>`, l: '今年出现' },
+          { n: lastTxt, l: '最近一次' },
+          { n: `${(tagDays / daysInYear * 100).toFixed(1)}<small>%</small>`, l: '占全年' },
+        ];
+      }
+      const tilesHtml = `<div class="hm-tiles">` +
+        tiles.map(t => `<div class="hm-tile"><div class="n">${t.n}</div><div class="l">${t.l}</div></div>`).join('') +
+        `</div>`;
+
+      // 强度分布条
+      const totalDays = levelDays.reduce((a, b) => a + b, 0);
+      const labels = (heatFilter === '全部')
+        ? { 4: '≥4 个标签', 3: '3 个标签', 2: '2 个标签', 1: '1 个标签', 0: '无记录' }
+        : { 3: `记了「${escapeHtml(heatFilter)}」`, 0: '无记录' };
+      const order = [4, 3, 2, 1, 0].filter(v => levelDays[v] > 0 || v === 0);
+      const barHtml = order.map(v =>
+        `<div style="background:${HM_RAMP[v]};width:${(levelDays[v] / totalDays * 100)}%"></div>`
+      ).join('');
+      const legendHtml = order.map(v =>
+        `<div class="hm-dl"><span class="sw" style="background:${HM_RAMP[v]}"></span>` +
+        `<b>${(levelDays[v] / totalDays * 100).toFixed(1)}%</b>${labels[v] || ''}</div>`
+      ).join('');
+      const distHtml = `<div class="hm-dist"><div class="hm-distbar">${barHtml}</div>` +
+        `<div class="hm-distlegend">${legendHtml}</div></div>`;
+
+      const hintHtml = `<div class="stats-hint">💡 颜色越深 = 那天记的标签越多；灰色 = 当天没记录。<br>` +
+        `💡 点顶部标签，只看某一个症状的全年分布。</div>`;
+
+      content.innerHTML = tilesHtml + `<div class="hm-year-grid">${gridHtml}</div>` + distHtml + hintHtml;
     }
   </script>
 
