@@ -902,7 +902,10 @@
     }
     .hm-chip.on { background: var(--hm-accent); color: #fff; font-weight: 600; }
     .hm-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 18px; }
-    .hm-tile { background: var(--surface-2); border-radius: var(--r-lg); padding: 12px 6px; text-align: center; }
+    /* 顶部 3 数据块收进「概览卡」,与统计页「周期概览」结构统一(保留墨绿主题) */
+    .hm-ov-card { margin-top: 4px; }
+    .hm-ov-card .hm-tiles { margin-bottom: 0; }
+    .hm-tile { background: var(--surface-2); border-radius: var(--r-md); padding: 12px 6px; text-align: center; }
     .hm-tile .n { font-size: var(--fs-stat); font-weight: 800; color: var(--hm-accent); line-height: 1.15; }
     .hm-tile .n small { font-size: var(--fs-footnote); font-weight: 700; }
     .hm-tile .l { font-size: var(--fs-footnote); color: var(--muted); margin-top: 4px; }
@@ -2786,9 +2789,11 @@
           { n: `${(tagDays / daysInYear * 100).toFixed(1)}<small>%</small>`, l: '占全年' },
         ];
       }
-      const tilesHtml = `<div class="hm-tiles">` +
+      const tilesHtml = `<div class="stcard hm-ov-card">
+        <div class="stcard-title">概览</div>
+        <div class="hm-tiles">` +
         tiles.map(t => `<div class="hm-tile"><div class="n">${t.n}</div><div class="l">${t.l}</div></div>`).join('') +
-        `</div>`;
+        `</div></div>`;
 
       // 强度分布条
       const totalDays = levelDays.reduce((a, b) => a + b, 0);
