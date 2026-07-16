@@ -730,7 +730,8 @@
     /* 卡片/按钮之间统一走「卡片外边距」令牌 --sp-5(20px)，避免拥挤 */
     .me-body .stcard { margin-top: var(--sp-5); }
     .me-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .me-tile { background: var(--surface-2); border-radius: var(--r-lg); padding: var(--sp-3) var(--sp-1); text-align: center; }
+    /* 平铺小卡走白底 + 轻阴影，与下方分组卡(.stcard)统一 */
+    .me-tile { background: var(--surface); box-shadow: var(--shadow-sm); border-radius: var(--r-lg); padding: var(--sp-3) var(--sp-1); text-align: center; }
     .me-tile .n { font-size: var(--fs-stat); font-weight: bold; color: var(--brand); font-variant-numeric: tabular-nums; }
     .me-tile .l { font-size: var(--fs-footnote); color: var(--muted); margin-top: 4px; }
     /* 卡内列表行(功能入口):图标 + 文字 + 右箭头,行间浅分隔 */
@@ -904,7 +905,7 @@
     .hm-chip.on { background: var(--hm-accent); color: #fff; font-weight: 600; }
     /* 顶部 3 个数据块直接平铺(不套卡);与下方月历网格留「大区块之间」间距 --sp-8 */
     .hm-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: var(--sp-8); }
-    .hm-tile { background: var(--surface-2); border-radius: var(--r-lg); padding: 12px 6px; text-align: center; }
+    .hm-tile { background: var(--surface); box-shadow: var(--shadow-sm); border-radius: var(--r-lg); padding: 12px 6px; text-align: center; }
     .hm-tile .n { font-size: var(--fs-stat); font-weight: 800; color: var(--hm-accent); line-height: 1.15; }
     .hm-tile .n small { font-size: var(--fs-footnote); font-weight: 700; }
     .hm-tile .l { font-size: var(--fs-footnote); color: var(--muted); margin-top: 4px; }
