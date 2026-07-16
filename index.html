@@ -389,6 +389,64 @@
       padding-top: 10px;
       border-top: 1px dashed var(--line);
     }
+
+    /* ── 统计页卡片式（周期概览 / 周期变化 / 明细）——沿用现有令牌 ── */
+    .stcard {
+      background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+      padding: var(--sp-5) var(--sp-4) var(--sp-4); margin-top: 14px;
+    }
+    .stcard-title {
+      font-size: var(--fs-subhead); font-weight: 700; color: var(--ink); margin: 0 0 var(--sp-4);
+    }
+    .stcard-title .sub { font-size: var(--fs-footnote); font-weight: 400; color: var(--faint); margin-left: 6px; }
+    /* 周期变化卡：标题行 + 右侧紧凑年份切换 */
+    .cyc-head { display: flex; align-items: center; justify-content: space-between; }
+    .cyc-yearbar { display: flex; align-items: center; gap: 8px; }
+    .cyc-nav { background: var(--line-soft); border: none; border-radius: 50%; width: 26px; height: 26px;
+      font-size: var(--fs-body); color: var(--muted); cursor: pointer; line-height: 1; font-family: inherit; }
+    .cyc-nav:active { background: var(--line); }
+    .cyc-year { font-size: var(--fs-callout); font-weight: 700; color: var(--ink-2);
+      min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
+    /* 概览：2×2 数据小卡 */
+    .st-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .st-tile { background: var(--surface-2); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-3) 14px; }
+    .st-tile .lab { font-size: var(--fs-footnote); color: var(--muted); }
+    .st-tile .val { font-size: var(--fs-stat); font-weight: 700; color: var(--ink); line-height: 1.15;
+      margin-top: 3px; font-variant-numeric: tabular-nums; }
+    .st-tile .val .u { font-size: var(--fs-footnote); font-weight: 600; color: var(--muted); margin-left: 2px; }
+    .st-tile .foot { font-size: var(--fs-micro); color: var(--faint); margin-top: 2px; }
+    .st-tile.accent { background: var(--brand-soft); }
+    .st-tile.accent .val { color: var(--brand-dark); }
+    .st-tile.accent .lab { color: var(--brand-dark); opacity: .8; }
+    .st-tile.accent .foot { color: var(--brand); opacity: .75; }
+    /* 周期变化：分组柱状图（经期红 / 周期蓝，均带数值直标 → 满足对比与可读性） */
+    .cyc-legend { display: flex; gap: 16px; margin: -2px 0 14px; }
+    .cyc-legend span { display: flex; align-items: center; gap: 6px; font-size: var(--fs-footnote); color: var(--body); }
+    .cyc-legend i { width: 10px; height: 10px; border-radius: 3px; }
+    .cyc-plot { height: 150px; display: flex; align-items: flex-end;
+      border-bottom: 1.5px solid var(--line); position: relative; }
+    .cyc-grid { position: absolute; inset: 0; pointer-events: none; }
+    .cyc-grid i { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--line-soft); }
+    .cyc-col { flex: 1; height: 100%; display: flex; align-items: flex-end; justify-content: center;
+      gap: 2px; position: relative; }
+    .cyc-bar { width: 9px; border-radius: 4px 4px 0 0; position: relative; }
+    .cyc-bar.p { background: var(--brand); }
+    .cyc-bar.c { background: var(--info); }
+    .cyc-bar .num { position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+      font-size: var(--fs-micro); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .cyc-bar.p .num { color: var(--brand); }
+    .cyc-bar.c .num { color: var(--ink-2); }
+    .cyc-col.empty::before { content: ""; position: absolute; bottom: 0; left: 22%; right: 22%;
+      border-top: 2px dashed var(--disabled); border-radius: 2px; }
+    .cyc-x { display: flex; margin-top: 7px; }
+    .cyc-x span { flex: 1; text-align: center; font-size: var(--fs-micro); color: var(--faint); }
+    .cyc-empty { text-align: center; color: var(--faint); font-size: var(--fs-footnote); padding: 30px 0; }
+    /* 明细：分组小标题 + 复用 .stats-row，行间加浅分割线 */
+    .st-sub { font-size: var(--fs-caption); font-weight: 600; color: var(--muted); margin: 14px 0 2px; }
+    .st-sub:first-of-type { margin-top: 0; }
+    .stcard .stats-row { padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+    .stcard .stats-row:last-of-type { border-bottom: 0; }
+    .stcard .stats-hint { border-top: 0; margin-top: 12px; padding-top: 2px; }
     .toast {
       position: fixed; top: max(16px, env(safe-area-inset-top)); left: 50%;
       transform: translateX(-50%); background: rgba(0,0,0,0.8);
@@ -1938,6 +1996,89 @@
         </div>`;
     }
 
+    // 近 N 天里“记过症状”的天数（用于概览小卡）
+    function countSymptomDays(days) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const from = new Date(today); from.setDate(from.getDate() - (days - 1));
+      let n = 0;
+      Object.keys(SYMPTOMS_DATA).forEach(key => {
+        const arr = SYMPTOMS_DATA[key];
+        if (!arr || arr.length === 0) return;
+        const [y, m, d] = key.split('-').map(Number);
+        const dt = new Date(y, m - 1, d);
+        if (dt >= from && dt <= today) n++;
+      });
+      return n;
+    }
+
+    // 周期变化：按月分组柱状图（经期天数 vs 周期天数），只画选中年份内“开始”的经期
+    function buildCycleChart(periods, year) {
+      const md = {};  // 月(1..12) → { p: 经期天数, c: 周期天数|null }
+      periods.forEach((pd, i) => {
+        if (pd.start.getFullYear() !== year) return;
+        const mo = pd.start.getMonth() + 1;
+        let c = null;
+        if (i < periods.length - 1) {
+          const days = Math.round((periods[i + 1].start - pd.start) / 86400000);
+          if (days <= 90) c = days;   // 超过 90 天多为漏记，按无效处理
+        }
+        md[mo] = { p: pd.length, c };
+      });
+      // 卡片标题行：左侧标题，右侧独立年份切换（只切这张图，不动日历页年份）
+      const head = `<div class="stcard-title cyc-head">
+          <span>周期变化 <span class="sub">按月</span></span>
+          <span class="cyc-yearbar">
+            <button class="cyc-nav" onclick="shiftStatChartYear(-1)" aria-label="上一年">‹</button>
+            <span class="cyc-year">${year}</span>
+            <button class="cyc-nav" onclick="shiftStatChartYear(1)" aria-label="下一年">›</button>
+          </span>
+        </div>`;
+      const hasData = Object.keys(md).length > 0;
+      if (!hasData) {
+        return `<div class="stcard" id="cycCard">${head}
+            <div class="cyc-empty">${year} 年还没有经期记录</div>
+          </div>`;
+      }
+      let maxV = 30;
+      Object.keys(md).forEach(mo => {
+        const v = md[mo];
+        maxV = Math.max(maxV, v.p, v.c || 0);
+      });
+      const scale = maxV * 1.18;  // 顶部留出数值标签空间
+      let cols = '', xs = '';
+      for (let mo = 1; mo <= 12; mo++) {
+        const v = md[mo];
+        if (v) {
+          let bars = `<div class="cyc-bar p" style="height:${(v.p / scale * 100).toFixed(1)}%"><span class="num">${v.p}</span></div>`;
+          if (v.c) bars += `<div class="cyc-bar c" style="height:${(v.c / scale * 100).toFixed(1)}%"><span class="num">${v.c}</span></div>`;
+          cols += `<div class="cyc-col">${bars}</div>`;
+        } else {
+          cols += `<div class="cyc-col empty"></div>`;
+        }
+        xs += `<span>${mo}</span>`;
+      }
+      return `<div class="stcard" id="cycCard">${head}
+          <div class="cyc-legend">
+            <span><i style="background:var(--brand)"></i>经期天数</span>
+            <span><i style="background:var(--info)"></i>周期天数</span>
+          </div>
+          <div class="cyc-plot">
+            <div class="cyc-grid"><i style="top:0"></i><i style="top:33.3%"></i><i style="top:66.6%"></i></div>
+            ${cols}
+          </div>
+          <div class="cyc-x">${xs}</div>
+        </div>`;
+    }
+
+    // 周期变化卡的独立年份状态；打开统计页时同步到当前日历年份
+    let statChartYear = 2026;
+    function shiftStatChartYear(delta) {
+      statChartYear += delta;
+      const { periods } = computeCycles();
+      const card = document.getElementById('cycCard');
+      if (card) card.outerHTML = buildCycleChart(periods, statChartYear);
+    }
+
     function showStats() {
       const overlay = document.getElementById('statsOverlay');
       const body = document.getElementById('statsBody');
@@ -2017,91 +2158,59 @@
         html += buildPredictionDial({ daysUntilNext, predictedDate, cycLen, periodLen, dotFrac, inPeriod, curDayInPeriod });
       }
 
-      // ── 周期 ──
-      html += '<div class="stats-section">周期(下次到下次开始的天数)</div>';
-      if (avgCyc !== null) {
-        html += `
-          <div class="stats-row">
-            <span class="stats-label">平均周期 <span class="stats-sub">(${validCycles.length} 个)</span></span>
-            <span class="stats-value-big">${avgCyc.toFixed(1)} 天</span>
-          </div>
-          <div class="stats-row">
-            <span class="stats-label">最近 6 个平均</span>
-            <span class="stats-value">${recentCycAvg.toFixed(1)} 天</span>
-          </div>
-          <div class="stats-row">
-            <span class="stats-label">最短 / 最长</span>
-            <span class="stats-value">${minCyc} / ${maxCyc} 天</span>
-          </div>
-        `;
-        if (allCycles.length > validCycles.length) {
-          html += `<div class="stats-hint">⚠️ ${allCycles.length - validCycles.length} 个周期超过 90 天(可能漏记),已从平均值中排除</div>`;
-        }
-      } else {
-        html += '<div class="stats-row"><span class="stats-label">周期数据不足</span><span class="stats-value">—</span></div>';
-      }
-
-      // ── 月经期 ──
-      html += '<div class="stats-section">月经期(单次持续天数)</div>';
+      // ── 周期概览（4 个关键数做成 2×2 小卡）──
+      const cycAvgTxt = avgCyc !== null ? avgCyc.toFixed(1) : '—';
+      const symDays30 = countSymptomDays(30);
       html += `
-        <div class="stats-row">
-          <span class="stats-label">平均月经期 <span class="stats-sub">(${lengths.length} 段)</span></span>
-          <span class="stats-value-big">${avgLen.toFixed(1)} 天</span>
-        </div>
-        <div class="stats-row">
-          <span class="stats-label">最近 6 段平均</span>
-          <span class="stats-value">${recentLenAvg.toFixed(1)} 天</span>
-        </div>
-        <div class="stats-row">
-          <span class="stats-label">最短 / 最长</span>
-          <span class="stats-value">${minLen} / ${maxLen} 天</span>
-        </div>
-      `;
-
-      // ── 总览 ──
-      html += '<div class="stats-section">总览</div>';
-      html += `
-        <div class="stats-row">
-          <span class="stats-label">总记录段数</span>
-          <span class="stats-value">${periods.length} 段</span>
-        </div>
-        <div class="stats-row">
-          <span class="stats-label">记录跨度</span>
-          <span class="stats-value">${spanYears} 年(${spanDays} 天)</span>
-        </div>
-        <div class="stats-row">
-          <span class="stats-label">最近一次</span>
-          <span class="stats-value">${formatDate(lastPeriod.start)}</span>
-        </div>
-      `;
-
-      // ── 症状统计（只统计当前选中年份）──
-      const symCount = {};
-      const yearPrefix = year + '-';
-      Object.keys(SYMPTOMS_DATA).forEach(key => {
-        if (key.indexOf(yearPrefix) === 0) {
-          (SYMPTOMS_DATA[key] || []).forEach(name => {
-            symCount[name] = (symCount[name] || 0) + 1;
-          });
-        }
-      });
-      const symSorted = Object.keys(symCount).sort((a, b) => symCount[b] - symCount[a]);
-
-      html += `<div class="stats-section">症状统计 <span class="stats-sub">(${year} 年)</span></div>`;
-      if (symSorted.length === 0) {
-        html += '<div class="stats-empty" style="padding:14px 0;">本年还没有症状记录</div>';
-      } else {
-        symSorted.forEach(name => {
-          html += `
-            <div class="stats-row">
-              <span class="stats-label">${escapeHtml(name)}</span>
-              <span class="stats-value">${symCount[name]} 次</span>
+        <div class="stcard">
+          <div class="stcard-title">周期概览</div>
+          <div class="st-tiles">
+            <div class="st-tile accent">
+              <div class="lab">平均周期</div>
+              <div class="val">${cycAvgTxt}<span class="u">天</span></div>
+              <div class="foot">${avgCyc !== null ? '来自 ' + validCycles.length + ' 个周期' : '数据不足'}</div>
             </div>
-          `;
-        });
-      }
+            <div class="st-tile">
+              <div class="lab">平均经期</div>
+              <div class="val">${avgLen.toFixed(1)}<span class="u">天</span></div>
+              <div class="foot">来自 ${lengths.length} 段</div>
+            </div>
+            <div class="st-tile">
+              <div class="lab">记录段数</div>
+              <div class="val">${periods.length}<span class="u">段</span></div>
+              <div class="foot">累计 ${spanYears} 年</div>
+            </div>
+            <div class="st-tile">
+              <div class="lab">症状记录</div>
+              <div class="val">${symDays30}<span class="u">天</span></div>
+              <div class="foot">近 30 天</div>
+            </div>
+          </div>
+        </div>`;
 
-      html += `<div class="stats-hint">💡 周期 = 一段经期开始到下一段开始的天数<br>💡 同一段经期 = 连续(或仅相差 1 天)的有色日期</div>`;
+      // ── 周期变化（按月分组柱状图，卡片内独立年份切换，默认跟随日历年份）──
+      statChartYear = year;
+      html += buildCycleChart(periods, statChartYear);
+
+      // ── 明细（保留原来的极值 / 近况，改版不丢信息）──
+      const cycExtreme = avgCyc !== null ? `${minCyc} / ${maxCyc} 天` : '—';
+      const recentCycTxt = recentCycAvg !== null ? `${recentCycAvg.toFixed(1)} 天` : '—';
+      const excluded = allCycles.length - validCycles.length;
+      html += `
+        <div class="stcard">
+          <div class="stcard-title">明细</div>
+          <div class="st-sub">周期(下次到下次开始)</div>
+          <div class="stats-row"><span class="stats-label">最近 6 个平均</span><span class="stats-value">${recentCycTxt}</span></div>
+          <div class="stats-row"><span class="stats-label">最短 / 最长</span><span class="stats-value">${cycExtreme}</span></div>
+          <div class="st-sub">月经期(单次持续)</div>
+          <div class="stats-row"><span class="stats-label">最近 6 段平均</span><span class="stats-value">${recentLenAvg.toFixed(1)} 天</span></div>
+          <div class="stats-row"><span class="stats-label">最短 / 最长</span><span class="stats-value">${minLen} / ${maxLen} 天</span></div>
+          <div class="st-sub">近况</div>
+          <div class="stats-row"><span class="stats-label">最近一次经期</span><span class="stats-value">${formatDate(lastPeriod.start)}</span></div>
+          <div class="stats-row"><span class="stats-label">记录跨度</span><span class="stats-value">${spanYears} 年(${spanDays} 天)</span></div>
+          ${excluded > 0 ? `<div class="stats-hint">⚠️ ${excluded} 个周期超过 90 天(可能漏记),已从平均中排除</div>` : ''}
+          <div class="stats-hint">💡 周期 = 一段经期开始到下一段开始的天数<br>💡 同一段经期 = 连续(或仅相差 1 天)的有色日期</div>
+        </div>`;
 
       body.innerHTML = html;
       switchToPage('statsOverlay', 'stat');
