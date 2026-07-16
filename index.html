@@ -250,7 +250,7 @@
     .day.ext-l { box-shadow: -3px 0 0 0 var(--c); }
     .day.ext-r { box-shadow:  3px 0 0 0 var(--c); }
     .day.ext-l.ext-r { box-shadow: -3px 0 0 0 var(--c), 3px 0 0 0 var(--c); }
-    .today { outline: 2px solid #eab308; outline-offset: -2px; color: #eab308 !important; }
+    .today { color: var(--brand) !important; font-weight: 700; }
     /* 症状标签筛选:命中当天描红,其余淡出 */
     .calendar-container.sym-on .day:not(.sym-hit) { opacity: .28; }
     .day.sym-hit { outline: 2px solid var(--brand); outline-offset: -2px; z-index: 3; }
@@ -1323,7 +1323,7 @@
         // 扁平方格：不再拼接胶囊，每格独立圆角小方块，风格与热力图一致
         html += `<div data-month="${month}" data-day="${day}"
                       class="day ${getLevelClass(lv)} ${isToday?'today':''} ${hasSym?'has-sym':''} ${symHit?'sym-hit':''}"
-                      style="user-select:none;-webkit-user-select:none;">${day}</div>`;
+                      style="user-select:none;-webkit-user-select:none;">${isToday ? '今' : day}</div>`;
       }
       return html + `</div></div>`;
     }
