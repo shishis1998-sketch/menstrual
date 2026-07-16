@@ -1295,6 +1295,14 @@
     function setHomeSymFilter(name) {
       homeSymFilter = (homeSymFilter === name && name !== '全部') ? '全部' : name;
       render();
+      // 选中具体标签时，自动跳到当年第一个高亮日期(rAF 等新 DOM 布局完成)
+      if (homeSymFilter !== '全部') {
+        requestAnimationFrame(() => {
+          const first = document.querySelector('#calendar .day.sym-hit');
+          if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          else showToast(`「${homeSymFilter}」${year} 年还没有记录`);
+        });
+      }
     }
 
     function generateMonth(month) {
