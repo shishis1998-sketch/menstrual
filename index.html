@@ -92,8 +92,9 @@
     }
     .home-header {
       background: var(--bg);
-      padding: calc(10px + env(safe-area-inset-top)) var(--page-gutter) 10px;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      /* 与热力图等二级页的 .stats-header 同高:14px 内边距 + 10px 间距,标题栏统一 */
+      padding: calc(14px + env(safe-area-inset-top)) var(--page-gutter) 14px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
     }
     .home-header h1 { margin: 0; }
     .home-year { cursor: pointer; }
@@ -101,7 +102,8 @@
     /* 首页症状标签条(复用 .hm-chip 单个样式) */
     .home-chips {
       display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-      padding: 8px var(--page-gutter) 12px; background: var(--bg);
+      /* 标签条内边距与热力图 .hm-chips 一致(10px 上下),两页标签条同高 */
+      padding: 10px var(--page-gutter); background: var(--bg);
       box-shadow: var(--shadow-card);
     }
     .home-chips::-webkit-scrollbar { display: none; }
@@ -822,7 +824,8 @@
     /* 症状标签横条：往下滑时也吸顶停留，随时知道当前看的是哪个标签 */
     .hm-chips { display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
       position: sticky; top: 0; z-index: 6; background: var(--bg);
-      margin: 10px calc(-1 * var(--page-gutter)) 14px; padding: 10px var(--page-gutter);
+      /* 标签条紧贴页头(与首页一致,页头与标签条之间不留缝) */
+      margin: 0 calc(-1 * var(--page-gutter)) 14px; padding: 10px var(--page-gutter);
       box-shadow: var(--shadow-card); }
     .hm-chips::-webkit-scrollbar { display: none; }
     .hm-chip {
