@@ -726,16 +726,26 @@
     .bnav-dot.show { opacity: 1; }
 
     /* ── “我的”页面 ── */
-    .me-overview {
-      display: flex; text-align: center;
-      background: linear-gradient(135deg, #fef2f4, var(--brand-soft));
-      border-radius: var(--r-md); padding: var(--sp-3) var(--sp-2); margin-bottom: var(--sp-4);
+    /* 「我的」概览卡:3 个居中数据小卡（复用 .stcard 卡片外壳） */
+    .me-body .stcard:first-child { margin-top: 0; }
+    .me-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .me-tile { background: var(--surface-2); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-1); text-align: center; }
+    .me-tile .n { font-size: var(--fs-stat); font-weight: bold; color: var(--brand); font-variant-numeric: tabular-nums; }
+    .me-tile .l { font-size: var(--fs-footnote); color: var(--muted); margin-top: 4px; }
+    /* 卡内列表行(功能入口):图标 + 文字 + 右箭头,行间浅分隔 */
+    .me-row {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+      padding: 12px 2px; border: none; background: none; border-bottom: 1px solid var(--line-soft);
+      color: var(--ink); font-size: var(--fs-callout); font-family: inherit; cursor: pointer; text-align: left;
     }
-    .me-ov-item { flex: 1; }
-    .me-ov-item + .me-ov-item { border-left: 1px solid #f6d5dd; }
-    .me-ov-num { font-size: var(--fs-stat); font-weight: bold; color: var(--brand); }
-    .me-ov-lbl { font-size: var(--fs-footnote); color: var(--muted); margin-top: 4px; }
-    .me-list { display: flex; flex-direction: column; gap: 10px; }
+    .me-row:last-child { border-bottom: 0; }
+    .me-row:active { background: var(--line-soft); }
+    .me-row .me-ic { font-size: var(--fs-subhead); width: 22px; text-align: center; }
+    .me-row .me-tx { flex: 1; }
+    .me-row .me-ar { color: var(--disabled); font-size: var(--fs-body); }
+    /* 保存(主) / 清空(危险)保留为独立醒目按钮 */
+    .me-cta { margin: 4px 0 12px; }
+    .me-clear { margin-top: 4px; }
     .me-btn {
       display: flex; align-items: center; gap: 12px;
       width: 100%; padding: 13px var(--sp-3); border: none; border-radius: var(--r-md);
@@ -1097,46 +1107,47 @@
       <div class="stats-header">
         <div class="stats-title">我的</div>
       </div>
-      <div class="stats-body">
-        <div class="me-overview" id="meOverview"></div>
-        <div class="me-list">
-          <button class="me-btn primary" onclick="saveFile()">
-            <span class="me-ic">💾</span>
-            <span class="me-txt">保存文件到本地<span class="unsaved-dot" id="unsavedDot"></span></span>
-            <span class="me-arrow" style="color:rgba(255,255,255,0.7)">›</span>
+      <div class="stats-body me-body">
+        <div class="stcard">
+          <div class="stcard-title">概览</div>
+          <div class="me-tiles" id="meOverview"></div>
+        </div>
+
+        <button class="me-btn primary me-cta" onclick="saveFile()">
+          <span class="me-ic">💾</span>
+          <span class="me-txt">保存文件到本地<span class="unsaved-dot" id="unsavedDot"></span></span>
+          <span class="me-arrow" style="color:rgba(255,255,255,0.7)">›</span>
+        </button>
+
+        <div class="stcard">
+          <div class="stcard-title">数据与备份</div>
+          <button class="me-row" onclick="importData()">
+            <span class="me-ic">📥</span><span class="me-tx">导入数据（文件 / 云端备份）</span><span class="me-ar">›</span>
           </button>
-          <button class="me-btn" onclick="importData()">
-            <span class="me-ic">📥</span>
-            <span class="me-txt">导入数据（文件 / 云端备份）</span>
-            <span class="me-arrow">›</span>
-          </button>
-          <button class="me-btn" onclick="openSyncSettings()">
-            <span class="me-ic">☁️</span>
-            <span class="me-txt">云端同步设置</span>
-            <span class="cloud-status-dot" id="cloudStatusDot" style="margin-right:8px;"></span>
-            <span class="me-arrow">›</span>
-          </button>
-          <button class="me-btn" onclick="openColorEditor()">
-            <span class="me-ic">🎨</span>
-            <span class="me-txt">色卡自定义（名称 / 颜色）</span>
-            <span class="me-arrow">›</span>
-          </button>
-          <button class="me-btn" onclick="showStats()">
-            <span class="me-ic">📊</span>
-            <span class="me-txt">周期总结与统计</span>
-            <span class="me-arrow">›</span>
-          </button>
-          <button class="me-btn" onclick="openAbout()">
-            <span class="me-ic">ℹ️</span>
-            <span class="me-txt">关于</span>
-            <span class="me-arrow">›</span>
-          </button>
-          <button class="me-btn danger" onclick="clearAllData()">
-            <span class="me-ic">🗑️</span>
-            <span class="me-txt">清空全部记录</span>
-            <span class="me-arrow" style="color:#fca5a5">›</span>
+          <button class="me-row" onclick="openSyncSettings()">
+            <span class="me-ic">☁️</span><span class="me-tx">云端同步设置</span>
+            <span class="cloud-status-dot" id="cloudStatusDot"></span><span class="me-ar">›</span>
           </button>
         </div>
+
+        <div class="stcard">
+          <div class="stcard-title">个性化与更多</div>
+          <button class="me-row" onclick="openColorEditor()">
+            <span class="me-ic">🎨</span><span class="me-tx">色卡自定义（名称 / 颜色）</span><span class="me-ar">›</span>
+          </button>
+          <button class="me-row" onclick="showStats()">
+            <span class="me-ic">📊</span><span class="me-tx">周期总结与统计</span><span class="me-ar">›</span>
+          </button>
+          <button class="me-row" onclick="openAbout()">
+            <span class="me-ic">ℹ️</span><span class="me-tx">关于</span><span class="me-ar">›</span>
+          </button>
+        </div>
+
+        <button class="me-btn danger me-clear" onclick="clearAllData()">
+          <span class="me-ic">🗑️</span>
+          <span class="me-txt">清空全部记录</span>
+        </button>
+
         <div class="me-foot">经期日历 · 数据仅存本机与你的云端 Gist</div>
       </div>
     </div>
@@ -2656,9 +2667,9 @@
       const symDays = Object.keys(SYMPTOMS_DATA).length;
       const symKinds = SYMPTOMS_LIB.length;
       document.getElementById('meOverview').innerHTML =
-        `<div class="me-ov-item"><div class="me-ov-num">${days}</div><div class="me-ov-lbl">已记录天数</div></div>` +
-        `<div class="me-ov-item"><div class="me-ov-num">${symDays}</div><div class="me-ov-lbl">记症状天数</div></div>` +
-        `<div class="me-ov-item"><div class="me-ov-num">${symKinds}</div><div class="me-ov-lbl">症状种类</div></div>`;
+        `<div class="me-tile"><div class="n">${days}</div><div class="l">已记录天数</div></div>` +
+        `<div class="me-tile"><div class="n">${symDays}</div><div class="l">记症状天数</div></div>` +
+        `<div class="me-tile"><div class="n">${symKinds}</div><div class="l">症状种类</div></div>`;
       // 同步“我的”里云端状态点
       setCloudDot(syncCfg && syncCfg.gistId && syncCfg.token ? 'ok' : '');
       switchToPage('meOverlay', 'me');
