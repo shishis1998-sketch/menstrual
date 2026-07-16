@@ -940,23 +940,20 @@
       position: relative; z-index: 1; flex: 1; border: none; background: transparent; font-family: inherit;
       font-size: var(--fs-footnote); font-weight: 600; color: var(--muted); padding: 6px 0;
       border-radius: var(--r-full); cursor: pointer; transition: color .32s ease;
+      -webkit-appearance: none; appearance: none; outline: none;
+      -webkit-tap-highlight-color: transparent;   /* 关掉安卓点按时的蓝色高亮 */
+      user-select: none; -webkit-user-select: none;
     }
     .hm-vt.on { color: #fff; }
-    /* 视图切换:内容横向滑动(方向跟随) */
-    #hmContent { position: relative; }
-    #hmContent.hm-swapping { overflow: hidden; }
-    #hmContent.hm-swapping .hm-layer { position: absolute; top: 0; left: 0; right: 0; }
+    /* 视图切换:新内容横向滑入(方向跟随);只渲染单层,避免新旧重影 */
+    #hmContent { overflow: hidden; }
     @media (prefers-reduced-motion: no-preference) {
-      .hm-vt-thumb { transition: transform .42s cubic-bezier(.22,.61,.36,1); }
-      .hm-layer.hm-enter-fwd  { animation: hmInRight .42s cubic-bezier(.22,.61,.36,1) both; }
-      .hm-layer.hm-leave-fwd  { animation: hmOutLeft .42s cubic-bezier(.22,.61,.36,1) both; }
-      .hm-layer.hm-enter-back { animation: hmInLeft  .42s cubic-bezier(.22,.61,.36,1) both; }
-      .hm-layer.hm-leave-back { animation: hmOutRight .42s cubic-bezier(.22,.61,.36,1) both; }
+      .hm-vt-thumb { transition: transform .40s cubic-bezier(.22,.61,.36,1); }
+      .hm-layer.hm-enter-fwd  { animation: hmSlideInR .34s cubic-bezier(.22,.61,.36,1) both; }
+      .hm-layer.hm-enter-back { animation: hmSlideInL .34s cubic-bezier(.22,.61,.36,1) both; }
     }
-    @keyframes hmInRight  { from { opacity:.3; transform: translateX(26%);  } to { opacity:1; transform: translateX(0); } }
-    @keyframes hmOutLeft  { from { opacity:1; transform: translateX(0);     } to { opacity:.3; transform: translateX(-26%); } }
-    @keyframes hmInLeft   { from { opacity:.3; transform: translateX(-26%); } to { opacity:1; transform: translateX(0); } }
-    @keyframes hmOutRight { from { opacity:1; transform: translateX(0);     } to { opacity:.3; transform: translateX(26%); } }
+    @keyframes hmSlideInR { from { opacity:0; transform: translateX(8%);  } to { opacity:1; transform: translateX(0); } }
+    @keyframes hmSlideInL { from { opacity:0; transform: translateX(-8%); } to { opacity:1; transform: translateX(0); } }
     .hm-tagcards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .hm-tcard {
       background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-lg);
@@ -2791,36 +2788,18 @@
       renderHeatmap();
     }
 
-    // 把内容写进 #hmContent;传了方向就做「旧滑出 + 新滑入」的横向过渡
+    // 把内容写进 #hmContent。传了方向(切视图)时,让新内容从对应方向滑入。
+    // 只保留单层,旧内容直接替换 —— 避免新旧两层叠加时互相透出的重影。
     function setContent(html, dir) {
       const host = document.getElementById('hmContent');
-      // 收尾上一次未完成的切换,只保留最新一层
-      const layers = host.querySelectorAll('.hm-layer');
-      for (let i = 0; i < layers.length - 1; i++) layers[i].remove();
-      host.classList.remove('hm-swapping');
-      host.style.minHeight = '';
-      const old = host.querySelector('.hm-layer');
+      host.innerHTML = `<div class="hm-layer">${html}</div>`;
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!dir || !old || reduce) {
-        host.innerHTML = `<div class="hm-layer">${html}</div>`;
-        return;
+      if (dir && !reduce) {
+        const layer = host.firstElementChild;
+        const cls = 'hm-enter-' + dir;
+        layer.classList.add(cls);
+        layer.addEventListener('animationend', () => layer.classList.remove(cls), { once: true });
       }
-      const h = host.offsetHeight;
-      const nw = document.createElement('div');
-      nw.className = 'hm-layer';
-      nw.innerHTML = html;
-      host.style.minHeight = h + 'px';
-      host.classList.add('hm-swapping');
-      host.appendChild(nw);
-      old.className = 'hm-layer hm-leave-' + dir;
-      void nw.offsetWidth;                       // 强制回流,确保动画重新触发
-      nw.className = 'hm-layer hm-enter-' + dir;
-      setTimeout(() => {
-        if (old.parentNode) old.remove();
-        nw.className = 'hm-layer';
-        host.classList.remove('hm-swapping');
-        host.style.minHeight = '';
-      }, 480);
     }
     // 上/下：年视图翻年、标签视图翻月(跨年自动进位)
     function heatNavShift(delta) {
