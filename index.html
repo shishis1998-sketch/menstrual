@@ -2727,7 +2727,18 @@
       switchToPage('heatmapOverlay', 'heat');
     }
     function heatYearShift(delta) { heatYear += delta; renderHeatmap(); }
-    function setHeatFilter(name) { heatFilter = name; renderHeatmap(); }
+    function setHeatFilter(name) {
+      heatFilter = name;
+      renderHeatmap();
+      // 选中具体标签时，自动跳到当年第一个有记录（有色）的日期；无记录则提示
+      if (heatFilter !== '全部') {
+        requestAnimationFrame(() => {
+          const first = document.querySelector('#hmContent .hm-cell.dark');
+          if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          else showToast(`「${heatFilter}」${heatYear} 年还没有记录`);
+        });
+      }
+    }
 
     // 某天在当前过滤下的“强度等级”(0=无, 1..4)
     function hmDayLevel(list) {
