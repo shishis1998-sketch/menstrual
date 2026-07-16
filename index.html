@@ -928,6 +928,33 @@
     .hm-dl .sw { width: 12px; height: 12px; border-radius: 4px; flex: 0 0 auto; }
     .hm-dl b { color: var(--ink); }
     .hm-empty { text-align: center; color: var(--faint); font-size: var(--fs-caption); padding: 40px 10px; line-height: 1.8; }
+    /* ── 标签视图（按月·按标签的卡片）── */
+    .hm-viewtoggle { display: flex; background: var(--line-soft); border-radius: var(--r-full); padding: 3px; gap: 2px; }
+    .hm-vt {
+      border: none; background: transparent; font-family: inherit; font-size: var(--fs-footnote);
+      font-weight: 600; color: var(--muted); padding: 6px 18px; border-radius: var(--r-full); cursor: pointer;
+    }
+    .hm-vt.on { background: var(--hm-accent); color: #fff; box-shadow: var(--shadow-sm); }
+    .hm-tagcards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .hm-tcard {
+      background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-lg);
+      box-shadow: var(--shadow-sm); padding: 12px 11px 11px;
+    }
+    .hm-tc-head { margin-bottom: 2px; }
+    .hm-tc-name { font-size: var(--fs-callout); font-weight: 700; color: var(--ink); }
+    .hm-tc-meta { font-size: var(--fs-footnote); color: var(--muted); margin: 0 0 9px; }
+    .hm-tc-meta b { color: var(--hm-accent); font-weight: 700; }
+    .hm-tc-wk { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 3px; }
+    .hm-tc-wk div { text-align: center; font-size: 9px; color: var(--faint); }
+    .hm-tc-dd { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .hm-tc-cell {
+      aspect-ratio: 1; border-radius: 4px; background: var(--hm0); display: flex;
+      align-items: center; justify-content: center; font-size: 9px; color: var(--ink-2);
+    }
+    .hm-tc-cell.on { background: var(--hm4); color: rgba(255,255,255,.94); font-weight: 600; }
+    .hm-tc-cell.today { outline: 2px solid var(--brand); outline-offset: -2px; }
+    .hm-tc-cell.empty { background: transparent; }
+    .hm-empty-center { display: flex; align-items: center; justify-content: center; min-height: 55vh; padding: 0; }
   </style>
 </head>
 <body style="">
@@ -1035,15 +1062,19 @@
     <div class="stats-modal">
       <div class="stats-header hm-header">
         <div class="stats-title">标签热力图</div>
+        <div class="hm-viewtoggle">
+          <button class="hm-vt on" data-view="year" onclick="setHeatView('year')">年视图</button>
+          <button class="hm-vt" data-view="tag" onclick="setHeatView('tag')">标签视图</button>
+        </div>
         <div class="hm-yearbar">
-          <button class="hm-nav" onclick="heatYearShift(-1)">‹</button>
+          <button class="hm-nav" onclick="heatNavShift(-1)">‹</button>
           <div class="hm-year" id="hmYear">2026</div>
-          <button class="hm-nav" onclick="heatYearShift(1)">›</button>
+          <button class="hm-nav" onclick="heatNavShift(1)">›</button>
         </div>
       </div>
       <div class="stats-body">
         <div class="hm-chips" id="hmChips"></div>
-        <div class="hm-sub">每一格 = 那天记的标签，越多越深</div>
+        <div class="hm-sub" id="hmSub">每一格 = 那天记的标签，越多越深</div>
         <div id="hmContent"></div>
       </div>
     </div>
@@ -2715,6 +2746,8 @@
     // 复用 SYMPTOMS_DATA：{ "2026-5-16": ["头痛","腰酸"] }
     // “全部”模式：格子深浅 = 当天标签数量；单标签模式：有该标签 = 深绿，无 = 灰
     let heatYear = new Date().getFullYear();
+    let heatMonth = new Date().getMonth() + 1;   // 标签视图当前月(1..12)
+    let heatView = 'year';     // 'year' 全年热力图 · 'tag' 按月按标签卡片
     let heatFilter = '全部';   // '全部' 或某个标签名
     const HM_WK = ['一','二','三','四','五','六','日'];
     const HM_RAMP = ['var(--hm0)','var(--hm1)','var(--hm2)','var(--hm3)','var(--hm4)'];
@@ -2726,7 +2759,23 @@
       renderHeatmap();
       switchToPage('heatmapOverlay', 'heat');
     }
-    function heatYearShift(delta) { heatYear += delta; renderHeatmap(); }
+    // 视图切换：年视图 ↔ 标签视图
+    function setHeatView(view) {
+      if (heatView === view) return;
+      heatView = view;
+      renderHeatmap();
+    }
+    // 上/下：年视图翻年、标签视图翻月(跨年自动进位)
+    function heatNavShift(delta) {
+      if (heatView === 'tag') {
+        heatMonth += delta;
+        if (heatMonth < 1) { heatMonth = 12; heatYear--; }
+        else if (heatMonth > 12) { heatMonth = 1; heatYear++; }
+      } else {
+        heatYear += delta;
+      }
+      renderHeatmap();
+    }
     function setHeatFilter(name) {
       heatFilter = name;
       renderHeatmap();
@@ -2748,10 +2797,27 @@
     }
 
     function renderHeatmap() {
+      // 同步视图切换按钮的选中态
+      document.querySelectorAll('.hm-vt').forEach(b => b.classList.toggle('on', b.dataset.view === heatView));
+
+      const chips = document.getElementById('hmChips');
+      const sub = document.getElementById('hmSub');
+
+      // 标签视图：按月、按标签的卡片
+      if (heatView === 'tag') {
+        chips.style.display = 'none';
+        document.getElementById('hmYear').textContent = `${heatYear}年${heatMonth}月`;
+        sub.textContent = '每张卡 = 一个标签这个月记录的日子';
+        renderTagCards();
+        return;
+      }
+
+      // 年视图（全年热力图）
+      chips.style.display = '';
+      sub.textContent = '每一格 = 那天记的标签，越多越深';
       document.getElementById('hmYear').textContent = heatYear;
 
       // 标签筛选 chips
-      const chips = document.getElementById('hmChips');
       const names = ['全部'].concat(SYMPTOMS_LIB);
       chips.innerHTML = names.map(n =>
         `<button class="hm-chip${n === heatFilter ? ' on' : ''}" data-name="${escapeAttr(n)}">${escapeHtml(n)}</button>`
@@ -2844,6 +2910,52 @@
         `💡 点顶部标签，只看某一个症状的全年分布。</div>`;
 
       content.innerHTML = tilesHtml + `<div class="hm-year-grid">${gridHtml}</div>` + distHtml + hintHtml;
+    }
+
+    // 标签视图：当月每个「有记录」的标签一张卡，卡里是当月日历，记过的那天点亮
+    function renderTagCards() {
+      const content = document.getElementById('hmContent');
+      const y = heatYear, mo = heatMonth;
+      const lead = (new Date(y, mo - 1, 1).getDay() + 6) % 7;   // 周一起始
+      const dim = new Date(y, mo + 1, 0).getDate();
+      const now = new Date();
+      const todayD = (now.getFullYear() === y && now.getMonth() + 1 === mo) ? now.getDate() : 0;
+
+      // 收集当月有记录的标签及其日期
+      const cards = [];
+      SYMPTOMS_LIB.forEach(tag => {
+        const set = {};
+        let count = 0;
+        for (let d = 1; d <= dim; d++) {
+          const list = SYMPTOMS_DATA[`${y}-${mo}-${d}`];
+          if (list && list.includes(tag)) { set[d] = 1; count++; }
+        }
+        if (count) cards.push({ tag, set, count });
+      });
+
+      if (cards.length === 0) {
+        content.innerHTML = `<div class="hm-empty hm-empty-center">无记录</div>`;
+        return;
+      }
+
+      const wkHead = HM_WK.map(w => `<div>${w}</div>`).join('');
+      const cardsHtml = cards.map(c => {
+        let cells = '';
+        for (let i = 0; i < lead; i++) cells += '<div class="hm-tc-cell empty"></div>';
+        for (let d = 1; d <= dim; d++) {
+          const on = c.set[d] ? ' on' : '';
+          const today = d === todayD ? ' today' : '';
+          cells += `<div class="hm-tc-cell${on}${today}">${d}</div>`;
+        }
+        return `<div class="hm-tcard">` +
+          `<div class="hm-tc-head"><span class="hm-tc-name">${escapeHtml(c.tag)}</span></div>` +
+          `<div class="hm-tc-meta">本月 <b>${c.count}</b> 天</div>` +
+          `<div class="hm-tc-wk">${wkHead}</div>` +
+          `<div class="hm-tc-dd">${cells}</div>` +
+          `</div>`;
+      }).join('');
+
+      content.innerHTML = `<div class="hm-tagcards">${cardsHtml}</div>`;
     }
   </script>
 
