@@ -1665,6 +1665,8 @@
       document.body.addEventListener('touchstart', e => {
         if (zoomedMonth !== null) return;   // 放大态不响应
         if (e.touches.length !== 1) return;
+        // 顶部标签条本身是横向滚动区，在上面滑动是看标签，不当作翻年份
+        if (e.target.closest && e.target.closest('.home-chips, .hm-chips')) { tracking = false; return; }
         const t = e.touches[0];
         sx = t.clientX; sy = t.clientY;
         tracking = true;
