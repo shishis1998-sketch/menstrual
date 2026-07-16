@@ -929,12 +929,34 @@
     .hm-dl b { color: var(--ink); }
     .hm-empty { text-align: center; color: var(--faint); font-size: var(--fs-caption); padding: 40px 10px; line-height: 1.8; }
     /* ── 标签视图（按月·按标签的卡片）── */
-    .hm-viewtoggle { display: flex; background: var(--line-soft); border-radius: var(--r-full); padding: 3px; gap: 2px; }
-    .hm-vt {
-      border: none; background: transparent; font-family: inherit; font-size: var(--fs-footnote);
-      font-weight: 600; color: var(--muted); padding: 6px 18px; border-radius: var(--r-full); cursor: pointer;
+    .hm-viewtoggle { position: relative; display: flex; width: 200px; max-width: 100%; background: var(--line-soft); border-radius: var(--r-full); padding: 3px; }
+    /* 绿色滑块:选中态跟着滑动,不再瞬间跳 */
+    .hm-vt-thumb {
+      position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
+      background: var(--hm-accent); border-radius: var(--r-full); box-shadow: var(--shadow-sm);
+      transform: translateX(0);
     }
-    .hm-vt.on { background: var(--hm-accent); color: #fff; box-shadow: var(--shadow-sm); }
+    .hm-vt {
+      position: relative; z-index: 1; flex: 1; border: none; background: transparent; font-family: inherit;
+      font-size: var(--fs-footnote); font-weight: 600; color: var(--muted); padding: 6px 0;
+      border-radius: var(--r-full); cursor: pointer; transition: color .32s ease;
+    }
+    .hm-vt.on { color: #fff; }
+    /* 视图切换:内容横向滑动(方向跟随) */
+    #hmContent { position: relative; }
+    #hmContent.hm-swapping { overflow: hidden; }
+    #hmContent.hm-swapping .hm-layer { position: absolute; top: 0; left: 0; right: 0; }
+    @media (prefers-reduced-motion: no-preference) {
+      .hm-vt-thumb { transition: transform .42s cubic-bezier(.22,.61,.36,1); }
+      .hm-layer.hm-enter-fwd  { animation: hmInRight .42s cubic-bezier(.22,.61,.36,1) both; }
+      .hm-layer.hm-leave-fwd  { animation: hmOutLeft .42s cubic-bezier(.22,.61,.36,1) both; }
+      .hm-layer.hm-enter-back { animation: hmInLeft  .42s cubic-bezier(.22,.61,.36,1) both; }
+      .hm-layer.hm-leave-back { animation: hmOutRight .42s cubic-bezier(.22,.61,.36,1) both; }
+    }
+    @keyframes hmInRight  { from { opacity:.3; transform: translateX(26%);  } to { opacity:1; transform: translateX(0); } }
+    @keyframes hmOutLeft  { from { opacity:1; transform: translateX(0);     } to { opacity:.3; transform: translateX(-26%); } }
+    @keyframes hmInLeft   { from { opacity:.3; transform: translateX(-26%); } to { opacity:1; transform: translateX(0); } }
+    @keyframes hmOutRight { from { opacity:1; transform: translateX(0);     } to { opacity:.3; transform: translateX(26%); } }
     .hm-tagcards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .hm-tcard {
       background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-lg);
@@ -1063,6 +1085,7 @@
       <div class="stats-header hm-header">
         <div class="stats-title">标签热力图</div>
         <div class="hm-viewtoggle">
+          <div class="hm-vt-thumb" id="hmVtThumb"></div>
           <button class="hm-vt on" data-view="year" onclick="setHeatView('year')">年视图</button>
           <button class="hm-vt" data-view="tag" onclick="setHeatView('tag')">标签视图</button>
         </div>
@@ -2760,10 +2783,44 @@
       switchToPage('heatmapOverlay', 'heat');
     }
     // 视图切换：年视图 ↔ 标签视图
+    let heatSwapDir = null;   // 一次性:'fwd'(年→标签,左滑) / 'back'(标签→年,右滑)
     function setHeatView(view) {
       if (heatView === view) return;
+      heatSwapDir = (view === 'tag') ? 'fwd' : 'back';
       heatView = view;
       renderHeatmap();
+    }
+
+    // 把内容写进 #hmContent;传了方向就做「旧滑出 + 新滑入」的横向过渡
+    function setContent(html, dir) {
+      const host = document.getElementById('hmContent');
+      // 收尾上一次未完成的切换,只保留最新一层
+      const layers = host.querySelectorAll('.hm-layer');
+      for (let i = 0; i < layers.length - 1; i++) layers[i].remove();
+      host.classList.remove('hm-swapping');
+      host.style.minHeight = '';
+      const old = host.querySelector('.hm-layer');
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!dir || !old || reduce) {
+        host.innerHTML = `<div class="hm-layer">${html}</div>`;
+        return;
+      }
+      const h = host.offsetHeight;
+      const nw = document.createElement('div');
+      nw.className = 'hm-layer';
+      nw.innerHTML = html;
+      host.style.minHeight = h + 'px';
+      host.classList.add('hm-swapping');
+      host.appendChild(nw);
+      old.className = 'hm-layer hm-leave-' + dir;
+      void nw.offsetWidth;                       // 强制回流,确保动画重新触发
+      nw.className = 'hm-layer hm-enter-' + dir;
+      setTimeout(() => {
+        if (old.parentNode) old.remove();
+        nw.className = 'hm-layer';
+        host.classList.remove('hm-swapping');
+        host.style.minHeight = '';
+      }, 480);
     }
     // 上/下：年视图翻年、标签视图翻月(跨年自动进位)
     function heatNavShift(delta) {
@@ -2797,18 +2854,21 @@
     }
 
     function renderHeatmap() {
-      // 同步视图切换按钮的选中态
+      // 同步视图切换按钮的选中态 + 滑块位置
       document.querySelectorAll('.hm-vt').forEach(b => b.classList.toggle('on', b.dataset.view === heatView));
+      const thumb = document.getElementById('hmVtThumb');
+      if (thumb) thumb.style.transform = heatView === 'tag' ? 'translateX(100%)' : 'translateX(0)';
 
       const chips = document.getElementById('hmChips');
       const sub = document.getElementById('hmSub');
+      const dir = heatSwapDir; heatSwapDir = null;   // 只在切视图时做横向过渡
 
       // 标签视图：按月、按标签的卡片
       if (heatView === 'tag') {
         chips.style.display = 'none';
         document.getElementById('hmYear').textContent = `${heatYear}年${heatMonth}月`;
         sub.textContent = '每张卡 = 一个标签这个月记录的日子';
-        renderTagCards();
+        setContent(renderTagCards(), dir);
         return;
       }
 
@@ -2826,11 +2886,9 @@
         el.onclick = () => setHeatFilter(el.dataset.name);
       });
 
-      const content = document.getElementById('hmContent');
-
       // 没有任何症状记录时的空状态
       if (Object.keys(SYMPTOMS_DATA).length === 0) {
-        content.innerHTML = `<div class="hm-empty">今年还没有标签记录 🌱<br>在日历里点某天、记录「头痛 / 腹痛…」<br>用一阵子这里就会长出热力图</div>`;
+        setContent(`<div class="hm-empty">今年还没有标签记录 🌱<br>在日历里点某天、记录「头痛 / 腹痛…」<br>用一阵子这里就会长出热力图</div>`, dir);
         return;
       }
 
@@ -2909,12 +2967,11 @@
       const hintHtml = `<div class="stats-hint">💡 颜色越深 = 那天记的标签越多；灰色 = 当天没记录。<br>` +
         `💡 点顶部标签，只看某一个症状的全年分布。</div>`;
 
-      content.innerHTML = tilesHtml + `<div class="hm-year-grid">${gridHtml}</div>` + distHtml + hintHtml;
+      setContent(tilesHtml + `<div class="hm-year-grid">${gridHtml}</div>` + distHtml + hintHtml, dir);
     }
 
-    // 标签视图：当月每个「有记录」的标签一张卡，卡里是当月日历，记过的那天点亮
+    // 标签视图：当月每个「有记录」的标签一张卡，卡里是当月日历，记过的那天点亮。返回 HTML 字符串
     function renderTagCards() {
-      const content = document.getElementById('hmContent');
       const y = heatYear, mo = heatMonth;
       const lead = (new Date(y, mo - 1, 1).getDay() + 6) % 7;   // 周一起始
       const dim = new Date(y, mo + 1, 0).getDate();
@@ -2934,8 +2991,7 @@
       });
 
       if (cards.length === 0) {
-        content.innerHTML = `<div class="hm-empty hm-empty-center">无记录</div>`;
-        return;
+        return `<div class="hm-empty hm-empty-center">无记录</div>`;
       }
 
       const wkHead = HM_WK.map(w => `<div>${w}</div>`).join('');
@@ -2955,7 +3011,7 @@
           `</div>`;
       }).join('');
 
-      content.innerHTML = `<div class="hm-tagcards">${cardsHtml}</div>`;
+      return `<div class="hm-tagcards">${cardsHtml}</div>`;
     }
   </script>
 
