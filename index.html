@@ -431,7 +431,7 @@
       gap: 2px; position: relative; }
     .cyc-bar { width: 9px; border-radius: 4px 4px 0 0; position: relative; }
     .cyc-bar.p { background: var(--brand); }
-    .cyc-bar.c { background: var(--info); }
+    .cyc-bar.c { background: #1c5a48; }  /* 周期天数：借用热力图主绿(墨绿)，与 --info 蓝解耦 */
     .cyc-bar .num { position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
       font-size: var(--fs-micro); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .cyc-bar.p .num { color: var(--brand); }
@@ -2060,7 +2060,7 @@
       return `<div class="stcard" id="cycCard">${head}
           <div class="cyc-legend">
             <span><i style="background:var(--brand)"></i>经期天数</span>
-            <span><i style="background:var(--info)"></i>周期天数</span>
+            <span><i style="background:#1c5a48"></i>周期天数</span>
           </div>
           <div class="cyc-plot">
             <div class="cyc-grid"><i style="top:0"></i><i style="top:33.3%"></i><i style="top:66.6%"></i></div>
