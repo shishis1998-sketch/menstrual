@@ -680,63 +680,51 @@
     /* ── 底部导航栏（悬浮胶囊 · 独立记录键） ──
        四个入口收进悬浮胶囊，选中项用 --brand-soft 高亮并展开中文标签；
        「记录」抽成右侧独立圆键（白底描边 + 品牌红）。仅沿用现有令牌。 */
-    body { padding-bottom: 78px; }          /* 给悬浮导航让出空间，避免遮住同步栏 */
+    body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }  /* 给固定导航让出空间 */
     .bottom-nav {
-      position: fixed; left: 0; right: 0; z-index: 80;
-      bottom: calc(12px + env(safe-area-inset-bottom));   /* 胶囊贴边（少留白） */
-      display: flex; align-items: center; gap: 12px;
-      padding: 0 10px;
-      background: none; border: none;
-      /* 随滚动方向自动隐藏/显示 */
-      transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease;
-    }
-    .bottom-nav.nav-hidden {
-      transform: translateY(calc(100% + 28px));
-      opacity: 0; pointer-events: none;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .bottom-nav { transition: none; }
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
+      display: flex; align-items: center; gap: 6px;
+      /* 贴底整条：顶部圆角、底边齐平、顶边浅阴影 */
+      background: var(--surface); border: none;
+      border-top-left-radius: 20px; border-top-right-radius: 20px;
+      box-shadow: var(--shadow-nav);
+      padding: 7px 10px calc(8px + env(safe-area-inset-bottom));
     }
     .bnav-pill {
       flex: 1; display: flex; align-items: center; justify-content: space-between;
-      background: var(--surface); border-radius: var(--r-full);
-      padding: 5px 12px; gap: 2px;
-      box-shadow: 0 8px 24px rgba(28,20,24,.14), 0 1.5px 4px rgba(28,20,24,.06);
+      background: none; border-radius: 0; padding: 0; gap: 2px; box-shadow: none;
     }
     .bnav-tab {
-      position: relative; flex: 1; height: 36px;
+      position: relative; flex: 1; height: 40px;
       display: flex; align-items: center; justify-content: center; gap: 6px;
       color: var(--faint); border-radius: 14px;   /* 内圆角＜外壳胶囊，形成被包裹层次 */
       background: none; border: none; cursor: pointer; font-family: inherit;
       -webkit-tap-highlight-color: transparent;
       transition: color .2s, background .25s, flex .28s cubic-bezier(.22,1,.36,1);
     }
-    .bnav-tab.on { color: var(--brand); background: var(--brand-soft); flex: 1.9; }
-    .bnav-tab:not(.on):active { background: var(--line-soft); }
-    /* 选中项展开中文标签 */
-    .bnav-lbl {
-      font-size: var(--fs-caption); font-weight: 600; white-space: nowrap;
-      max-width: 0; overflow: hidden; opacity: 0;
-      transition: max-width .28s cubic-bezier(.22,1,.36,1), opacity .2s;
-    }
-    .bnav-tab.on .bnav-lbl { max-width: 64px; opacity: 1; }
+    /* 选中态：仅图标填充实心 + 变品牌红，无背景/边框 */
+    .bnav-tab.on { color: var(--brand); }
+    /* 仅图标模式：隐藏中文标签 */
+    .bnav-lbl { display: none; }
     /* 图标跟随文字色(currentColor)；未选=描边线性,选中=填充实心 */
-    .bnav-tab svg { width: 21px; height: 21px; flex: none; }
+    .bnav-tab svg { width: 22px; height: 22px; flex: none; position: relative; z-index: 1; }
     .bnav-tab svg.ic-line { stroke: currentColor; fill: none; }
     .bnav-tab svg.ic-fill { fill: currentColor; stroke: none; display: none; }
     .bnav-tab.on svg.ic-line { display: none; }
     .bnav-tab.on svg.ic-fill { display: block; }
-    /* 记录键：白底描边圆键 */
+    /* 记录键：独立悬浮右下角、导航条上方，品牌红全填色 */
     .bnav-fab {
-      flex: none; width: 46px; height: 46px; border-radius: 50%;
-      background: var(--surface); color: var(--brand); border: 1px solid var(--line);
-      box-shadow: 0 8px 24px rgba(28,20,24,.14);
+      position: fixed; right: 16px; z-index: 81;
+      bottom: calc(70px + env(safe-area-inset-bottom));
+      width: 54px; height: 54px; border-radius: 50%;
+      background: var(--brand); color: #fff; border: none;
+      box-shadow: 0 6px 16px rgba(199,31,55,.36);
       display: flex; align-items: center; justify-content: center; cursor: pointer;
       font-family: inherit; -webkit-tap-highlight-color: transparent;
       transition: transform 0.15s ease;
     }
     .bnav-fab:active { transform: scale(0.9); }
-    .bnav-fab svg { width: 24px; height: 24px; }
+    .bnav-fab svg { width: 26px; height: 26px; }
     /* “我的”标签上的未保存小红点 */
     .bnav-dot {
       position: absolute; top: 6px; right: calc(50% - 14px);
@@ -2709,10 +2697,11 @@
         <span class="bnav-lbl">我的</span>
       </button>
     </div>
-    <button class="bnav-fab" onclick="recordToday()" aria-label="记录今天">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-    </button>
   </nav>
+  <!-- 记录键：独立悬浮于右下角、导航条上方 -->
+  <button class="bnav-fab" onclick="recordToday()" aria-label="记录今天">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
 
   <script>
     // ── 底部导航：整页视图切换（不再是弹窗） ──
@@ -2727,27 +2716,9 @@
       showNav();   // 每次切页都让导航条复位显示
     }
 
-    // ── 底部导航：随滚动方向自动隐藏/显示 ──
-    // 向下滚动（看内容）→ 隐藏；反向上滑一点 → 出现；靠近顶部始终显示。
+    // ── 底部导航：固定贴底，始终显示（不再随滚动隐藏） ──
     const bottomNav = document.querySelector('.bottom-nav');
-    function showNav() { if (bottomNav) bottomNav.classList.remove('nav-hidden'); }
-    (function initNavAutoHide() {
-      if (!bottomNav) return;
-      const TH = 8;    // 方向阈值,防抖
-      const TOP = 24;  // 顶部附近始终显示
-      function attach(el, getTop) {
-        let last = getTop();
-        el.addEventListener('scroll', () => {
-          const cur = getTop();
-          if (cur <= TOP) { showNav(); last = cur; return; }
-          const d = cur - last;
-          if (d > TH) { bottomNav.classList.add('nav-hidden'); last = cur; }
-          else if (d < -TH) { showNav(); last = cur; }
-        }, { passive: true });
-      }
-      attach(window, () => window.scrollY || document.documentElement.scrollTop || 0);
-      document.querySelectorAll('.stats-body').forEach(b => attach(b, () => b.scrollTop));
-    })();
+    function showNav() {}  // 保留空实现，供切页调用
     // 切到某个整页：隐藏其它页 → 显示目标页 → 顶部对齐 → 高亮对应标签
     function switchToPage(id, tab) {
       if (typeof zoomedMonth !== 'undefined' && zoomedMonth) unzoomMonth();
