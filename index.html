@@ -687,6 +687,15 @@
       display: flex; align-items: center; gap: 12px;
       padding: 0 10px;
       background: none; border: none;
+      /* 随滚动方向自动隐藏/显示 */
+      transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease;
+    }
+    .bottom-nav.nav-hidden {
+      transform: translateY(calc(100% + 28px));
+      opacity: 0; pointer-events: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .bottom-nav { transition: none; }
     }
     .bnav-pill {
       flex: 1; display: flex; align-items: center; justify-content: space-between;
@@ -2715,7 +2724,30 @@
     function setActiveTab(tab) {
       const tabs = document.querySelectorAll('.bottom-nav .bnav-tab');
       tabs.forEach((t, i) => t.classList.toggle('on', i === TAB_INDEX[tab]));
+      showNav();   // 每次切页都让导航条复位显示
     }
+
+    // ── 底部导航：随滚动方向自动隐藏/显示 ──
+    // 向下滚动（看内容）→ 隐藏；反向上滑一点 → 出现；靠近顶部始终显示。
+    const bottomNav = document.querySelector('.bottom-nav');
+    function showNav() { if (bottomNav) bottomNav.classList.remove('nav-hidden'); }
+    (function initNavAutoHide() {
+      if (!bottomNav) return;
+      const TH = 8;    // 方向阈值,防抖
+      const TOP = 24;  // 顶部附近始终显示
+      function attach(el, getTop) {
+        let last = getTop();
+        el.addEventListener('scroll', () => {
+          const cur = getTop();
+          if (cur <= TOP) { showNav(); last = cur; return; }
+          const d = cur - last;
+          if (d > TH) { bottomNav.classList.add('nav-hidden'); last = cur; }
+          else if (d < -TH) { showNav(); last = cur; }
+        }, { passive: true });
+      }
+      attach(window, () => window.scrollY || document.documentElement.scrollTop || 0);
+      document.querySelectorAll('.stats-body').forEach(b => attach(b, () => b.scrollTop));
+    })();
     // 切到某个整页：隐藏其它页 → 显示目标页 → 顶部对齐 → 高亮对应标签
     function switchToPage(id, tab) {
       if (typeof zoomedMonth !== 'undefined' && zoomedMonth) unzoomMonth();
