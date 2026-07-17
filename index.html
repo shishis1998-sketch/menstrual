@@ -2777,6 +2777,7 @@
       // 若过滤的标签已被删除，退回“全部”
       if (heatFilter !== '全部' && !SYMPTOMS_LIB.includes(heatFilter)) heatFilter = '全部';
       renderHeatmap();
+      initHeatSwipe();
       switchToPage('heatmapOverlay', 'heat');
     }
     // 视图切换：年视图 ↔ 标签视图
@@ -2801,7 +2802,7 @@
         layer.addEventListener('animationend', () => layer.classList.remove(cls), { once: true });
       }
     }
-    // 上/下：年视图翻年、标签视图翻月(跨年自动进位)
+    // 上/下：年视图翻年、标签视图翻月(跨年自动进位)。delta>0=下一个(从右滑入), delta<0=上一个(从左滑入)
     function heatNavShift(delta) {
       if (heatView === 'tag') {
         heatMonth += delta;
@@ -2810,7 +2811,31 @@
       } else {
         heatYear += delta;
       }
+      heatSwapDir = delta > 0 ? 'fwd' : 'back';
       renderHeatmap();
+    }
+
+    // 内容区左右滑动手势：标签视图翻月、年视图翻年
+    let hmTouchX = 0, hmTouchY = 0, hmTouchOn = false;
+    function initHeatSwipe() {
+      const el = document.querySelector('#heatmapOverlay .stats-body');
+      if (!el || el.dataset.swipe) return;
+      el.dataset.swipe = '1';
+      el.addEventListener('touchstart', (e) => {
+        // 单指、且不是从可横向滚动的标签条上起手,才当作翻页手势
+        if (e.touches.length !== 1 || (e.target.closest && e.target.closest('.hm-chips'))) { hmTouchOn = false; return; }
+        hmTouchOn = true; hmTouchX = e.touches[0].clientX; hmTouchY = e.touches[0].clientY;
+      }, { passive: true });
+      el.addEventListener('touchend', (e) => {
+        if (!hmTouchOn) return;
+        hmTouchOn = false;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - hmTouchX, dy = t.clientY - hmTouchY;
+        // 明显的水平滑动(横向位移够大、且远大于纵向)才翻页,避免误伤上下滚动
+        if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+          heatNavShift(dx < 0 ? 1 : -1);   // 左滑→下一个, 右滑→上一个
+        }
+      }, { passive: true });
     }
     function setHeatFilter(name) {
       heatFilter = name;
