@@ -677,49 +677,60 @@
       100% { transform: translateY(-50%) scale(1); }
     }
 
-    /* ── 底部导航栏（方案 C · 中央凸起） ── */
-    body { padding-bottom: 96px; }          /* 给固定导航让出空间，避免遮住同步栏 */
+    /* ── 底部导航栏（悬浮胶囊 · 独立记录键） ──
+       四个入口收进悬浮胶囊，选中项用 --brand-soft 高亮并展开中文标签；
+       「记录」抽成右侧独立圆键（白底描边 + 品牌红）。仅沿用现有令牌。 */
+    body { padding-bottom: 92px; }          /* 给悬浮导航让出空间，避免遮住同步栏 */
     .bottom-nav {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
-      background: #fff;
-      border-top: 1px solid #eef0f2;
-      box-shadow: var(--shadow-nav);
-      display: flex; align-items: flex-end;
-      padding: 8px 0 calc(10px + env(safe-area-inset-bottom));
+      position: fixed; left: 0; right: 0; z-index: 80;
+      bottom: calc(12px + env(safe-area-inset-bottom));   /* 胶囊贴边（少留白） */
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 10px;
+      background: none; border: none;
+    }
+    .bnav-pill {
+      flex: 1; display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface); border-radius: var(--r-full);
+      padding: 8px 12px; gap: 2px;
+      box-shadow: 0 8px 24px rgba(28,20,24,.14), 0 1.5px 4px rgba(28,20,24,.06);
     }
     .bnav-tab {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; gap: 3px;
-      color: var(--disabled); font-size: var(--fs-micro); cursor: pointer;
-      background: none; border: none; font-family: inherit;
+      position: relative; flex: 1; height: 44px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      color: var(--faint); border-radius: var(--r-full);
+      background: none; border: none; cursor: pointer; font-family: inherit;
       -webkit-tap-highlight-color: transparent;
+      transition: color .2s, background .25s, flex .28s cubic-bezier(.22,1,.36,1);
     }
-    .bnav-tab { color: var(--disabled); }
-    .bnav-tab.on { color: var(--brand); }
+    .bnav-tab.on { color: var(--brand); background: var(--brand-soft); flex: 1.9; }
+    .bnav-tab:not(.on):active { background: var(--line-soft); }
+    /* 选中项展开中文标签 */
+    .bnav-lbl {
+      font-size: var(--fs-caption); font-weight: 600; white-space: nowrap;
+      max-width: 0; overflow: hidden; opacity: 0;
+      transition: max-width .28s cubic-bezier(.22,1,.36,1), opacity .2s;
+    }
+    .bnav-tab.on .bnav-lbl { max-width: 64px; opacity: 1; }
     /* 图标跟随文字色(currentColor)；未选=描边线性,选中=填充实心 */
-    .bnav-tab svg { width: 24px; height: 24px; }
+    .bnav-tab svg { width: 23px; height: 23px; flex: none; }
     .bnav-tab svg.ic-line { stroke: currentColor; fill: none; }
     .bnav-tab svg.ic-fill { fill: currentColor; stroke: none; display: none; }
     .bnav-tab.on svg.ic-line { display: none; }
     .bnav-tab.on svg.ic-fill { display: block; }
+    /* 记录键：白底描边圆键 */
     .bnav-fab {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      background: none; border: none; cursor: pointer; font-family: inherit;
-      -webkit-tap-highlight-color: transparent;
+      flex: none; width: 52px; height: 52px; border-radius: 50%;
+      background: var(--surface); color: var(--brand); border: 1px solid var(--line);
+      box-shadow: 0 8px 24px rgba(28,20,24,.14);
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      font-family: inherit; -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s ease;
     }
-    .bnav-fab .fab-btn {
-      width: 56px; height: 56px; border-radius: 50%; margin-top: -30px;
-      background: linear-gradient(135deg, #e13a54, var(--brand));
-      box-shadow: var(--shadow-brand);
-      display: flex; align-items: center; justify-content: center; color: #fff;
-      transition: transform 0.15s;
-    }
-    .bnav-fab:active .fab-btn { transform: scale(0.92); }
-    .bnav-fab .fab-lbl { font-size: var(--fs-micro); color: var(--brand); margin-top: 4px; font-weight: 600; }
+    .bnav-fab:active { transform: scale(0.9); }
+    .bnav-fab svg { width: 26px; height: 26px; }
     /* “我的”标签上的未保存小红点 */
-    .bnav-tab { position: relative; }
     .bnav-dot {
-      position: absolute; top: 4px; right: calc(50% - 16px);
+      position: absolute; top: 6px; right: calc(50% - 14px);
       width: 7px; height: 7px; background: #f43f5e; border-radius: 50%;
       opacity: 0; transition: opacity 0.3s;
     }
@@ -2664,32 +2675,33 @@
     setupEvents();
   </script>
 
-  <!-- ── 底部导航栏（方案 C · 中央凸起） ── -->
+  <!-- ── 底部导航栏（悬浮胶囊 · 独立记录键） ── -->
   <nav class="bottom-nav">
-    <button class="bnav-tab on" onclick="navCalendar()">
-      <svg class="ic-line" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>
-      <svg class="ic-fill" viewBox="0 0 24 24"><path d="M6 3.2a1 1 0 0 1 2 0V4h8v-.8a1 1 0 1 1 2 0V4a3 3 0 0 1 3 3v1.2H3V7a3 3 0 0 1 3-3v-.8z"/><path d="M3 10.2h18V18a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-7.8z"/></svg>
-      <span>日历</span>
-    </button>
-    <button class="bnav-tab" onclick="showStats()">
-      <svg class="ic-line" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg>
-      <svg class="ic-fill" viewBox="0 0 24 24"><rect x="3" y="12" width="4.2" height="8" rx="1.4"/><rect x="9.9" y="4" width="4.2" height="16" rx="1.4"/><rect x="16.8" y="8.5" width="4.2" height="11.5" rx="1.4"/></svg>
-      <span>统计</span>
-    </button>
-    <button class="bnav-fab" onclick="recordToday()">
-      <span class="fab-btn"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
-      <span class="fab-lbl">记录</span>
-    </button>
-    <button class="bnav-tab" onclick="openHeatmap()">
-      <svg class="ic-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg>
-      <svg class="ic-fill" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg>
-      <span>热力图</span>
-    </button>
-    <button class="bnav-tab" onclick="openMe()">
-      <span class="bnav-dot" id="meNavDot"></span>
-      <svg class="ic-line" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M5.2 20a6.8 6.8 0 0 1 13.6 0"/></svg>
-      <svg class="ic-fill" viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4"/><path d="M4 20.2a8 8 0 0 1 16 0v.3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-.3z"/></svg>
-      <span>我的</span>
+    <div class="bnav-pill">
+      <button class="bnav-tab on" onclick="navCalendar()">
+        <svg class="ic-line" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>
+        <svg class="ic-fill" viewBox="0 0 24 24"><path d="M6 3.2a1 1 0 0 1 2 0V4h8v-.8a1 1 0 1 1 2 0V4a3 3 0 0 1 3 3v1.2H3V7a3 3 0 0 1 3-3v-.8z"/><path d="M3 10.2h18V18a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-7.8z"/></svg>
+        <span class="bnav-lbl">日历</span>
+      </button>
+      <button class="bnav-tab" onclick="showStats()">
+        <svg class="ic-line" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg>
+        <svg class="ic-fill" viewBox="0 0 24 24"><rect x="3" y="12" width="4.2" height="8" rx="1.4"/><rect x="9.9" y="4" width="4.2" height="16" rx="1.4"/><rect x="16.8" y="8.5" width="4.2" height="11.5" rx="1.4"/></svg>
+        <span class="bnav-lbl">统计</span>
+      </button>
+      <button class="bnav-tab" onclick="openHeatmap()">
+        <svg class="ic-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg>
+        <svg class="ic-fill" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg>
+        <span class="bnav-lbl">热力图</span>
+      </button>
+      <button class="bnav-tab" onclick="openMe()">
+        <span class="bnav-dot" id="meNavDot"></span>
+        <svg class="ic-line" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M5.2 20a6.8 6.8 0 0 1 13.6 0"/></svg>
+        <svg class="ic-fill" viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4"/><path d="M4 20.2a8 8 0 0 1 16 0v.3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-.3z"/></svg>
+        <span class="bnav-lbl">我的</span>
+      </button>
+    </div>
+    <button class="bnav-fab" onclick="recordToday()" aria-label="记录今天">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
     </button>
   </nav>
 
