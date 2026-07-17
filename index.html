@@ -680,7 +680,7 @@
     /* ── 底部导航栏（悬浮胶囊 · 独立记录键） ──
        四个入口收进悬浮胶囊，选中项用 --brand-soft 高亮并展开中文标签；
        「记录」抽成右侧独立圆键（白底描边 + 品牌红）。仅沿用现有令牌。 */
-    body { padding-bottom: 92px; }          /* 给悬浮导航让出空间，避免遮住同步栏 */
+    body { padding-bottom: 78px; }          /* 给悬浮导航让出空间，避免遮住同步栏 */
     .bottom-nav {
       position: fixed; left: 0; right: 0; z-index: 80;
       bottom: calc(12px + env(safe-area-inset-bottom));   /* 胶囊贴边（少留白） */
@@ -700,11 +700,11 @@
     .bnav-pill {
       flex: 1; display: flex; align-items: center; justify-content: space-between;
       background: var(--surface); border-radius: var(--r-full);
-      padding: 8px 12px; gap: 2px;
+      padding: 5px 12px; gap: 2px;
       box-shadow: 0 8px 24px rgba(28,20,24,.14), 0 1.5px 4px rgba(28,20,24,.06);
     }
     .bnav-tab {
-      position: relative; flex: 1; height: 44px;
+      position: relative; flex: 1; height: 36px;
       display: flex; align-items: center; justify-content: center; gap: 6px;
       color: var(--faint); border-radius: var(--r-full);
       background: none; border: none; cursor: pointer; font-family: inherit;
@@ -721,14 +721,14 @@
     }
     .bnav-tab.on .bnav-lbl { max-width: 64px; opacity: 1; }
     /* 图标跟随文字色(currentColor)；未选=描边线性,选中=填充实心 */
-    .bnav-tab svg { width: 23px; height: 23px; flex: none; }
+    .bnav-tab svg { width: 21px; height: 21px; flex: none; }
     .bnav-tab svg.ic-line { stroke: currentColor; fill: none; }
     .bnav-tab svg.ic-fill { fill: currentColor; stroke: none; display: none; }
     .bnav-tab.on svg.ic-line { display: none; }
     .bnav-tab.on svg.ic-fill { display: block; }
     /* 记录键：白底描边圆键 */
     .bnav-fab {
-      flex: none; width: 52px; height: 52px; border-radius: 50%;
+      flex: none; width: 46px; height: 46px; border-radius: 50%;
       background: var(--surface); color: var(--brand); border: 1px solid var(--line);
       box-shadow: 0 8px 24px rgba(28,20,24,.14);
       display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -736,7 +736,7 @@
       transition: transform 0.15s ease;
     }
     .bnav-fab:active { transform: scale(0.9); }
-    .bnav-fab svg { width: 26px; height: 26px; }
+    .bnav-fab svg { width: 24px; height: 24px; }
     /* “我的”标签上的未保存小红点 */
     .bnav-dot {
       position: absolute; top: 6px; right: calc(50% - 14px);
