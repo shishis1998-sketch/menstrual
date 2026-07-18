@@ -390,7 +390,7 @@
       border-top: 1px dashed var(--line);
     }
 
-    /* ── 统计页卡片式（周期概览 / 周期变化 / 明细）——沿用现有令牌 ── */
+    /* ── 统计页卡片式（周期概览 / 周期轨迹 / 明细）——沿用现有令牌 ── */
     .stcard {
       background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
       padding: var(--sp-5) var(--sp-4) var(--sp-4); margin-top: 14px;
@@ -399,7 +399,7 @@
       font-size: var(--fs-subhead); font-weight: 700; color: var(--ink); margin: 0 0 var(--sp-4);
     }
     .stcard-title .sub { font-size: var(--fs-footnote); font-weight: 400; color: var(--faint); margin-left: 6px; }
-    /* 周期变化卡：标题行 + 右侧紧凑年份切换 */
+    /* 周期轨迹卡：标题行 + 右侧紧凑年份切换 */
     .cyc-head { display: flex; align-items: center; justify-content: space-between; }
     .cyc-yearbar { display: flex; align-items: center; gap: 8px; }
     .cyc-nav { background: var(--line-soft); border: none; border-radius: 50%; width: 26px; height: 26px;
@@ -419,7 +419,7 @@
     .st-tile.accent .val { color: var(--brand-dark); }
     .st-tile.accent .lab { color: var(--brand-dark); opacity: .8; }
     .st-tile.accent .foot { color: var(--brand); opacity: .75; }
-    /* 周期变化：分组柱状图（经期红 / 周期蓝，均带数值直标 → 满足对比与可读性） */
+    /* 周期轨迹：分组柱状图（经期红 / 周期蓝，均带数值直标 → 满足对比与可读性） */
     .cyc-legend { display: flex; gap: 16px; margin: -2px 0 14px; }
     .cyc-legend span { display: flex; align-items: center; gap: 6px; font-size: var(--fs-footnote); color: var(--body); }
     .cyc-legend i { width: 10px; height: 10px; border-radius: 3px; }
@@ -2091,7 +2091,7 @@
       return n;
     }
 
-    // 周期变化：按月分组柱状图（经期天数 vs 周期天数），只画选中年份内“开始”的经期
+    // 周期轨迹：按月分组柱状图（经期天数 vs 周期天数），只画选中年份内“开始”的经期
     function buildCycleChart(periods, year) {
       const md = {};  // 月(1..12) → { p: 经期天数, c: 周期天数|null }
       periods.forEach((pd, i) => {
@@ -2106,7 +2106,7 @@
       });
       // 卡片标题行：左侧标题，右侧独立年份切换（只切这张图，不动日历页年份）
       const head = `<div class="stcard-title cyc-head">
-          <span>周期变化</span>
+          <span>周期轨迹</span>
           <span class="cyc-yearbar">
             <button class="cyc-nav" onclick="shiftStatChartYear(-1)" aria-label="上一年">‹</button>
             <span class="cyc-year">${year}</span>
@@ -2150,7 +2150,7 @@
         </div>`;
     }
 
-    // 周期变化卡的独立年份状态；打开统计页时同步到当前日历年份
+    // 周期轨迹卡的独立年份状态；打开统计页时同步到当前日历年份
     let statChartYear = 2026;
     function shiftStatChartYear(delta) {
       statChartYear += delta;
@@ -2268,7 +2268,7 @@
           </div>
         </div>`;
 
-      // ── 周期变化（按月分组柱状图，卡片内独立年份切换，默认跟随日历年份）──
+      // ── 周期轨迹（按月分组柱状图，卡片内独立年份切换，默认跟随日历年份）──
       statChartYear = year;
       html += buildCycleChart(periods, statChartYear);
 
