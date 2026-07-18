@@ -527,40 +527,32 @@
     }
 
     /* ── 色卡选择栏 ── */
+    /* 小圆点色卡：缩小 + 一行 + 靠左（点圆点或文字都可选色）
+       尺寸/间距对齐设计令牌：圆点 --r-full、文字 --fs-micro、间距 --sp-* */
     .color-palette {
-      margin-top: 14px;
-      padding: 10px 0 4px;
+      margin-top: var(--sp-3);          /* 12px */
+      padding: var(--sp-2) 2px 0;       /* 上 8px 与日历分隔 */
       border-top: 1px solid var(--line);
-      display: flex; gap: 14px; justify-content: center;
-      align-items: flex-start; flex-wrap: wrap;
-    }
-    .palette-label {
-      width: 100%; text-align: center;
-      font-size: var(--fs-micro); color: var(--faint);
-      letter-spacing: 1px; margin-bottom: 4px;
+      display: flex; gap: var(--sp-3);  /* 项间 12px */
+      justify-content: flex-start; align-items: center; flex-wrap: wrap;
     }
     .swatch {
       flex: 0 0 auto; cursor: pointer;
-      display: flex; flex-direction: column;
-      align-items: center; gap: 4px;
-      padding: 2px;
+      display: flex; flex-direction: row;
+      align-items: center; gap: var(--sp-1);   /* 圆点↔文字 4px */
+      padding: 2px 0;
       transition: transform 0.15s;
     }
+    .swatch:active { transform: scale(0.94); }
     .swatch-dot {
-      width: 34px; height: 34px; border-radius: 50%;
-      border: 3px solid transparent;
-      box-sizing: border-box;
-      transition: border-color 0.15s;
+      width: 8px; height: 8px; border-radius: var(--r-full);
+      box-sizing: border-box; flex: 0 0 auto;
     }
     .swatch-text {
-      font-size: var(--fs-micro); color: var(--faint);
-      letter-spacing: 0.5px;
-      font-weight: 500;
+      font-size: var(--fs-micro); color: var(--muted);
+      letter-spacing: 0.3px; font-weight: 500;
     }
-    .swatch.selected { transform: scale(1.08); }
-    .swatch.selected .swatch-dot { border-color: var(--ink); }
-    .swatch.selected .swatch-text { color: var(--ink); font-weight: bold; }
-    .swatch-g .swatch-dot { background: var(--disabled); }
+    .swatch-g .swatch-dot { background: var(--disabled); box-shadow: inset 0 0 0 1.5px rgba(74,81,88,.42); }
     .swatch-1 .swatch-dot { background: var(--brand-tint); }
     .swatch-2 .swatch-dot { background: #cf4865; }
     .swatch-3 .swatch-dot { background: #834047; }
@@ -1741,7 +1733,6 @@
       const palette = document.createElement('div');
       palette.className = 'color-palette';
       palette.innerHTML = `
-        <div class="palette-label">先点日期选中,再点颜色 · 同色再点 = 取消</div>
         <div class="swatch swatch-g" data-level="4"><div class="swatch-dot"></div><div class="swatch-text">${escapeHtml(PALETTE[4].name)}</div></div>
         <div class="swatch swatch-1" data-level="1"><div class="swatch-dot"></div><div class="swatch-text">${escapeHtml(PALETTE[1].name)}</div></div>
         <div class="swatch swatch-2" data-level="2"><div class="swatch-dot"></div><div class="swatch-text">${escapeHtml(PALETTE[2].name)}</div></div>
