@@ -2218,7 +2218,7 @@
         : `<div class="pd-num">${daysUntilNext}<small>天</small></div>`;
       const pill = inPeriod ? `<div class="pd-pill">🌸 经期中 · 第 ${curDayInPeriod} 天</div>` : '';
       return `
-        <div class="pred-dial-wrap">
+        <div class="stcard pred-dial-wrap">
           <div class="pred-dial">
             ${svg}
             <div class="pd-center">
@@ -2232,7 +2232,6 @@
             <span><i style="background:var(--brand)"></i>经期(${Math.round(periodLen)}天)</span>
             <span><i style="background:#fff;border:1.5px solid var(--brand)"></i>今天</span>
           </div>
-          <div class="pd-note">环长 = 最近平均周期 ${cycLen} 天 · 红色为经期天数</div>
         </div>`;
     }
 
