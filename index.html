@@ -924,7 +924,7 @@
       flex: 0 0 auto; font-size: var(--fs-footnote); padding: 6px var(--sp-3); border-radius: var(--r-full);
       background: var(--line-soft); color: var(--muted); white-space: nowrap; cursor: pointer; border: none; font-family: inherit;
     }
-    .hm-chip.on { background: var(--hm-accent); color: #fff; font-weight: 600; }
+    .hm-chip.on { background: #FFFFFF; color: var(--ink); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
     /* 顶部 3 个数据块直接平铺(不套卡);与下方月历网格留「大区块之间」间距 --sp-8 */
     .hm-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: var(--sp-8); }
     .hm-tile { background: var(--surface); box-shadow: var(--shadow-sm); border-radius: var(--r-lg); padding: 12px 6px; text-align: center; }
@@ -955,7 +955,7 @@
     /* 绿色滑块:选中态跟着滑动,不再瞬间跳 */
     .hm-vt-thumb {
       position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
-      background: var(--hm-accent); border-radius: var(--r-full); box-shadow: var(--shadow-sm);
+      background: #FFFFFF; border-radius: var(--r-full); box-shadow: 0 2px 8px rgba(0,0,0,0.13);
       transform: translateX(0);
     }
     .hm-vt {
@@ -966,7 +966,7 @@
       -webkit-tap-highlight-color: transparent;   /* 关掉安卓点按时的蓝色高亮 */
       user-select: none; -webkit-user-select: none;
     }
-    .hm-vt.on { color: #fff; }
+    .hm-vt.on { color: var(--ink); }
     /* 视图切换:新内容横向滑入(方向跟随);只渲染单层,避免新旧重影 */
     #hmContent { overflow: hidden; }
     @media (prefers-reduced-motion: no-preference) {
