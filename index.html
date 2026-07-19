@@ -1019,6 +1019,11 @@
       -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
     }
     .hvt.on { color: var(--ink); }
+    /* 切月度/年度时,日历内容横向滑入(与热力图切视图一致) */
+    @media (prefers-reduced-motion: no-preference) {
+      #calendar.cal-enter-fwd  { animation: hmSlideInR .34s cubic-bezier(.22,.61,.36,1) both; }
+      #calendar.cal-enter-back { animation: hmSlideInL .34s cubic-bezier(.22,.61,.36,1) both; }
+    }
 
     /* ── 月视图:整月一张白卡片 ── */
     .calendar-container.month-view { display: block; margin: 0 var(--page-gutter); }
@@ -1358,6 +1363,7 @@
     let unsaved = false;
     // 首页视图:'month' 单月(默认) | 'year' 全年总览
     let homeView = 'month';
+    let homeSwapDir = null;   // 切月度/年度时的内容滑入方向('fwd'|'back'),只在切视图时置位
     let viewMonth = new Date().getMonth() + 1;   // 月视图当前显示的月份,默认当前月
 
     function getLevel(y, m, d) { return ALL_DATA[`${y}-${m}-${d}`] || 0; }
@@ -1518,6 +1524,16 @@
         cal.classList.remove('year-view', 'one-col');
       }
       cal.classList.toggle('sym-on', !!homeSymFilter && homeSymFilter !== '全部');
+      // 切月度/年度时内容横向滑入(与热力图一致);仅切视图时触发
+      const dir = homeSwapDir; homeSwapDir = null;
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      cal.classList.remove('cal-enter-fwd', 'cal-enter-back');
+      if (dir && !reduceMotion) {
+        void cal.offsetWidth;   // 强制回流,确保动画重新播放
+        const cls = 'cal-enter-' + dir;
+        cal.classList.add(cls);
+        cal.addEventListener('animationend', () => cal.classList.remove(cls), { once: true });
+      }
       renderHomeChips();
       updateViewToggleUI();
       if (typeof afterRender === 'function') afterRender();
@@ -1534,6 +1550,7 @@
     // 顶部标签:切换 月视图 / 年视图
     function setHomeView(v) {
       if (homeView === v) return;
+      homeSwapDir = (v === 'year') ? 'fwd' : 'back';   // 年度从右滑入,月度从左滑入
       homeView = v;
       selectedView = null;
       render();
