@@ -66,7 +66,12 @@
       --muted:  #64748B;  /* 辅助文字   (← #666) */
       --faint:  #94A3B8;  /* 弱化文字   (← #999·#888·#aaa) */
       --disabled: #CBD5E1;/* 禁用/占位  (← #b6bcc4·#dbdbdf) */
-      --bg:        #F9FAFB;  /* 页面底 */
+      --bg:        #F9FAFB;  /* 页面底 (旧纯色，保留兜底) */
+      /* 背景：粉灰 —— 中性灰略带一点粉,极淡 */
+      --bg-grad:   linear-gradient(180deg, #F7F1F3 0%, #F3E9ED 100%);
+      /* 磨砂噪点：极细颗粒纹理，透明度很低，营造雾面质感 */
+      --grain:     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
+      --frost:     rgba(243, 234, 238, 0.58);  /* 吸顶栏毛玻璃底(带粉调,让背景色渗上来) */
       --surface:   #FFFFFF;  /* 卡片面 */
       --surface-2: #F7F8FA;  /* 次级面   (← #f8fafc) */
       --line:      #E2E8F0;  /* 分割线   (← #eee) */
@@ -75,7 +80,10 @@
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
+      background: var(--grain), var(--bg-grad);
+      background-attachment: fixed, fixed;
+      background-size: 140px 140px, cover;
+      min-height: 100vh;
       margin: 0;
       padding: 8px 0 30px;
       /* 双指手势由脚本接管为“列数缩放”,禁用浏览器默认的整页捏合缩放;
@@ -88,10 +96,12 @@
     /* 首页顶部:标题 + 年份 + 症状标签条 整块置顶停留,风格与热力图页一致 */
     .home-sticky {
       position: sticky; top: 0; z-index: 50;
-      background: var(--bg); margin: -8px 0 8px;
+      background: var(--frost); margin: -8px 0 8px;
+      -webkit-backdrop-filter: blur(14px) saturate(1.3);
+      backdrop-filter: blur(14px) saturate(1.3);
     }
     .home-header {
-      background: var(--bg);
+      background: transparent;
       /* 与热力图等二级页的 .stats-header 同高:14px 内边距 + 10px 间距,标题栏统一 */
       padding: calc(14px + env(safe-area-inset-top)) var(--page-gutter) 14px;
       display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -103,7 +113,7 @@
     .home-chips {
       display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
       /* 标签条内边距与热力图 .hm-chips 一致(10px 上下),两页标签条同高 */
-      padding: 10px var(--page-gutter); background: var(--bg);
+      padding: 10px var(--page-gutter); background: transparent;
       box-shadow: var(--shadow-card);
     }
     .home-chips::-webkit-scrollbar { display: none; }
@@ -829,13 +839,14 @@
     .pd-note { font-size: var(--fs-footnote); color: var(--disabled); margin-top: 8px; }
 
     /* ── 整页模式：把弹窗改成占满屏幕、直接展示的页面（无遮罩、无浮层卡片） ── */
-    .stats-overlay.as-page { background: var(--bg); padding: 0;
+    .stats-overlay.as-page { background: var(--grain), var(--bg-grad);
+      background-attachment: fixed, fixed; background-size: 140px 140px, cover; padding: 0;
       -webkit-backdrop-filter: none; backdrop-filter: none; z-index: 70; }
     .stats-overlay.as-page.show { display: block; }
     .stats-overlay.as-page .stats-modal {
       width: 100%; max-width: none; height: 100%; max-height: none;
       border-radius: 0; box-shadow: none; animation: none;
-      background: var(--bg); display: flex; flex-direction: column;
+      background: transparent; display: flex; flex-direction: column;
     }
     /* 整页切换：淡入 + 轻微上滑 */
     @keyframes pageIn {
@@ -855,7 +866,9 @@
     .stats-overlay.as-page .stats-header {
       position: relative;
       justify-content: center;            /* 标题统一居中 */
-      background: var(--bg); border-bottom: 1px solid #eef0f2;
+      background: var(--frost); border-bottom: 1px solid rgba(199,31,55,.10);
+      -webkit-backdrop-filter: blur(14px) saturate(1.3);
+      backdrop-filter: blur(14px) saturate(1.3);
       padding: calc(14px + env(safe-area-inset-top)) var(--page-gutter) 14px;
     }
     .stats-overlay.as-page .stats-title { font-size: var(--fs-title); text-align: center; }
@@ -866,6 +879,10 @@
       margin: auto 0; height: 28px;
     }
     .stats-overlay.as-page .stats-body { flex: 1; overflow-y: auto; padding-bottom: 110px; }
+    /* 无标题栏的整页(周期总结·我的):内容区自行承担顶部安全区留白 */
+    #statsOverlay .stats-body, #meOverlay .stats-body {
+      padding-top: calc(14px + env(safe-area-inset-top));
+    }
     /* 顶层页(统计/同步/我的)右上角为“返回日历”；二级页(色卡/关于)为“返回” */
     .page-back {
       background: var(--line-soft); border: none; border-radius: var(--r-lg);
@@ -893,7 +910,9 @@
     .hm-sub { text-align: center; font-size: var(--fs-footnote); color: var(--faint); margin: 0 0 14px; }
     /* 症状标签横条：往下滑时也吸顶停留，随时知道当前看的是哪个标签 */
     .hm-chips { display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-      position: sticky; top: 0; z-index: 6; background: var(--bg);
+      position: sticky; top: 0; z-index: 6; background: var(--frost);
+      -webkit-backdrop-filter: blur(14px) saturate(1.3);
+      backdrop-filter: blur(14px) saturate(1.3);
       /* 标签条紧贴页头(与首页一致,页头与标签条之间不留缝) */
       margin: 0 calc(-1 * var(--page-gutter)) 14px; padding: 10px var(--page-gutter);
       box-shadow: var(--shadow-card); }
@@ -1006,6 +1025,21 @@
       background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
       padding: 6px 12px 16px;
     }
+    /* ── 卡片液态玻璃质感：半透明填充 + 强背景模糊 + 顶部整片光泽 + 内高光 ── */
+    .calendar-container.month-view .month,
+    .stcard, .me-tile, .hm-tile {
+      /* 上层:顶部白色光泽渐隐(借鉴 liquid glass 的 from-white to-transparent)
+         下层:半透明白填充 */
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.04) 48%, rgba(255,255,255,0.12) 100%),
+        rgba(255, 255, 255, 0.52);
+      -webkit-backdrop-filter: blur(28px) saturate(1.7);
+      backdrop-filter: blur(28px) saturate(1.7);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow:
+        0 8px 30px rgba(70, 55, 75, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
     /* 月视图月头:‹ 月 › 翻月按钮(不再左右滑动) */
     .mv-head { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 8px 0 12px; }
     .mv-nav {
@@ -1064,7 +1098,6 @@
 <body style="">
   <div class="home-sticky">
     <div class="home-header">
-      <h1>经期日历</h1>
       <div class="hm-yearbar">
         <button class="hm-nav" onclick="changeYear(-1)">‹</button>
         <div class="hm-year home-year" id="yearLabel" onclick="openYearPicker()">2026</div>
@@ -1072,8 +1105,8 @@
       </div>
       <div class="home-viewtoggle" id="homeViewToggle">
         <div class="hvt-thumb" id="hvtThumb"></div>
-        <button class="hvt on" data-view="month" onclick="setHomeView('month')">月视图</button>
-        <button class="hvt" data-view="year" onclick="setHomeView('year')">年视图</button>
+        <button class="hvt on" data-view="month" onclick="setHomeView('month')">月度</button>
+        <button class="hvt" data-view="year" onclick="setHomeView('year')">年度</button>
       </div>
     </div>
     <div class="home-chips" id="homeChips"></div>
@@ -1163,11 +1196,10 @@
   <div class="stats-overlay as-page heatmap-page" id="heatmapOverlay">
     <div class="stats-modal">
       <div class="stats-header hm-header">
-        <div class="stats-title">标签热力图</div>
         <div class="hm-viewtoggle">
           <div class="hm-vt-thumb" id="hmVtThumb"></div>
-          <button class="hm-vt on" data-view="year" onclick="setHeatView('year')">年视图</button>
-          <button class="hm-vt" data-view="tag" onclick="setHeatView('tag')">标签视图</button>
+          <button class="hm-vt on" data-view="year" onclick="setHeatView('year')">年度</button>
+          <button class="hm-vt" data-view="tag" onclick="setHeatView('tag')">标签</button>
         </div>
         <div class="hm-yearbar">
           <button class="hm-nav" onclick="heatNavShift(-1)">‹</button>
@@ -1186,9 +1218,6 @@
   <!-- 周期总结（整页） -->
   <div class="stats-overlay as-page" id="statsOverlay">
     <div class="stats-modal">
-      <div class="stats-header">
-        <div class="stats-title">周期总结</div>
-      </div>
       <div class="stats-body" id="statsBody">
           <div class="stats-pred">
             <div class="stats-pred-label">📅 预测下次经期</div>
@@ -1241,20 +1270,14 @@
   <!-- “我的”（整页） -->
   <div class="stats-overlay as-page" id="meOverlay">
     <div class="stats-modal">
-      <div class="stats-header">
-        <div class="stats-title">我的</div>
-      </div>
       <div class="stats-body me-body">
         <div class="me-tiles" id="meOverview"></div>
 
-        <button class="me-btn primary me-cta" onclick="saveFile()">
-          <span class="me-ic">💾</span>
-          <span class="me-txt">保存文件到本地<span class="unsaved-dot" id="unsavedDot"></span></span>
-          <span class="me-arrow" style="color:rgba(255,255,255,0.7)">›</span>
-        </button>
-
         <div class="stcard">
           <div class="stcard-title">数据与备份</div>
+          <button class="me-row" onclick="saveFile()">
+            <span class="me-ic">💾</span><span class="me-tx">保存文件到本地<span class="unsaved-dot" id="unsavedDot"></span></span><span class="me-ar">›</span>
+          </button>
           <button class="me-row" onclick="importData()">
             <span class="me-ic">📥</span><span class="me-tx">导入数据（文件 / 云端备份）</span><span class="me-ar">›</span>
           </button>
