@@ -597,7 +597,32 @@
       outline-offset: -2px;
     }
 
-    /* ── 日期记录信息栏:独立卡片(选中日期后显示状态 + 症状编辑) ── */
+    /* ── 当天状态卡片(经期第几天等) ── */
+    .day-status-bar {
+      margin-top: 12px;
+      padding: 16px 14px;
+      border-radius: var(--r-lg);
+      text-align: center;
+    }
+    .ds-date {
+      font-size: var(--fs-callout); font-weight: bold;
+      color: var(--ink); margin-bottom: 10px;
+    }
+    .ds-status {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 16px; border-radius: var(--r-full);
+      font-size: var(--fs-subhead); font-weight: 600;
+    }
+    .ds-status .ds-emoji { font-size: 17px; line-height: 1; }
+    .ds-status .ds-main b { font-size: 1.2em; margin: 0 1px; }
+    .ds-period { background: var(--brand-soft); color: var(--brand-dark); }
+    .ds-spot   { background: var(--line-soft);  color: var(--muted); }
+    .ds-none   { background: var(--line-soft);  color: var(--faint); font-weight: 500; }
+    .ds-sub {
+      margin-top: 8px; font-size: var(--fs-footnote); color: var(--muted);
+    }
+
+    /* ── 日期记录信息栏:独立卡片(选中日期后显示症状标签) ── */
     .day-info-bar {
       margin-top: 12px;
       padding: 16px 14px;
@@ -1044,6 +1069,7 @@
     /* ── 卡片液态玻璃质感：半透明填充 + 强背景模糊 + 顶部整片光泽 + 内高光 ── */
     .calendar-container.month-view .month,
     .calendar-container.month-view .day-info-bar,
+    .calendar-container.month-view .day-status-bar,
     .stcard, .me-tile, .hm-tile {
       /* 上层:顶部白色光泽渐隐(借鉴 liquid glass 的 from-white to-transparent)
          下层:半透明白填充 */
@@ -1793,7 +1819,13 @@
         s.onclick = (e) => { e.stopPropagation(); applySelectedColor(+s.dataset.level); };
       });
 
-      // 日期信息栏(选中某天后显示状态 + 症状编辑)—— 独立卡片,置于日历卡片下方
+      // 当天状态卡片(经期第几天等)—— 独立卡片,置于标签卡片之前
+      const statusBar = document.createElement('div');
+      statusBar.className = 'day-status-bar';
+      statusBar.id = 'dayStatusBar';
+      cal.appendChild(statusBar);
+
+      // 日期信息栏(选中某天后显示症状标签)—— 独立卡片,置于状态卡片下方
       const infoBar = document.createElement('div');
       infoBar.className = 'day-info-bar';
       infoBar.id = 'dayInfoBar';
@@ -1992,8 +2024,52 @@
       }
     }
 
+    // 判断某天的经期状态:none(无) / spotting(点滴 GOTAS) / period(经期,含第几天)
+    function getDayStatus(y, m, d) {
+      const lv = getLevel(y, m, d);
+      if (lv === 0) return { kind: 'none', lv };
+      if (lv === 4) return { kind: 'spotting', lv };   // GOTAS 点滴,不计入经期
+      // lv 1/2/3:真正的经期,找出所属经期段与是第几天
+      const { periods } = computeCycles();
+      const sel = new Date(y, m - 1, d).getTime();
+      for (const p of periods) {
+        if (sel >= p.start.getTime() && sel <= p.end.getTime()) {
+          const dayNo = Math.round((sel - p.start.getTime()) / 86400000) + 1;
+          return { kind: 'period', lv, dayNo, total: p.length };
+        }
+      }
+      return { kind: 'period', lv, dayNo: 1, total: 1 };
+    }
+
+    // 渲染「当天状态」卡片(经期第几天等)
+    function renderDayStatusBar() {
+      const sb = document.getElementById('dayStatusBar');
+      if (!sb) return;
+      if (!selectedView) { sb.style.display = 'none'; return; }
+      sb.style.display = '';
+      const { y, m, d } = selectedView;
+      const st = getDayStatus(y, m, d);
+      let statusHtml;
+      if (st.kind === 'period') {
+        const flow = PALETTE[st.lv] ? `${PALETTE[st.lv].name} ${LEVEL_SUFFIX[st.lv] || ''}`.trim() : '';
+        statusHtml =
+          `<div class="ds-status ds-period"><span class="ds-emoji">🌸</span><span class="ds-main">经期 · 第 <b>${st.dayNo}</b> 天</span></div>` +
+          `<div class="ds-sub">出血量 ${escapeHtml(flow)} · 本段共 ${st.total} 天</div>`;
+      } else if (st.kind === 'spotting') {
+        const nm = PALETTE[4] ? PALETTE[4].name : 'GOTAS';
+        statusHtml =
+          `<div class="ds-status ds-spot"><span class="ds-emoji">🩸</span><span class="ds-main">点滴 · ${escapeHtml(nm)}</span></div>` +
+          `<div class="ds-sub">少量出血,不计入经期</div>`;
+      } else {
+        statusHtml =
+          `<div class="ds-status ds-none"><span class="ds-emoji">○</span><span class="ds-main">今日无经期记录</span></div>`;
+      }
+      sb.innerHTML = `<div class="ds-date">${y}年${m}月${d}日</div>${statusHtml}`;
+    }
+
     // 渲染放大态下底部的"日期信息栏"
     function renderDayInfoBar() {
+      renderDayStatusBar();
       const bar = document.getElementById('dayInfoBar');
       if (!bar) return; // 没在放大态
 
@@ -2003,9 +2079,7 @@
       }
 
       const { y, m, d } = selectedView;
-      const lv = getLevel(y, m, d);
       const today = getSym(y, m, d);
-      const lvText = levelName(lv);
 
       const todayTagsHtml = today.length === 0
         ? '<div class="info-empty">还没有记录 — 从下方选择或新建</div>'
@@ -2021,7 +2095,6 @@
           ).join('');
 
       bar.innerHTML = `
-        <div class="info-date">${y}年${m}月${d}日 · ${lvText}</div>
         <div class="info-section-title">当天症状</div>
         <div class="info-tags" id="infoTodayTags">${todayTagsHtml}</div>
         <div class="info-section-title">从已有标签选择</div>
