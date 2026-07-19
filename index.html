@@ -614,7 +614,7 @@
       flex: 0 0 auto;
     }
     .ds-v {
-      font-size: var(--fs-body); color: var(--ink); font-weight: 600;
+      font-size: var(--fs-body); color: var(--ink); font-weight: 400;
       text-align: right;
     }
     .ds-v.ds-hl { color: var(--brand-dark); }
@@ -2048,20 +2048,19 @@
       const st = getDayStatus(y, m, d);
       const row = (k, v, hl) =>
         `<div class="ds-row"><span class="ds-k">${k}</span><span class="ds-v${hl ? ' ds-hl' : ''}">${v}</span></div>`;
-      let rows = row('日期', `${y}年${m}月${d}日`);
+      let rows;
       if (st.kind === 'period') {
         const flow = PALETTE[st.lv] ? `${PALETTE[st.lv].name} ${LEVEL_SUFFIX[st.lv] || ''}`.trim() : '';
-        rows +=
+        rows =
           row('经期状态', `经期 · 第 ${st.dayNo} 天`, true) +
-          row('出血量', escapeHtml(flow)) +
-          row('本段天数', `共 ${st.total} 天`);
+          row('出血量', escapeHtml(flow));
       } else if (st.kind === 'spotting') {
         const nm = PALETTE[4] ? PALETTE[4].name : 'GOTAS';
-        rows +=
+        rows =
           row('经期状态', `点滴 · ${escapeHtml(nm)}`) +
           row('说明', '少量出血,不计入经期');
       } else {
-        rows += row('经期状态', '无经期记录');
+        rows = row('经期状态', '无经期记录');
       }
       sb.innerHTML = rows;
     }
