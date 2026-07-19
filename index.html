@@ -620,6 +620,17 @@
     .info-tags {
       display: flex; flex-wrap: wrap; gap: 6px;
     }
+    /* 「从已有标签选择」默认只显示一行,超出裁剪 */
+    .info-tags.collapsed {
+      max-height: 30px; overflow: hidden;
+    }
+    /* 展开/收起按钮 */
+    .info-toggle {
+      margin-top: 8px; padding: 0; border: none; background: none;
+      color: var(--brand); font-size: var(--fs-footnote); font-weight: 600;
+      font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .info-toggle:active { opacity: 0.6; }
     .info-tag {
       display: inline-flex; align-items: center;
       padding: 5px 10px; border-radius: var(--r-lg);
@@ -1731,6 +1742,7 @@
     // ── 放大某个月卡片 ──
     let zoomedMonth = null;   // 旧「弹窗放大」已废弃,保留变量恒为 null 以兼容历史判断
     let selectedView = null;  // {y, m, d} - 当前在信息栏查看/编辑的日期
+    let libTagsExpanded = false; // 「从已有标签选择」是否展开(默认只显示一行)
 
     // 旧「放大某月」→ 现在等价于切到该月的月视图
     function zoomMonth(month) {
@@ -2013,7 +2025,8 @@
         <div class="info-section-title">当天症状</div>
         <div class="info-tags" id="infoTodayTags">${todayTagsHtml}</div>
         <div class="info-section-title">从已有标签选择</div>
-        <div class="info-tags" id="infoLibTags">${libTagsHtml}</div>
+        <div class="info-tags${libTagsExpanded ? '' : ' collapsed'}" id="infoLibTags">${libTagsHtml}</div>
+        <button type="button" class="info-toggle" id="infoLibToggle" style="display:none"></button>
         <div class="info-section-title">新建标签</div>
         <div class="info-add-row">
           <input type="text" class="info-input" id="infoInput" placeholder="例如:头痛、腰酸、情绪低落" maxlength="20">
@@ -2036,6 +2049,27 @@
           }
         };
       });
+      // 「从已有标签选择」默认只显示一行,超出时给出展开/收起按钮
+      const libTagsEl = bar.querySelector('#infoLibTags');
+      const libToggle = bar.querySelector('#infoLibToggle');
+      if (libTagsEl && libToggle) {
+        // 先按折叠态测量,判断标签是否超过一行
+        libTagsEl.classList.add('collapsed');
+        const needsToggle = libTagsEl.scrollHeight - libTagsEl.clientHeight > 1;
+        if (libTagsExpanded) libTagsEl.classList.remove('collapsed');
+        if (needsToggle) {
+          libToggle.style.display = '';
+          libToggle.textContent = libTagsExpanded ? '收起 ▲' : '展开全部 ▼';
+        } else {
+          libToggle.style.display = 'none';
+          libTagsEl.classList.remove('collapsed'); // 一行内放得下就不裁剪
+        }
+        libToggle.onclick = (ev) => {
+          ev.stopPropagation();
+          libTagsExpanded = !libTagsExpanded;
+          renderDayInfoBar();
+        };
+      }
       bar.querySelector('#infoAddBtn').onclick = (ev) => {
         ev.stopPropagation();
         addNewSymptom();
