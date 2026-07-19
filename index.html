@@ -875,6 +875,10 @@
       margin: auto 0; height: 28px;
     }
     .stats-overlay.as-page .stats-body { flex: 1; overflow-y: auto; padding-bottom: 110px; }
+    /* 无标题栏的整页(周期总结·我的):内容区自行承担顶部安全区留白 */
+    #statsOverlay .stats-body, #meOverlay .stats-body {
+      padding-top: calc(14px + env(safe-area-inset-top));
+    }
     /* 顶层页(统计/同步/我的)右上角为“返回日历”；二级页(色卡/关于)为“返回” */
     .page-back {
       background: var(--line-soft); border: none; border-radius: var(--r-lg);
@@ -1075,7 +1079,6 @@
 <body style="">
   <div class="home-sticky">
     <div class="home-header">
-      <h1>经期日历</h1>
       <div class="hm-yearbar">
         <button class="hm-nav" onclick="changeYear(-1)">‹</button>
         <div class="hm-year home-year" id="yearLabel" onclick="openYearPicker()">2026</div>
@@ -1174,7 +1177,6 @@
   <div class="stats-overlay as-page heatmap-page" id="heatmapOverlay">
     <div class="stats-modal">
       <div class="stats-header hm-header">
-        <div class="stats-title">标签热力图</div>
         <div class="hm-viewtoggle">
           <div class="hm-vt-thumb" id="hmVtThumb"></div>
           <button class="hm-vt on" data-view="year" onclick="setHeatView('year')">年视图</button>
@@ -1197,9 +1199,6 @@
   <!-- 周期总结（整页） -->
   <div class="stats-overlay as-page" id="statsOverlay">
     <div class="stats-modal">
-      <div class="stats-header">
-        <div class="stats-title">周期总结</div>
-      </div>
       <div class="stats-body" id="statsBody">
           <div class="stats-pred">
             <div class="stats-pred-label">📅 预测下次经期</div>
@@ -1252,9 +1251,6 @@
   <!-- “我的”（整页） -->
   <div class="stats-overlay as-page" id="meOverlay">
     <div class="stats-modal">
-      <div class="stats-header">
-        <div class="stats-title">我的</div>
-      </div>
       <div class="stats-body me-body">
         <div class="me-tiles" id="meOverview"></div>
 
