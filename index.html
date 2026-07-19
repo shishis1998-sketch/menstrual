@@ -597,30 +597,27 @@
       outline-offset: -2px;
     }
 
-    /* ── 当天状态卡片(经期第几天等) ── */
+    /* ── 当天状态卡片(经期第几天等):左标题 / 右内容 逐行显示 ── */
     .day-status-bar {
       margin-top: 12px;
-      padding: 16px 14px;
+      padding: 6px 14px;
       border-radius: var(--r-lg);
-      text-align: center;
     }
-    .ds-date {
-      font-size: var(--fs-callout); font-weight: bold;
-      color: var(--ink); margin-bottom: 10px;
+    .ds-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 12px; padding: 11px 0;
+      border-bottom: 1px solid var(--line-soft);
     }
-    .ds-status {
-      display: inline-flex; align-items: center; gap: 7px;
-      padding: 8px 16px; border-radius: var(--r-full);
-      font-size: var(--fs-subhead); font-weight: 600;
+    .ds-row:last-child { border-bottom: none; }
+    .ds-k {
+      font-size: var(--fs-footnote); color: var(--faint);
+      flex: 0 0 auto;
     }
-    .ds-status .ds-emoji { font-size: 17px; line-height: 1; }
-    .ds-status .ds-main b { font-size: 1.2em; margin: 0 1px; }
-    .ds-period { background: var(--brand-soft); color: var(--brand-dark); }
-    .ds-spot   { background: var(--line-soft);  color: var(--muted); }
-    .ds-none   { background: var(--line-soft);  color: var(--faint); font-weight: 500; }
-    .ds-sub {
-      margin-top: 8px; font-size: var(--fs-footnote); color: var(--muted);
+    .ds-v {
+      font-size: var(--fs-body); color: var(--ink); font-weight: 600;
+      text-align: right;
     }
+    .ds-v.ds-hl { color: var(--brand-dark); }
 
     /* ── 日期记录信息栏:独立卡片(选中日期后显示症状标签) ── */
     .day-info-bar {
@@ -2049,22 +2046,24 @@
       sb.style.display = '';
       const { y, m, d } = selectedView;
       const st = getDayStatus(y, m, d);
-      let statusHtml;
+      const row = (k, v, hl) =>
+        `<div class="ds-row"><span class="ds-k">${k}</span><span class="ds-v${hl ? ' ds-hl' : ''}">${v}</span></div>`;
+      let rows = row('日期', `${y}年${m}月${d}日`);
       if (st.kind === 'period') {
         const flow = PALETTE[st.lv] ? `${PALETTE[st.lv].name} ${LEVEL_SUFFIX[st.lv] || ''}`.trim() : '';
-        statusHtml =
-          `<div class="ds-status ds-period"><span class="ds-emoji">🌸</span><span class="ds-main">经期 · 第 <b>${st.dayNo}</b> 天</span></div>` +
-          `<div class="ds-sub">出血量 ${escapeHtml(flow)} · 本段共 ${st.total} 天</div>`;
+        rows +=
+          row('经期状态', `经期 · 第 ${st.dayNo} 天`, true) +
+          row('出血量', escapeHtml(flow)) +
+          row('本段天数', `共 ${st.total} 天`);
       } else if (st.kind === 'spotting') {
         const nm = PALETTE[4] ? PALETTE[4].name : 'GOTAS';
-        statusHtml =
-          `<div class="ds-status ds-spot"><span class="ds-emoji">🩸</span><span class="ds-main">点滴 · ${escapeHtml(nm)}</span></div>` +
-          `<div class="ds-sub">少量出血,不计入经期</div>`;
+        rows +=
+          row('经期状态', `点滴 · ${escapeHtml(nm)}`) +
+          row('说明', '少量出血,不计入经期');
       } else {
-        statusHtml =
-          `<div class="ds-status ds-none"><span class="ds-emoji">○</span><span class="ds-main">今日无经期记录</span></div>`;
+        rows += row('经期状态', '无经期记录');
       }
-      sb.innerHTML = `<div class="ds-date">${y}年${m}月${d}日</div>${statusHtml}`;
+      sb.innerHTML = rows;
     }
 
     // 渲染放大态下底部的"日期信息栏"
