@@ -2959,6 +2959,9 @@
 
     function openHeatmap() {
       if (typeof zoomedMonth !== 'undefined' && zoomedMonth) unzoomMonth();
+      // 每次进入热力图都回到「月度」(按月标签卡片)视图作为第一页,
+      // 不保留上次可能切到的「年度」视图
+      heatView = 'tag';
       // 若过滤的标签已被删除，退回“全部”
       if (heatFilter !== '全部' && !SYMPTOMS_LIB.includes(heatFilter)) heatFilter = '全部';
       renderHeatmap();
