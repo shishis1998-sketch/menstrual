@@ -904,9 +904,13 @@
       --hm0: #ecedf0; --hm1: #cfe1d7; --hm2: #86b5a0; --hm3: #407f66; --hm4: #164a3b;
       --hm-accent: #1c5a48;
     }
-    /* 页头：标题在上、年份在下，整块置顶不随内容滚动 */
-    /* 同一行:年份切换在左、视图切换在右(与首页头部一致) */
-    .hm-header { flex-direction: row; justify-content: space-between; align-items: center; gap: 12px; }
+    /* 同一行:年份切换在左、视图切换在右(与首页头部一致)。
+       权重需盖过 .stats-overlay.as-page .stats-header 的「居中 + 品牌红描边」——
+       年份改为靠左对齐,并去掉那条描边(首页页头本就无描边,两页统一为无缝磨砂条)。 */
+    .stats-overlay.as-page .hm-header {
+      flex-direction: row; justify-content: space-between; align-items: center; gap: 12px;
+      border-bottom: none;
+    }
     .hm-yearbar { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 0; }
     .hm-year { font-size: var(--fs-title); font-weight: bold; color: var(--ink); min-width: 66px; text-align: center; }
     .hm-nav {
