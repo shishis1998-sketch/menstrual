@@ -755,6 +755,9 @@
     .me-row .me-ic { font-size: var(--fs-subhead); width: 22px; text-align: center; }
     .me-row .me-tx { flex: 1; }
     .me-row .me-ar { color: var(--disabled); font-size: var(--fs-body); }
+    /* 危险操作行(清空记录):文字与箭头红色以示警示 */
+    .me-row.danger { color: var(--danger); }
+    .me-row.danger .me-ar { color: var(--danger); opacity: .6; }
     /* 保存(主) / 清空(危险)保留为独立醒目按钮,与相邻卡片同走 --sp-5 间距 */
     .me-cta { margin: var(--sp-5) 0 0; }
     .me-clear { margin-top: var(--sp-5); }
@@ -1285,6 +1288,9 @@
             <span class="me-ic">☁️</span><span class="me-tx">云端同步设置</span>
             <span class="cloud-status-dot" id="cloudStatusDot"></span><span class="me-ar">›</span>
           </button>
+          <button class="me-row danger" onclick="clearAllData()">
+            <span class="me-ic">🗑️</span><span class="me-tx">清空全部记录</span><span class="me-ar">›</span>
+          </button>
         </div>
 
         <div class="stcard">
@@ -1299,11 +1305,6 @@
             <span class="me-ic">ℹ️</span><span class="me-tx">关于</span><span class="me-ar">›</span>
           </button>
         </div>
-
-        <button class="me-btn danger me-clear" onclick="clearAllData()">
-          <span class="me-ic">🗑️</span>
-          <span class="me-txt">清空全部记录</span>
-        </button>
 
         <div class="me-foot">经期日历 · 数据仅存本机与你的云端 Gist</div>
       </div>
