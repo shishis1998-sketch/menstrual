@@ -1221,8 +1221,8 @@
         </div>
         <div class="hm-viewtoggle">
           <div class="hm-vt-thumb" id="hmVtThumb"></div>
-          <button class="hm-vt" data-view="tag" onclick="setHeatView('tag')">月度</button>
-          <button class="hm-vt on" data-view="year" onclick="setHeatView('year')">年度</button>
+          <button class="hm-vt on" data-view="tag" onclick="setHeatView('tag')">月度</button>
+          <button class="hm-vt" data-view="year" onclick="setHeatView('year')">年度</button>
         </div>
       </div>
       <div class="stats-body">
@@ -2952,7 +2952,7 @@
     // “全部”模式：格子深浅 = 当天标签数量；单标签模式：有该标签 = 深绿，无 = 灰
     let heatYear = new Date().getFullYear();
     let heatMonth = new Date().getMonth() + 1;   // 标签视图当前月(1..12)
-    let heatView = 'year';     // 'year' 全年热力图 · 'tag' 按月按标签卡片
+    let heatView = 'tag';      // 默认「月度」(tag) 按月卡片 · 'year' 全年热力图
     let heatFilter = '全部';   // '全部' 或某个标签名
     const HM_WK = ['一','二','三','四','五','六','日'];
     const HM_RAMP = ['var(--hm0)','var(--hm1)','var(--hm2)','var(--hm3)','var(--hm4)'];
