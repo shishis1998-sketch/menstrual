@@ -69,8 +69,8 @@
       --faint:  #94A3B8;  /* 弱化文字   (← #999·#888·#aaa) */
       --disabled: #CBD5E1;/* 禁用/占位  (← #b6bcc4·#dbdbdf) */
       --bg:        #F9FAFB;  /* 页面底 (旧纯色，保留兜底) */
-      /* 背景：珍珠云幕 —— 冷调珍珠灰竖向渐到近白 */
-      --bg-grad:   linear-gradient(180deg, #D4D6DB 0%, #F8F9FB 100%);
+      /* 背景：灰白色纯色（无渐变）。方案 C 中浅灰；可切换 A #F5F6F8 / B #EFF1F4 / D #E7EAEE / E #F1F0ED */
+      --bg-grad:   #ECEEF1;
       /* 磨砂噪点：极细颗粒纹理，透明度很低，营造雾面质感 */
       --grain:     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
       --frost:     rgba(226, 228, 233, 0.55);  /* 吸顶栏毛玻璃底(冷灰调,让珍珠灰渗上来) */
@@ -82,9 +82,9 @@
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--grain), var(--bg-grad);
-      background-attachment: fixed, fixed;
-      background-size: 140px 140px, cover;
+      background: var(--bg-grad);
+      background-attachment: fixed;
+      background-size: cover;
       min-height: 100vh;
       margin: 0;
       padding: 8px 0 30px;
