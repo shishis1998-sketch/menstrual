@@ -614,7 +614,7 @@
       flex: 0 0 auto;
     }
     .ds-v {
-      font-size: var(--fs-body); color: var(--ink); font-weight: 400;
+      font-size: var(--fs-caption); color: var(--ink); font-weight: 400;
       text-align: right;
     }
     .ds-v.ds-hl { color: var(--brand-dark); }
@@ -2058,7 +2058,7 @@
         const nm = PALETTE[4] ? PALETTE[4].name : 'GOTAS';
         rows =
           row('经期状态', `点滴 · ${escapeHtml(nm)}`) +
-          row('说明', '少量出血,不计入经期');
+          row('说明', '少量出血，不计入经期');
       } else {
         rows = row('经期状态', '无经期记录');
       }
