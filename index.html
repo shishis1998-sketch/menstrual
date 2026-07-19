@@ -597,11 +597,11 @@
       outline-offset: -2px;
     }
 
-    /* ── 底部信息栏(嵌入在放大卡片内) ── */
+    /* ── 日期记录信息栏:独立卡片(选中日期后显示状态 + 症状编辑) ── */
     .day-info-bar {
       margin-top: 12px;
-      padding: 12px 4px 4px;
-      border-top: 1px solid var(--line);
+      padding: 16px 14px;
+      border-radius: var(--r-lg);
     }
     .info-date {
       font-size: var(--fs-callout); font-weight: bold;
@@ -718,19 +718,6 @@
     .bnav-tab svg.ic-fill { fill: currentColor; stroke: none; display: none; }
     .bnav-tab.on svg.ic-line { display: none; }
     .bnav-tab.on svg.ic-fill { display: block; }
-    /* 记录键：独立悬浮右下角、导航条上方，品牌红全填色 */
-    .bnav-fab {
-      position: fixed; right: 16px; z-index: 81;
-      bottom: calc(70px + env(safe-area-inset-bottom));
-      width: 54px; height: 54px; border-radius: 50%;
-      background: var(--brand); color: #fff; border: none;
-      box-shadow: 0 6px 16px rgba(199,31,55,.36);
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-      font-family: inherit; -webkit-tap-highlight-color: transparent;
-      transition: transform 0.15s ease;
-    }
-    .bnav-fab:active { transform: scale(0.9); }
-    .bnav-fab svg { width: 26px; height: 26px; }
     /* “我的”标签上的未保存小红点 */
     .bnav-dot {
       position: absolute; top: 6px; right: calc(50% - 14px);
@@ -1045,6 +1032,7 @@
     }
     /* ── 卡片液态玻璃质感：半透明填充 + 强背景模糊 + 顶部整片光泽 + 内高光 ── */
     .calendar-container.month-view .month,
+    .calendar-container.month-view .day-info-bar,
     .stcard, .me-tile, .hm-tile {
       /* 上层:顶部白色光泽渐隐(借鉴 liquid glass 的 from-white to-transparent)
          下层:半透明白填充 */
@@ -1108,9 +1096,8 @@
     .calendar-container.month-view .sym-list {
       display: block; margin: 14px 4px 2px; padding-top: 12px; border-top: 1px solid var(--line);
     }
-    /* 月视图里的色板/信息栏顶边距 */
-    .calendar-container.month-view .color-palette,
-    .calendar-container.month-view .day-info-bar { margin-left: 4px; margin-right: 4px; }
+    /* 月视图里的色板顶边距 */
+    .calendar-container.month-view .color-palette { margin-left: 4px; margin-right: 4px; }
   </style>
 </head>
 <body style="">
@@ -1794,11 +1781,11 @@
         s.onclick = (e) => { e.stopPropagation(); applySelectedColor(+s.dataset.level); };
       });
 
-      // 日期信息栏(选中某天后显示状态 + 症状编辑)
+      // 日期信息栏(选中某天后显示状态 + 症状编辑)—— 独立卡片,置于日历卡片下方
       const infoBar = document.createElement('div');
       infoBar.className = 'day-info-bar';
       infoBar.id = 'dayInfoBar';
-      card.appendChild(infoBar);
+      cal.appendChild(infoBar);
 
       // 本月状态记录(只读汇总)追加在卡片下方
       const list = buildMonthSymList(viewMonth);
@@ -2867,10 +2854,6 @@
       </button>
     </div>
   </nav>
-  <!-- 记录键：独立悬浮于右下角、导航条上方 -->
-  <button class="bnav-fab" onclick="recordToday()" aria-label="记录今天">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-  </button>
 
   <script>
     // ── 底部导航：整页视图切换（不再是弹窗） ──
@@ -2906,19 +2889,6 @@
       setActiveTab('cal');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    function recordToday() {
-      hideAllPages();
-      setActiveTab('cal');
-      const now = new Date();
-      year = now.getFullYear();
-      viewMonth = now.getMonth() + 1;
-      homeView = 'month';                         // 切到本月的月视图
-      selectedView = null;
-      render();
-      selectDayForView(year, viewMonth, now.getDate());   // 选中今天,直接进入记录
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
     // “我的”页面
     function openMe() {
       if (typeof zoomedMonth !== 'undefined' && zoomedMonth) unzoomMonth();
