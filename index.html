@@ -117,7 +117,7 @@
       box-shadow: var(--shadow-card);
     }
     .home-chips::-webkit-scrollbar { display: none; }
-    .home-chips .hm-chip.on { background: var(--brand); color: #fff; font-weight: 600; }
+    .home-chips .hm-chip.on { background: #FFFFFF; color: var(--ink); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
     .year-switcher {
       display: flex; align-items: center; justify-content: center;
       gap: 16px; margin: 4px 0 8px;
@@ -1007,7 +1007,7 @@
     }
     .hvt-thumb {
       position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
-      background: var(--brand); border-radius: var(--r-full); box-shadow: var(--shadow-sm);
+      background: #FFFFFF; border-radius: var(--r-full); box-shadow: 0 2px 8px rgba(0,0,0,0.13);
       transform: translateX(0); transition: transform .35s cubic-bezier(.22,.61,.36,1);
     }
     .hvt-thumb.year { transform: translateX(100%); }
@@ -1018,7 +1018,7 @@
       -webkit-appearance: none; appearance: none; outline: none;
       -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
     }
-    .hvt.on { color: #fff; }
+    .hvt.on { color: var(--ink); }
 
     /* ── 月视图:整月一张白卡片 ── */
     .calendar-container.month-view { display: block; margin: 0 var(--page-gutter); }
