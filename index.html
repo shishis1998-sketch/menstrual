@@ -67,9 +67,11 @@
       --faint:  #94A3B8;  /* 弱化文字   (← #999·#888·#aaa) */
       --disabled: #CBD5E1;/* 禁用/占位  (← #b6bcc4·#dbdbdf) */
       --bg:        #F9FAFB;  /* 页面底 (旧纯色，保留兜底) */
-      /* 背景渐变：玫瑰晨光 —— 左上淡红对角渐到白，很淡不压文字 */
-      --bg-grad:   linear-gradient(135deg, #FCE7EB 0%, #FEF6F3 46%, #FFFFFF 100%);
-      --frost:     rgba(255, 250, 251, 0.72);  /* 吸顶栏毛玻璃底 */
+      /* 背景渐变：玫瑰晨光(更淡) —— 左上极淡红对角渐到白 */
+      --bg-grad:   linear-gradient(135deg, #FEF2F5 0%, #FFF8F6 48%, #FFFFFF 100%);
+      /* 磨砂噪点：极细颗粒纹理，透明度很低，营造雾面质感 */
+      --grain:     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+      --frost:     rgba(255, 251, 252, 0.66);  /* 吸顶栏毛玻璃底(更淡) */
       --surface:   #FFFFFF;  /* 卡片面 */
       --surface-2: #F7F8FA;  /* 次级面   (← #f8fafc) */
       --line:      #E2E8F0;  /* 分割线   (← #eee) */
@@ -78,8 +80,9 @@
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-grad);
-      background-attachment: fixed;
+      background: var(--grain), var(--bg-grad);
+      background-attachment: fixed, fixed;
+      background-size: 140px 140px, cover;
       min-height: 100vh;
       margin: 0;
       padding: 8px 0 30px;
@@ -836,7 +839,8 @@
     .pd-note { font-size: var(--fs-footnote); color: var(--disabled); margin-top: 8px; }
 
     /* ── 整页模式：把弹窗改成占满屏幕、直接展示的页面（无遮罩、无浮层卡片） ── */
-    .stats-overlay.as-page { background: var(--bg-grad); background-attachment: fixed; padding: 0;
+    .stats-overlay.as-page { background: var(--grain), var(--bg-grad);
+      background-attachment: fixed, fixed; background-size: 140px 140px, cover; padding: 0;
       -webkit-backdrop-filter: none; backdrop-filter: none; z-index: 70; }
     .stats-overlay.as-page.show { display: block; }
     .stats-overlay.as-page .stats-modal {
@@ -1254,14 +1258,11 @@
       <div class="stats-body me-body">
         <div class="me-tiles" id="meOverview"></div>
 
-        <button class="me-btn primary me-cta" onclick="saveFile()">
-          <span class="me-ic">💾</span>
-          <span class="me-txt">保存文件到本地<span class="unsaved-dot" id="unsavedDot"></span></span>
-          <span class="me-arrow" style="color:rgba(255,255,255,0.7)">›</span>
-        </button>
-
         <div class="stcard">
           <div class="stcard-title">数据与备份</div>
+          <button class="me-row" onclick="saveFile()">
+            <span class="me-ic">💾</span><span class="me-tx">保存文件到本地<span class="unsaved-dot" id="unsavedDot"></span></span><span class="me-ar">›</span>
+          </button>
           <button class="me-row" onclick="importData()">
             <span class="me-ic">📥</span><span class="me-tx">导入数据（文件 / 云端备份）</span><span class="me-ar">›</span>
           </button>
