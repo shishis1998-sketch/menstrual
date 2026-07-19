@@ -1076,9 +1076,10 @@
       -webkit-backdrop-filter: blur(28px) saturate(1.7);
       backdrop-filter: blur(28px) saturate(1.7);
       border: 1px solid rgba(255, 255, 255, 0.7);
+      /* 负 spread 让阴影向内收,四角随圆角平滑收束,避免底部两角出现直角接缝 */
       box-shadow:
-        0 4px 14px rgba(70, 55, 75, 0.06),
-        0 1px 3px rgba(70, 55, 75, 0.04),
+        0 6px 16px -4px rgba(70, 55, 75, 0.10),
+        0 2px 5px -2px rgba(70, 55, 75, 0.06),
         inset 0 1px 0 rgba(255, 255, 255, 0.6);
     }
     /* 月视图月头:‹ 月 › 翻月按钮(不再左右滑动) */
@@ -3136,13 +3137,14 @@
       if (heatView === 'tag') {
         chips.style.display = 'none';
         document.getElementById('hmYear').textContent = `${heatYear}年${heatMonth}月`;
-        sub.textContent = '每张卡 = 一个标签这个月记录的日子';
+        sub.style.display = 'none';   // 月度视图不显示说明文字
         setContent(renderTagCards(), dir);
         return;
       }
 
       // 年视图（全年热力图）
       chips.style.display = '';
+      sub.style.display = '';
       sub.textContent = '每一格 = 那天记的标签，越多越深';
       document.getElementById('hmYear').textContent = heatYear;
 
