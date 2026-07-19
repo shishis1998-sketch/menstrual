@@ -104,9 +104,10 @@
     }
     .home-header {
       background: transparent;
-      /* 与热力图等二级页的 .stats-header 同高:14px 内边距 + 10px 间距,标题栏统一 */
+      /* 与热力图等二级页的 .stats-header 同高:14px 内边距,标题栏统一 */
       padding: calc(14px + env(safe-area-inset-top)) var(--page-gutter) 14px;
-      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      /* 同一行:年份切换在左、视图切换在右(两页头部一致) */
+      display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 12px;
     }
     .home-header h1 { margin: 0; }
     .home-year { cursor: pointer; }
@@ -904,7 +905,8 @@
       --hm-accent: #1c5a48;
     }
     /* 页头：标题在上、年份在下，整块置顶不随内容滚动 */
-    .hm-header { flex-direction: column; align-items: center; gap: 10px; }
+    /* 同一行:年份切换在左、视图切换在右(与首页头部一致) */
+    .hm-header { flex-direction: row; justify-content: space-between; align-items: center; gap: 12px; }
     .hm-yearbar { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 0; }
     .hm-year { font-size: var(--fs-title); font-weight: bold; color: var(--ink); min-width: 66px; text-align: center; }
     .hm-nav {
@@ -955,7 +957,7 @@
     .hm-dl b { color: var(--ink); }
     .hm-empty { text-align: center; color: var(--faint); font-size: var(--fs-caption); padding: 40px 10px; line-height: 1.8; }
     /* ── 标签视图（按月·按标签的卡片）── */
-    .hm-viewtoggle { position: relative; display: flex; width: 200px; max-width: 100%; background: var(--line-soft); border-radius: var(--r-full); padding: 3px; }
+    .hm-viewtoggle { position: relative; display: flex; width: auto; flex: 0 0 auto; background: var(--line-soft); border-radius: var(--r-full); padding: 3px; }
     /* 绿色滑块:选中态跟着滑动,不再瞬间跳 */
     .hm-vt-thumb {
       position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
@@ -963,8 +965,8 @@
       transform: translateX(0);
     }
     .hm-vt {
-      position: relative; z-index: 1; flex: 1; border: none; background: transparent; font-family: inherit;
-      font-size: var(--fs-footnote); font-weight: 600; color: var(--muted); padding: 6px 0;
+      position: relative; z-index: 1; flex: 0 0 auto; border: none; background: transparent; font-family: inherit;
+      font-size: var(--fs-footnote); font-weight: 600; color: var(--muted); padding: 6px 14px;
       border-radius: var(--r-full); cursor: pointer; transition: color .32s ease;
       -webkit-appearance: none; appearance: none; outline: none;
       -webkit-tap-highlight-color: transparent;   /* 关掉安卓点按时的蓝色高亮 */
@@ -1006,8 +1008,8 @@
        ═══════════════════════════════════════════════════════════ */
     /* 顶部「月视图 / 年视图」切换胶囊(与热力图页同款) */
     .home-viewtoggle {
-      position: relative; display: flex; width: 200px; max-width: 100%;
-      background: var(--line-soft); border-radius: var(--r-full); padding: 3px; margin: 2px auto 0;
+      position: relative; display: flex; width: auto; flex: 0 0 auto;
+      background: var(--line-soft); border-radius: var(--r-full); padding: 3px; margin: 0;
     }
     .hvt-thumb {
       position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
@@ -1016,8 +1018,8 @@
     }
     .hvt-thumb.year { transform: translateX(100%); }
     .hvt {
-      position: relative; z-index: 1; flex: 1; border: none; background: transparent; font-family: inherit;
-      font-size: var(--fs-footnote); font-weight: 600; color: var(--muted); padding: 6px 0;
+      position: relative; z-index: 1; flex: 0 0 auto; border: none; background: transparent; font-family: inherit;
+      font-size: var(--fs-footnote); font-weight: 600; color: var(--muted); padding: 6px 14px;
       border-radius: var(--r-full); cursor: pointer; transition: color .3s;
       -webkit-appearance: none; appearance: none; outline: none;
       -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
@@ -1208,15 +1210,15 @@
   <div class="stats-overlay as-page heatmap-page" id="heatmapOverlay">
     <div class="stats-modal">
       <div class="stats-header hm-header">
-        <div class="hm-viewtoggle">
-          <div class="hm-vt-thumb" id="hmVtThumb"></div>
-          <button class="hm-vt on" data-view="year" onclick="setHeatView('year')">年度</button>
-          <button class="hm-vt" data-view="tag" onclick="setHeatView('tag')">标签</button>
-        </div>
         <div class="hm-yearbar">
           <button class="hm-nav" onclick="heatNavShift(-1)">‹</button>
           <div class="hm-year" id="hmYear">2026</div>
           <button class="hm-nav" onclick="heatNavShift(1)">›</button>
+        </div>
+        <div class="hm-viewtoggle">
+          <div class="hm-vt-thumb" id="hmVtThumb"></div>
+          <button class="hm-vt" data-view="tag" onclick="setHeatView('tag')">月度</button>
+          <button class="hm-vt on" data-view="year" onclick="setHeatView('year')">年度</button>
         </div>
       </div>
       <div class="stats-body">
@@ -3040,7 +3042,8 @@
       // 同步视图切换按钮的选中态 + 滑块位置
       document.querySelectorAll('.hm-vt').forEach(b => b.classList.toggle('on', b.dataset.view === heatView));
       const thumb = document.getElementById('hmVtThumb');
-      if (thumb) thumb.style.transform = heatView === 'tag' ? 'translateX(100%)' : 'translateX(0)';
+      // 月度(tag) 在左、年度(year) 在右
+      if (thumb) thumb.style.transform = heatView === 'year' ? 'translateX(100%)' : 'translateX(0)';
 
       const chips = document.getElementById('hmChips');
       const sub = document.getElementById('hmSub');
