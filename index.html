@@ -1004,13 +1004,19 @@
     }
     @keyframes hmSlideInR { from { opacity:0; transform: translateX(8%);  } to { opacity:1; transform: translateX(0); } }
     @keyframes hmSlideInL { from { opacity:0; transform: translateX(-8%); } to { opacity:1; transform: translateX(0); } }
-    .hm-tagcards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    /* align-items:start —— 每张卡按自身内容定高,不被同行更高的卡拉伸;
+       否则内容较矮的卡会被撑高,底部多出一段空白,四张卡的下沿(及阴影)看起来参差不齐 */
+    .hm-tagcards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-items: start; }
     .hm-tcard {
       background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-lg);
       box-shadow: var(--shadow-sm); padding: 12px 11px 11px;
+      /* min-width:0 —— 让网格列始终按 1fr 均分,长标签在卡内省略,不把本列撑宽 */
+      min-width: 0;
     }
     .hm-tc-head { margin-bottom: 2px; }
-    .hm-tc-name { font-size: var(--fs-callout); font-weight: 700; color: var(--ink); }
+    /* 标签名固定单行(过长省略号)——保证每张卡的卡头等高,进而四张卡整体等高、下沿对齐 */
+    .hm-tc-name { font-size: var(--fs-callout); font-weight: 700; color: var(--ink);
+      display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .hm-tc-meta { font-size: var(--fs-footnote); color: var(--muted); margin: 0 0 9px; }
     .hm-tc-meta b { color: var(--hm-accent); font-weight: 700; }
     .hm-tc-wk { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 3px; }
