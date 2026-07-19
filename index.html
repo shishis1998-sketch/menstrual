@@ -66,7 +66,10 @@
       --muted:  #64748B;  /* 辅助文字   (← #666) */
       --faint:  #94A3B8;  /* 弱化文字   (← #999·#888·#aaa) */
       --disabled: #CBD5E1;/* 禁用/占位  (← #b6bcc4·#dbdbdf) */
-      --bg:        #F9FAFB;  /* 页面底 */
+      --bg:        #F9FAFB;  /* 页面底 (旧纯色，保留兜底) */
+      /* 背景渐变：玫瑰晨光 —— 左上淡红对角渐到白，很淡不压文字 */
+      --bg-grad:   linear-gradient(135deg, #FCE7EB 0%, #FEF6F3 46%, #FFFFFF 100%);
+      --frost:     rgba(255, 250, 251, 0.72);  /* 吸顶栏毛玻璃底 */
       --surface:   #FFFFFF;  /* 卡片面 */
       --surface-2: #F7F8FA;  /* 次级面   (← #f8fafc) */
       --line:      #E2E8F0;  /* 分割线   (← #eee) */
@@ -75,7 +78,9 @@
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
+      background: var(--bg-grad);
+      background-attachment: fixed;
+      min-height: 100vh;
       margin: 0;
       padding: 8px 0 30px;
       /* 双指手势由脚本接管为“列数缩放”,禁用浏览器默认的整页捏合缩放;
@@ -88,10 +93,12 @@
     /* 首页顶部:标题 + 年份 + 症状标签条 整块置顶停留,风格与热力图页一致 */
     .home-sticky {
       position: sticky; top: 0; z-index: 50;
-      background: var(--bg); margin: -8px 0 8px;
+      background: var(--frost); margin: -8px 0 8px;
+      -webkit-backdrop-filter: blur(14px) saturate(1.3);
+      backdrop-filter: blur(14px) saturate(1.3);
     }
     .home-header {
-      background: var(--bg);
+      background: transparent;
       /* 与热力图等二级页的 .stats-header 同高:14px 内边距 + 10px 间距,标题栏统一 */
       padding: calc(14px + env(safe-area-inset-top)) var(--page-gutter) 14px;
       display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -103,7 +110,7 @@
     .home-chips {
       display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
       /* 标签条内边距与热力图 .hm-chips 一致(10px 上下),两页标签条同高 */
-      padding: 10px var(--page-gutter); background: var(--bg);
+      padding: 10px var(--page-gutter); background: transparent;
       box-shadow: var(--shadow-card);
     }
     .home-chips::-webkit-scrollbar { display: none; }
@@ -829,13 +836,13 @@
     .pd-note { font-size: var(--fs-footnote); color: var(--disabled); margin-top: 8px; }
 
     /* ── 整页模式：把弹窗改成占满屏幕、直接展示的页面（无遮罩、无浮层卡片） ── */
-    .stats-overlay.as-page { background: var(--bg); padding: 0;
+    .stats-overlay.as-page { background: var(--bg-grad); background-attachment: fixed; padding: 0;
       -webkit-backdrop-filter: none; backdrop-filter: none; z-index: 70; }
     .stats-overlay.as-page.show { display: block; }
     .stats-overlay.as-page .stats-modal {
       width: 100%; max-width: none; height: 100%; max-height: none;
       border-radius: 0; box-shadow: none; animation: none;
-      background: var(--bg); display: flex; flex-direction: column;
+      background: transparent; display: flex; flex-direction: column;
     }
     /* 整页切换：淡入 + 轻微上滑 */
     @keyframes pageIn {
@@ -855,7 +862,9 @@
     .stats-overlay.as-page .stats-header {
       position: relative;
       justify-content: center;            /* 标题统一居中 */
-      background: var(--bg); border-bottom: 1px solid #eef0f2;
+      background: var(--frost); border-bottom: 1px solid rgba(199,31,55,.10);
+      -webkit-backdrop-filter: blur(14px) saturate(1.3);
+      backdrop-filter: blur(14px) saturate(1.3);
       padding: calc(14px + env(safe-area-inset-top)) var(--page-gutter) 14px;
     }
     .stats-overlay.as-page .stats-title { font-size: var(--fs-title); text-align: center; }
@@ -893,7 +902,9 @@
     .hm-sub { text-align: center; font-size: var(--fs-footnote); color: var(--faint); margin: 0 0 14px; }
     /* 症状标签横条：往下滑时也吸顶停留，随时知道当前看的是哪个标签 */
     .hm-chips { display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-      position: sticky; top: 0; z-index: 6; background: var(--bg);
+      position: sticky; top: 0; z-index: 6; background: var(--frost);
+      -webkit-backdrop-filter: blur(14px) saturate(1.3);
+      backdrop-filter: blur(14px) saturate(1.3);
       /* 标签条紧贴页头(与首页一致,页头与标签条之间不留缝) */
       margin: 0 calc(-1 * var(--page-gutter)) 14px; padding: 10px var(--page-gutter);
       box-shadow: var(--shadow-card); }
