@@ -26,6 +26,8 @@
       --sp-1: 4px;   --sp-2: 8px;   --sp-3: 12px;  --sp-4: 16px;
       --sp-5: 20px;  --sp-6: 24px;  --sp-8: 32px;  --sp-10: 40px;
       --sp-12: 48px; --sp-16: 64px; --sp-20: 80px;
+      /* 卡片外边距语义令牌:卡片与卡片、卡片与吸顶栏统一间距(介于 sp-4/sp-5) */
+      --sp-card: 18px;
       /* 四个页面统一的水平外边距 */
       --page-gutter: var(--sp-4);   /* 16px */
 
@@ -96,7 +98,7 @@
     /* 首页顶部:标题 + 年份 + 症状标签条 整块置顶停留,风格与热力图页一致 */
     .home-sticky {
       position: sticky; top: 0; z-index: 50;
-      background: var(--frost); margin: -8px 0 8px;
+      background: var(--frost); margin: -8px 0 var(--sp-card);
       -webkit-backdrop-filter: blur(14px) saturate(1.3);
       backdrop-filter: blur(14px) saturate(1.3);
     }
@@ -403,8 +405,8 @@
     /* ── 统计页卡片式（周期概览 / 周期轨迹 / 明细）——沿用现有令牌 ── */
     .stcard {
       background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
-      /* 卡片外边距统一走设计规范的 --sp-5(20px)——见 DESIGN.md 03/06 */
-      padding: var(--sp-5) var(--sp-4) var(--sp-4); margin-top: var(--sp-5);
+      /* 卡片外边距统一走 --sp-card(18px)——见 DESIGN.md 03/06 */
+      padding: var(--sp-5) var(--sp-4) var(--sp-4); margin-top: var(--sp-card);
     }
     .stcard-title {
       font-size: var(--fs-subhead); font-weight: 700; color: var(--ink); margin: 0 0 var(--sp-4);
@@ -739,7 +741,7 @@
     /* ── “我的”页面 ── */
     /* 「我的」顶部 3 个居中数据小卡,直接平铺(不套卡),与热力图同款 */
     /* 卡片/按钮之间统一走「卡片外边距」令牌 --sp-5(20px)，避免拥挤 */
-    .me-body .stcard { margin-top: var(--sp-5); }
+    .me-body .stcard { margin-top: var(--sp-card); }
     .me-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     /* 平铺小卡走白底 + 轻阴影，与下方分组卡(.stcard)统一 */
     .me-tile { background: var(--surface); box-shadow: var(--shadow-sm); border-radius: var(--r-lg); padding: var(--sp-3) var(--sp-1); text-align: center; }
