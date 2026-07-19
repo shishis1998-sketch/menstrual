@@ -723,10 +723,16 @@
     .bottom-nav {
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
       display: flex; align-items: center; gap: 6px;
-      /* 贴底整条：顶部圆角、底边齐平、顶边浅阴影 */
-      background: var(--surface); border: none;
+      /* 贴底整条：顶部圆角、底边齐平；与卡片统一的玻璃质感(半透明白 + 背景模糊) */
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.28) 100%),
+        rgba(255, 255, 255, 0.72);
+      -webkit-backdrop-filter: blur(28px) saturate(1.7);
+      backdrop-filter: blur(28px) saturate(1.7);
+      border: none; border-top: 1px solid rgba(255, 255, 255, 0.7);
       border-top-left-radius: 20px; border-top-right-radius: 20px;
-      box-shadow: var(--shadow-nav);
+      /* 与卡片同色系、负 spread 的柔和阴影(方向朝上) */
+      box-shadow: 0 -4px 20px -4px rgba(70, 55, 75, 0.10);
       padding: 7px 10px calc(8px + env(safe-area-inset-bottom));
     }
     .bnav-pill {
