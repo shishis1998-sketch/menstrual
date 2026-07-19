@@ -403,7 +403,8 @@
     /* ── 统计页卡片式（周期概览 / 周期轨迹 / 明细）——沿用现有令牌 ── */
     .stcard {
       background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
-      padding: var(--sp-5) var(--sp-4) var(--sp-4); margin-top: 14px;
+      /* 卡片外边距统一走设计规范的 --sp-5(20px)——见 DESIGN.md 03/06 */
+      padding: var(--sp-5) var(--sp-4) var(--sp-4); margin-top: var(--sp-5);
     }
     .stcard-title {
       font-size: var(--fs-subhead); font-weight: 700; color: var(--ink); margin: 0 0 var(--sp-4);
@@ -823,7 +824,8 @@
       background: var(--surface-2); border-radius: var(--r-md); padding: 12px 14px; }
 
     /* ── 预测圆盘（经期段 + 倒计时） ── */
-    .pred-dial-wrap { text-align: center; margin: 2px 0 18px; }
+    /* 圆环卡为统计页首个卡片:顶部间距由 stats-body 内边距承担,与下方卡片间距走 --sp-5 */
+    .pred-dial-wrap { text-align: center; margin-top: 0; }
     .pred-dial { position: relative; width: 220px; height: 220px; margin: 0 auto; }
     .pred-dial svg { width: 220px; height: 220px; display: block; }
     .pd-arc { transition: stroke-dasharray 0.6s ease; }
