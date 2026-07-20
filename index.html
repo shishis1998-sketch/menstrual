@@ -954,8 +954,8 @@
       background: var(--line-soft); color: var(--muted); white-space: nowrap; cursor: pointer; border: none; font-family: inherit;
     }
     .hm-chip.on { background: #FFFFFF; color: var(--ink); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
-    /* 顶部 3 个数据块直接平铺(不套卡);与下方月历网格留「大区块之间」间距 --sp-8 */
-    .hm-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: var(--sp-8); }
+    /* 顶部 3 个数据块直接平铺(不套卡);下间距由紧随其后的「标签轨迹」卡承担(--sp-card) */
+    .hm-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 0; }
     .hm-tile { background: var(--surface); box-shadow: var(--shadow-sm); border-radius: var(--r-lg); padding: 12px 6px; text-align: center; }
     .hm-tile .n { font-size: var(--fs-stat); font-weight: 800; color: var(--hm-accent); line-height: 1.15; }
     .hm-tile .n small { font-size: var(--fs-footnote); font-weight: 700; }
@@ -1007,7 +1007,8 @@
     @keyframes hmSlideInL { from { opacity:0; transform: translateX(-8%); } to { opacity:1; transform: translateX(0); } }
     /* align-items:start —— 每张卡按自身内容定高,不被同行更高的卡拉伸;
        否则内容较矮的卡会被撑高,底部多出一段空白,四张卡的下沿(及阴影)看起来参差不齐 */
-    .hm-tagcards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-items: start; }
+    /* 月视图卡片与吸顶页头之间留「卡片外边距」--sp-card(18px),与全站卡片↔吸顶栏一致 */
+    .hm-tagcards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-items: start; margin-top: var(--sp-card); }
     .hm-tcard {
       background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-lg);
       box-shadow: var(--shadow-sm); padding: 12px 11px 11px;
@@ -3248,7 +3249,7 @@
       const total = monthDays.reduce((a, b) => a + b, 0);
       const head = `<div class="stcard-title">标签轨迹</div>`;
       if (total === 0) {
-        return `<div class="stcard" style="margin:0 0 var(--sp-8)">${head}` +
+        return `<div class="stcard" style="margin:var(--sp-card) 0 var(--sp-8)">${head}` +
           `<div class="cyc-empty">${heatYear} 年还没有标签记录</div></div>`;
       }
       let maxV = 1;
@@ -3262,7 +3263,7 @@
           : `<div class="cyc-col empty"></div>`;
         xs += `<span>${mo + 1}</span>`;
       }
-      return `<div class="stcard" style="margin:0 0 var(--sp-8)">${head}
+      return `<div class="stcard" style="margin:var(--sp-card) 0 var(--sp-8)">${head}
           <div class="cyc-plot">
             <div class="cyc-grid"><i style="top:0"></i><i style="top:33.3%"></i><i style="top:66.6%"></i></div>
             ${cols}
