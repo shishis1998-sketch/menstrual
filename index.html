@@ -923,8 +923,8 @@
       --hm0: #ecedf0; --hm1: #cfe1d7; --hm2: #86b5a0; --hm3: #407f66; --hm4: #164a3b;
       --hm-accent: #1c5a48;
     }
-    /* 例外：第三页热力图不染粉，背景保持纯白(让墨绿色阶读数更干净) */
-    .stats-overlay.as-page.heatmap-page { background: #FFFFFF; }
+    /* 热力图页用淡灰底(非粉),让纯白卡片(概览/标签轨迹)明显浮起、不与背景融合 */
+    .stats-overlay.as-page.heatmap-page { background: var(--grain), #F9FAFB; }
     /* 同一行:年份切换在左、视图切换在右(与首页头部一致)。
        权重需盖过 .stats-overlay.as-page .stats-header 的「居中 + 品牌红描边」——
        年份改为靠左对齐,并去掉那条描边(首页页头本就无描边,两页统一为无缝磨砂条)。 */
@@ -3139,8 +3139,7 @@
 
       // 年视图（全年热力图）
       chips.style.display = '';
-      sub.style.display = '';
-      sub.textContent = '每一格 = 那天记的标签，越多越深';
+      sub.style.display = 'none';   // 去掉「每一格=…」说明文字
       document.getElementById('hmYear').textContent = heatYear;
 
       // 标签筛选 chips
@@ -3247,8 +3246,7 @@
     // 「全部」= 当月有任一标签的天数,选了某标签 = 当月记该标签的天数。跟随页头年份。
     function buildTagTrack(monthDays, filter) {
       const total = monthDays.reduce((a, b) => a + b, 0);
-      const subTxt = filter === '全部' ? '每月有标签记录的天数' : `每月记「${escapeHtml(filter)}」的天数`;
-      const head = `<div class="stcard-title">标签轨迹 <span class="sub">${subTxt}</span></div>`;
+      const head = `<div class="stcard-title">标签轨迹</div>`;
       if (total === 0) {
         return `<div class="stcard" style="margin:0 0 var(--sp-8)">${head}` +
           `<div class="cyc-empty">${heatYear} 年还没有标签记录</div></div>`;
