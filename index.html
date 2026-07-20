@@ -3165,6 +3165,7 @@
       let tagDays = 0;                 // 单标签模式：出现天数
       let lastTagKey = null;           // 单标签：最近一次
       const tagCount = {};             // 全部模式：各标签出现天数 → 找最常见
+      const monthDays = new Array(12).fill(0);  // 各月「有记录天数」(随筛选变) → 标签轨迹
 
       let gridHtml = '';
       for (let mo = 0; mo < 12; mo++) {
@@ -3182,7 +3183,11 @@
             symDays++;
             totalInstances += list.length;
             list.forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1; });
-            if (heatFilter !== '全部' && list.includes(heatFilter)) { tagDays++; lastTagKey = key; }
+            if (heatFilter === '全部') {
+              monthDays[mo]++;
+            } else if (list.includes(heatFilter)) {
+              tagDays++; lastTagKey = key; monthDays[mo]++;
+            }
           }
           const dark = lv >= 3 ? ' dark' : '';
           gridHtml += `<div class="hm-cellwrap"><div class="hm-cell${dark}" style="background:${HM_RAMP[lv]}">${d}</div></div>`;
@@ -3233,7 +3238,39 @@
       const hintHtml = `<div class="stats-hint">💡 颜色越深 = 那天记的标签越多；灰色 = 当天没记录。<br>` +
         `💡 点顶部标签，只看某一个症状的全年分布。</div>`;
 
-      setContent(tilesHtml + `<div class="hm-year-grid">${gridHtml}</div>` + distHtml + hintHtml, dir);
+      const trackHtml = buildTagTrack(monthDays, heatFilter);
+
+      setContent(tilesHtml + trackHtml + `<div class="hm-year-grid">${gridHtml}</div>` + distHtml + hintHtml, dir);
+    }
+
+    // 标签轨迹：当年每月「有记录天数」的柱状图，样式复用周期轨迹(.cyc-*)。单组绿柱;
+    // 「全部」= 当月有任一标签的天数,选了某标签 = 当月记该标签的天数。跟随页头年份。
+    function buildTagTrack(monthDays, filter) {
+      const total = monthDays.reduce((a, b) => a + b, 0);
+      const subTxt = filter === '全部' ? '每月有标签记录的天数' : `每月记「${escapeHtml(filter)}」的天数`;
+      const head = `<div class="stcard-title">标签轨迹 <span class="sub">${subTxt}</span></div>`;
+      if (total === 0) {
+        return `<div class="stcard" style="margin:0 0 var(--sp-8)">${head}` +
+          `<div class="cyc-empty">${heatYear} 年还没有标签记录</div></div>`;
+      }
+      let maxV = 1;
+      monthDays.forEach(v => { if (v > maxV) maxV = v; });
+      const scale = maxV * 1.18;   // 顶部给数值标签留空间
+      let cols = '', xs = '';
+      for (let mo = 0; mo < 12; mo++) {
+        const v = monthDays[mo];
+        cols += v > 0
+          ? `<div class="cyc-col"><div class="cyc-bar c" style="height:${(v / scale * 100).toFixed(1)}%"><span class="num">${v}</span></div></div>`
+          : `<div class="cyc-col empty"></div>`;
+        xs += `<span>${mo + 1}</span>`;
+      }
+      return `<div class="stcard" style="margin:0 0 var(--sp-8)">${head}
+          <div class="cyc-plot">
+            <div class="cyc-grid"><i style="top:0"></i><i style="top:33.3%"></i><i style="top:66.6%"></i></div>
+            ${cols}
+          </div>
+          <div class="cyc-x">${xs}</div>
+        </div>`;
     }
 
     // 标签视图：当月每个「有记录」的标签一张卡，卡里是当月日历，记过的那天点亮。返回 HTML 字符串
