@@ -4,6 +4,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>经期日历</title>
   <style>
+    /* 中文字体：内嵌 Noto Sans SC 常用字子集(≈3778 字,只含中文字形,不含数字/英文)。
+       放在字体栈 -apple-system 之后：苹果设备中文仍用真苹方(不下载此字体),
+       安卓/Windows 中文用此字体统一观感;数字与英文各平台仍走系统字体。
+       font-display:swap → 先用系统字秒显示,字体到位后无缝替换,不阻塞首屏。 */
+    @font-face {
+      font-family: 'AppSC';
+      src: url('./fonts/NotoSansSC-subset.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
     /* ═══════════════════════════════════════════════════════════════
        间距系统 · Spacing System  (v1)
        基于 4px 基准单位的 11 级刻度,四个页面共用同一套内外边距节奏。
@@ -81,7 +92,7 @@
       --info:   #0EA5E9;  --danger: #E11D48;  --ok: #16A34A;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'AppSC', sans-serif;
       background: var(--bg-grad);
       background-attachment: fixed;
       background-size: cover;
@@ -451,6 +462,9 @@
     .cyc-bar.c .num { color: var(--ink-2); }
     .cyc-col.empty::before { content: ""; position: absolute; bottom: 0; left: 22%; right: 22%;
       border-top: 2px dashed var(--disabled); border-radius: 2px; }
+    /* 标签轨迹：有记录的柱子可点击，跳到年热力图里该月的日期格 */
+    .cyc-col.hm-track-col { cursor: pointer; }
+    .cyc-col.hm-track-col:active .cyc-bar.c { filter: brightness(1.25); }
     .cyc-x { display: flex; margin-top: 7px; }
     .cyc-x span { flex: 1; text-align: center; font-size: var(--fs-micro); color: var(--faint); }
     .cyc-empty { text-align: center; color: var(--faint); font-size: var(--fs-footnote); padding: 30px 0; }
@@ -3101,14 +3115,18 @@
     function setHeatFilter(name) {
       heatFilter = name;
       renderHeatmap();
-      // 选中具体标签时，自动跳到当年第一个有记录（有色）的日期；无记录则提示
-      if (heatFilter !== '全部') {
-        requestAnimationFrame(() => {
-          const first = document.querySelector('#hmContent .hm-cell.dark');
-          if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          else showToast(`「${heatFilter}」${heatYear} 年还没有记录`);
-        });
-      }
+      // 点标签只做筛选，不再自动跳转日期；跳转改由「标签轨迹」的柱状条触发
+    }
+
+    // 点击「标签轨迹」某月柱状条：滚动定位到年热力图中该月的日期格
+    function heatScrollToMonth(mo) {
+      requestAnimationFrame(() => {
+        const minis = document.querySelectorAll('#hmContent .hm-year-grid .hm-mini');
+        const mini = minis[mo];
+        if (!mini) return;
+        const target = mini.querySelector('.hm-cell.dark') || mini;
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
     }
 
     // 某天在当前过滤下的“强度等级”(0=无, 1..4)
@@ -3259,7 +3277,7 @@
       for (let mo = 0; mo < 12; mo++) {
         const v = monthDays[mo];
         cols += v > 0
-          ? `<div class="cyc-col"><div class="cyc-bar c" style="height:${(v / scale * 100).toFixed(1)}%"><span class="num">${v}</span></div></div>`
+          ? `<div class="cyc-col hm-track-col" data-mo="${mo}" onclick="heatScrollToMonth(${mo})"><div class="cyc-bar c" style="height:${(v / scale * 100).toFixed(1)}%"><span class="num">${v}</span></div></div>`
           : `<div class="cyc-col empty"></div>`;
         xs += `<span>${mo + 1}</span>`;
       }
