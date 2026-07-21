@@ -4,9 +4,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>经期日历</title>
   <style>
-    /* 中文字体：内嵌 Noto Sans SC 常用字子集(≈3778 字,只含中文字形,不含数字/英文)。
-       放在字体栈 -apple-system 之后：苹果设备中文仍用真苹方(不下载此字体),
-       安卓/Windows 中文用此字体统一观感;数字与英文各平台仍走系统字体。
+    /* 内嵌 Noto Sans SC 常用字子集(≈3874 字：GB2312 一级 + 界面用字 + 基本拉丁数字/英文)。
+       放在字体栈 -apple-system 之后：苹果设备一律用系统字(SF+苹方,本就配套),且不下载此字体;
+       安卓/Windows 则中文与数字/英文统一用此字体,避免中文与数字字体割裂。
        font-display:swap → 先用系统字秒显示,字体到位后无缝替换,不阻塞首屏。 */
     @font-face {
       font-family: 'AppSC';
