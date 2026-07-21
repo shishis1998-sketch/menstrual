@@ -3236,7 +3236,7 @@
       } else {
         const daysInYear = ((heatYear % 4 === 0 && heatYear % 100 !== 0) || heatYear % 400 === 0) ? 366 : 365;
         let lastTxt = '—';
-        if (lastTagKey) { const p = lastTagKey.split('-'); lastTxt = `${p[1]}月${p[2]}日`; }
+        if (lastTagKey) { const p = lastTagKey.split('-'); lastTxt = `${p[1]}<small>月</small>${p[2]}<small>日</small>`; }
         tiles = [
           { n: `${tagDays}<small> 天</small>`, l: '今年出现' },
           { n: lastTxt, l: '最近一次' },
