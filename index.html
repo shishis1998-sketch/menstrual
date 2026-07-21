@@ -418,14 +418,16 @@
     /* 与其他页翻页钮(.hm-nav)保持一致:白底 + 1px 淡描边 */
     .cyc-nav { background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 50%;
       width: 30px; height: 30px; box-sizing: border-box; position: relative;
-      font-size: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+      font-size: 0; color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .cyc-nav:active { background: var(--line-soft); }
-    /* 统一箭头:用 CSS 边框画 chevron,几何居中于圆心水平线,略加粗 */
-    .hm-nav::before, .cyc-nav::before {
-      content: ""; position: absolute; top: 50%; left: 50%; width: 7px; height: 7px;
-      border-right: 1.8px solid var(--muted); border-bottom: 1.8px solid var(--muted); }
-    .hm-nav.prev::before, .cyc-nav.prev::before { transform: translate(-30%, -50%) rotate(135deg); }
-    .hm-nav.next::before, .cyc-nav.next::before { transform: translate(-70%, -50%) rotate(-45deg); }
+    /* 统一箭头:CSS 边框画 chevron(5px/1.4px);圆钮内几何居中,月份翻页贴左右边缘 */
+    .hm-nav::before, .cyc-nav::before, .mv-nav::before {
+      content: ""; position: absolute; top: 50%; width: 5px; height: 5px;
+      border-right: 1.4px solid currentColor; border-bottom: 1.4px solid currentColor; }
+    .hm-nav.prev::before, .cyc-nav.prev::before { left: 50%; transform: translate(-30%, -50%) rotate(135deg); }
+    .hm-nav.next::before, .cyc-nav.next::before { left: 50%; transform: translate(-70%, -50%) rotate(-45deg); }
+    .mv-nav.prev::before { left: 14px;  transform: translateY(-50%) rotate(135deg); }
+    .mv-nav.next::before { right: 14px; transform: translateY(-50%) rotate(-45deg); }
     .cyc-year { font-size: var(--fs-callout); font-weight: 700; color: var(--ink-2);
       min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
     /* 概览：2×2 数据小卡 */
@@ -955,7 +957,7 @@
       /* 白底圆钮:去阴影,改 1px 淡描边勾边,从灰/粉底轻轻分离,更简洁 */
       background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 50%;
       width: 30px; height: 30px; box-sizing: border-box; position: relative;
-      font-size: 0; cursor: pointer; -webkit-tap-highlight-color: transparent;
+      font-size: 0; color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
     .hm-nav:active { background: var(--line-soft); }
     /* 让吸顶标签条紧贴页头,顶部留白改由 hm-sub 承担,避免滚动内容从缝里露出 */
@@ -1100,14 +1102,12 @@
     }
     /* 月视图月头:‹ 月 › 翻月按钮(不再左右滑动) */
     .mv-head { display: flex; align-items: center; margin: 8px 0 12px; }
-    /* 无背景箭头：整个左半区 / 右半区都可点击翻月 */
+    /* 无背景箭头(chevron 贴边)：整个左半区 / 右半区都可点击翻月 */
     .mv-nav {
-      background: none; border: none; flex: 1 1 0; height: 40px;
-      font-size: 18px; color: var(--muted); cursor: pointer; line-height: 1;
-      font-family: inherit; padding: 0 14px; -webkit-tap-highlight-color: transparent;
+      background: none; border: none; flex: 1 1 0; height: 40px; position: relative;
+      font-size: 0; color: var(--muted); cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
-    .mv-nav.prev { text-align: left; }
-    .mv-nav.next { text-align: right; }
     .mv-nav:active { color: var(--ink); }
     .mv-title { font-size: var(--fs-subhead); font-weight: 700; flex: 0 0 auto; text-align: center; color: var(--ink); }
 
@@ -1530,9 +1530,9 @@
       const startOffset = firstDay === 0 ? 6 : firstDay - 1;
 
       const head = withNav
-        ? `<div class="mv-head"><button class="mv-nav prev" onclick="changeViewMonth(-1)">‹</button>` +
+        ? `<div class="mv-head"><button class="mv-nav prev" onclick="changeViewMonth(-1)" aria-label="上一月"></button>` +
           `<div class="mv-title">${month} 月</div>` +
-          `<button class="mv-nav next" onclick="changeViewMonth(1)">›</button></div>`
+          `<button class="mv-nav next" onclick="changeViewMonth(1)" aria-label="下一月"></button></div>`
         : `<div class="month-title">${month} 月</div>`;
 
       let html = `<div class="month" data-month="${month}">${head}
