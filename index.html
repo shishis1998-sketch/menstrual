@@ -415,9 +415,10 @@
     /* 周期轨迹卡：标题行 + 右侧紧凑年份切换 */
     .cyc-head { display: flex; align-items: center; justify-content: space-between; }
     .cyc-yearbar { display: flex; align-items: center; gap: 8px; }
-    /* 与其他页翻页钮(.hm-nav)保持一致:白底 + 1px 淡描边,字形箭头 */
+    /* 与其他页翻页钮(.hm-nav)保持一致:白底 + 1px 淡描边,字形箭头,flex 居中并下压 1px */
     .cyc-nav { background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 50%;
-      width: 30px; height: 30px; box-sizing: border-box; padding: 0;
+      width: 30px; height: 30px; box-sizing: border-box; padding: 2px 0 0;
+      display: inline-flex; align-items: center; justify-content: center;
       font-size: var(--fs-body); color: var(--muted); cursor: pointer; line-height: 1;
       font-family: inherit; -webkit-tap-highlight-color: transparent; }
     .cyc-nav:active { background: var(--line-soft); }
@@ -950,6 +951,8 @@
       /* 白底圆钮:去阴影,改 1px 淡描边勾边,从灰/粉底轻轻分离,更简洁 */
       background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 50%;
       width: 30px; height: 30px; box-sizing: border-box;
+      /* flex 居中 + 1px 下压:抵消 ‹/› 字形天生偏上,让箭头落在圆心水平线上 */
+      display: inline-flex; align-items: center; justify-content: center; padding: 2px 0 0;
       font-size: var(--fs-body); color: var(--muted); cursor: pointer; line-height: 1;
     }
     .hm-nav:active { background: var(--line-soft); }
