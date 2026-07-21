@@ -929,15 +929,17 @@
       /* 墨绿单色色阶：浅→深 */
       --hm0: #ecedf0; --hm1: #cfe1d7; --hm2: #86b5a0; --hm3: #407f66; --hm4: #164a3b;
       --hm-accent: #1c5a48;
+      --hm-canvas: #F9FAFB;   /* 页面画布灰底：页头/标签条与之统一,只有数据卡是白的 */
     }
     /* 热力图页用淡灰底(非粉),让纯白卡片(概览/标签轨迹)明显浮起、不与背景融合 */
-    .stats-overlay.as-page.heatmap-page { background: var(--grain), #F9FAFB; }
+    .stats-overlay.as-page.heatmap-page { background: var(--grain), var(--hm-canvas); }
     /* 同一行:年份切换在左、视图切换在右(与首页头部一致)。
        权重需盖过 .stats-overlay.as-page .stats-header 的「居中 + 品牌红描边」——
        年份改为靠左对齐,并去掉那条描边(首页页头本就无描边,两页统一为无缝磨砂条)。 */
     .stats-overlay.as-page .hm-header {
       flex-direction: row; justify-content: space-between; align-items: center; gap: 12px;
       border-bottom: none;
+      background: var(--hm-canvas);   /* 与画布灰底一致,不再是白色浮条 */
     }
     .hm-yearbar { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 0; }
     .hm-year { font-size: var(--fs-title); font-weight: bold; color: var(--ink); min-width: 66px; text-align: center; }
@@ -951,7 +953,7 @@
     .hm-sub { text-align: center; font-size: var(--fs-footnote); color: var(--faint); margin: 0 0 14px; }
     /* 症状标签横条：往下滑时也吸顶停留，随时知道当前看的是哪个标签 */
     .hm-chips { display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-      position: sticky; top: 0; z-index: 6; background: var(--frost);
+      position: sticky; top: 0; z-index: 6; background: var(--hm-canvas);   /* 与画布灰底一致；靠阴影表明吸顶浮起 */
       /* 标签条紧贴页头(与首页一致,页头与标签条之间不留缝) */
       margin: 0 calc(-1 * var(--page-gutter)) 14px; padding: 10px var(--page-gutter);
       box-shadow: var(--shadow-card); }
