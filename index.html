@@ -415,13 +415,17 @@
     /* 周期轨迹卡：标题行 + 右侧紧凑年份切换 */
     .cyc-head { display: flex; align-items: center; justify-content: space-between; }
     .cyc-yearbar { display: flex; align-items: center; gap: 8px; }
-    /* 与其他页翻页钮(.hm-nav)保持一致:白底 + 1px 淡描边,字形箭头,flex 居中并下压 1px */
+    /* 与其他页翻页钮(.hm-nav)保持一致:白底 + 1px 淡描边 */
     .cyc-nav { background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 50%;
-      width: 30px; height: 30px; box-sizing: border-box; padding: 2px 0 0;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: var(--fs-body); color: var(--muted); cursor: pointer; line-height: 1;
-      font-family: inherit; -webkit-tap-highlight-color: transparent; }
+      width: 30px; height: 30px; box-sizing: border-box; position: relative;
+      font-size: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .cyc-nav:active { background: var(--line-soft); }
+    /* 统一箭头:用 CSS 边框画 chevron,几何居中于圆心水平线,略加粗 */
+    .hm-nav::before, .cyc-nav::before {
+      content: ""; position: absolute; top: 50%; left: 50%; width: 7px; height: 7px;
+      border-right: 1.8px solid var(--muted); border-bottom: 1.8px solid var(--muted); }
+    .hm-nav.prev::before, .cyc-nav.prev::before { transform: translate(-30%, -50%) rotate(135deg); }
+    .hm-nav.next::before, .cyc-nav.next::before { transform: translate(-70%, -50%) rotate(-45deg); }
     .cyc-year { font-size: var(--fs-callout); font-weight: 700; color: var(--ink-2);
       min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
     /* 概览：2×2 数据小卡 */
@@ -950,10 +954,8 @@
     .hm-nav {
       /* 白底圆钮:去阴影,改 1px 淡描边勾边,从灰/粉底轻轻分离,更简洁 */
       background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 50%;
-      width: 30px; height: 30px; box-sizing: border-box;
-      /* flex 居中 + 1px 下压:抵消 ‹/› 字形天生偏上,让箭头落在圆心水平线上 */
-      display: inline-flex; align-items: center; justify-content: center; padding: 2px 0 0;
-      font-size: var(--fs-body); color: var(--muted); cursor: pointer; line-height: 1;
+      width: 30px; height: 30px; box-sizing: border-box; position: relative;
+      font-size: 0; cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
     .hm-nav:active { background: var(--line-soft); }
     /* 让吸顶标签条紧贴页头,顶部留白改由 hm-sub 承担,避免滚动内容从缝里露出 */
@@ -1158,9 +1160,9 @@
   <div class="home-sticky">
     <div class="home-header">
       <div class="hm-yearbar">
-        <button class="hm-nav" onclick="changeYear(-1)">‹</button>
+        <button class="hm-nav prev" onclick="changeYear(-1)" aria-label="上一年"></button>
         <div class="hm-year home-year" id="yearLabel" onclick="openYearPicker()">2026</div>
-        <button class="hm-nav" onclick="changeYear(1)">›</button>
+        <button class="hm-nav next" onclick="changeYear(1)" aria-label="下一年"></button>
       </div>
       <div class="home-viewtoggle" id="homeViewToggle">
         <div class="hvt-thumb" id="hvtThumb"></div>
@@ -1256,9 +1258,9 @@
     <div class="stats-modal">
       <div class="stats-header hm-header">
         <div class="hm-yearbar">
-          <button class="hm-nav" onclick="heatNavShift(-1)">‹</button>
+          <button class="hm-nav prev" onclick="heatNavShift(-1)" aria-label="上一段"></button>
           <div class="hm-year" id="hmYear">2026</div>
-          <button class="hm-nav" onclick="heatNavShift(1)">›</button>
+          <button class="hm-nav next" onclick="heatNavShift(1)" aria-label="下一段"></button>
         </div>
         <div class="hm-viewtoggle">
           <div class="hm-vt-thumb" id="hmVtThumb"></div>
@@ -2389,9 +2391,9 @@
       const head = `<div class="stcard-title cyc-head">
           <span>周期轨迹</span>
           <span class="cyc-yearbar">
-            <button class="cyc-nav prev" onclick="shiftStatChartYear(-1)" aria-label="上一年">‹</button>
+            <button class="cyc-nav prev" onclick="shiftStatChartYear(-1)" aria-label="上一年"></button>
             <span class="cyc-year">${year}</span>
-            <button class="cyc-nav next" onclick="shiftStatChartYear(1)" aria-label="下一年">›</button>
+            <button class="cyc-nav next" onclick="shiftStatChartYear(1)" aria-label="下一年"></button>
           </span>
         </div>`;
       const hasData = Object.keys(md).length > 0;
