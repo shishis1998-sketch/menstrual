@@ -944,10 +944,10 @@
     .hm-yearbar { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 0; }
     .hm-year { font-size: var(--fs-title); font-weight: bold; color: var(--ink); min-width: 66px; text-align: center; }
     .hm-nav {
-      /* 白底圆钮(与选中标签/视图切换白拇指一致),靠淡阴影从灰/粉底浮起 */
-      background: #FFFFFF; border: none; border-radius: 50%; width: 30px; height: 30px;
+      /* 白底圆钮:去阴影,改 1px 淡描边勾边,从灰/粉底轻轻分离,更简洁 */
+      background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 50%;
+      width: 30px; height: 30px; box-sizing: border-box;
       font-size: var(--fs-body); color: var(--muted); cursor: pointer; line-height: 1;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
     }
     .hm-nav:active { background: var(--line-soft); }
     /* 让吸顶标签条紧贴页头,顶部留白改由 hm-sub 承担,避免滚动内容从缝里露出 */
