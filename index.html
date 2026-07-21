@@ -4,27 +4,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>经期日历</title>
   <style>
-    /* 内嵌 Noto Sans SC 常用字子集(≈3874 字：GB2312 一级 + 界面用字 + 基本拉丁数字/英文)。
-       内嵌常规(400)与粗体(700)两个字重：界面数值/标题用 font-weight 600/700,
-       若只嵌单字重,浏览器合成假粗会让中文变粗而数字几乎不粗、二者割裂;嵌真粗体后粗细统一。
-       放在字体栈 -apple-system 之后：苹果设备一律用系统字(SF+苹方,本就配套),且不下载此字体;
-       安卓/Windows 则中文与数字/英文统一用此字体。
-       font-display:swap → 先用系统字秒显示,字体到位后无缝替换,不阻塞首屏。
-       文件名带版本号(.v2)以在更新时强制刷新浏览器缓存。 */
-    @font-face {
-      font-family: 'AppSC';
-      src: url('./fonts/NotoSansSC-sc-400.v2.woff2') format('woff2');
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
-    }
-    @font-face {
-      font-family: 'AppSC';
-      src: url('./fonts/NotoSansSC-sc-700.v2.woff2') format('woff2');
-      font-weight: 700;
-      font-style: normal;
-      font-display: swap;
-    }
     /* ═══════════════════════════════════════════════════════════════
        间距系统 · Spacing System  (v1)
        基于 4px 基准单位的 11 级刻度,四个页面共用同一套内外边距节奏。
@@ -102,7 +81,7 @@
       --info:   #0EA5E9;  --danger: #E11D48;  --ok: #16A34A;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'AppSC', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg-grad);
       background-attachment: fixed;
       background-size: cover;
