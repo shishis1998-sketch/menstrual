@@ -979,6 +979,7 @@
     .hm-cell.dark { color: rgba(255,255,255,.92); }
     .hm-cell.empty { background: transparent; }
     .hm-dist { margin-top: 20px; padding-top: 16px; border-top: 1px solid #eef0f3; }
+    .stcard .hm-dist { margin-top: 0; padding-top: 0; border-top: 0; }  /* 独立卡内由标题区隔,去掉顶部分隔线/间距 */
     .hm-distbar { display: flex; height: 9px; border-radius: 5px; overflow: hidden; margin-bottom: 12px; }
     .hm-distbar div:not(:last-child) { margin-right: 1px; }
     .hm-distlegend { display: flex; flex-direction: column; gap: 7px; }
@@ -3243,8 +3244,9 @@
         `<div class="hm-dl"><span class="sw" style="background:${HM_RAMP[v]}"></span>` +
         `<b>${(levelDays[v] / totalDays * 100).toFixed(1)}%</b>${labels[v] || ''}</div>`
       ).join('');
-      const distHtml = `<div class="hm-dist"><div class="hm-distbar">${barHtml}</div>` +
-        `<div class="hm-distlegend">${legendHtml}</div></div>`;
+      const distHtml = `<div class="stcard"><div class="stcard-title">强度分布</div>` +
+        `<div class="hm-dist"><div class="hm-distbar">${barHtml}</div>` +
+        `<div class="hm-distlegend">${legendHtml}</div></div></div>`;
 
       const hintHtml = `<div class="stats-hint">💡 颜色越深 = 那天记的标签越多；灰色 = 当天没记录。<br>` +
         `💡 点顶部标签，只看某一个症状的全年分布。</div>`;
@@ -3260,7 +3262,7 @@
       const total = monthDays.reduce((a, b) => a + b, 0);
       const head = `<div class="stcard-title">标签轨迹</div>`;
       if (total === 0) {
-        return `<div class="stcard" style="margin:var(--sp-card) 0 var(--sp-8)">${head}` +
+        return `<div class="stcard">${head}` +
           `<div class="cyc-empty">${heatYear} 年还没有标签记录</div></div>`;
       }
       let maxV = 1;
@@ -3274,7 +3276,7 @@
           : `<div class="cyc-col empty"></div>`;
         xs += `<span>${mo + 1}</span>`;
       }
-      return `<div class="stcard" style="margin:var(--sp-card) 0 var(--sp-8)">${head}
+      return `<div class="stcard">${head}
           <div class="cyc-plot">
             <div class="cyc-grid"><i style="top:0"></i><i style="top:33.3%"></i><i style="top:66.6%"></i></div>
             ${cols}
