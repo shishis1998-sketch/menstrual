@@ -415,15 +415,12 @@
     /* 周期轨迹卡：标题行 + 右侧紧凑年份切换 */
     .cyc-head { display: flex; align-items: center; justify-content: space-between; }
     .cyc-yearbar { display: flex; align-items: center; gap: 8px; }
-    .cyc-nav { background: var(--surface); border: 1px solid var(--line); border-radius: 50%;
-      width: 28px; height: 28px; padding: 0; position: relative; font-size: 0; cursor: pointer;
-      -webkit-tap-highlight-color: transparent; }
-    /* 用 CSS 边框画箭头，几何居中在圆心，避免字体字形偏上 */
-    .cyc-nav::before { content: ""; position: absolute; top: 50%; left: 50%;
-      width: 4.5px; height: 4.5px; border-right: 1.2px solid var(--muted); border-bottom: 1.2px solid var(--muted); }
-    .cyc-nav.prev::before { transform: translate(-30%, -50%) rotate(135deg); }
-    .cyc-nav.next::before { transform: translate(-70%, -50%) rotate(-45deg); }
-    .cyc-nav:active { background: var(--surface-2); }
+    /* 与其他页翻页钮(.hm-nav)保持一致:白底 + 1px 淡描边,字形箭头 */
+    .cyc-nav { background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 50%;
+      width: 30px; height: 30px; box-sizing: border-box; padding: 0;
+      font-size: var(--fs-body); color: var(--muted); cursor: pointer; line-height: 1;
+      font-family: inherit; -webkit-tap-highlight-color: transparent; }
+    .cyc-nav:active { background: var(--line-soft); }
     .cyc-year { font-size: var(--fs-callout); font-weight: 700; color: var(--ink-2);
       min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
     /* 概览：2×2 数据小卡 */
@@ -2389,9 +2386,9 @@
       const head = `<div class="stcard-title cyc-head">
           <span>周期轨迹</span>
           <span class="cyc-yearbar">
-            <button class="cyc-nav prev" onclick="shiftStatChartYear(-1)" aria-label="上一年"></button>
+            <button class="cyc-nav prev" onclick="shiftStatChartYear(-1)" aria-label="上一年">‹</button>
             <span class="cyc-year">${year}</span>
-            <button class="cyc-nav next" onclick="shiftStatChartYear(1)" aria-label="下一年"></button>
+            <button class="cyc-nav next" onclick="shiftStatChartYear(1)" aria-label="下一年">›</button>
           </span>
         </div>`;
       const hasData = Object.keys(md).length > 0;
