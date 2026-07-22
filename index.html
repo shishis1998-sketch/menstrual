@@ -111,15 +111,30 @@
     .home-header h1 { margin: 0; }
     .home-year { cursor: pointer; }
     .home-subtitle { text-align: center; margin: 0 0 10px; }
-    /* 首页症状标签条(复用 .hm-chip 单个样式) */
-    .home-chips {
-      display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-      /* 标签条内边距与热力图 .hm-chips 一致(10px 上下),两页标签条同高 */
-      padding: 10px var(--page-gutter); background: transparent;
-      box-shadow: var(--shadow-card);
+    /* 首页症状筛选:头部图标按钮 + 下方下拉列表(取代原横滑标签行) */
+    .home-header-right { display: flex; align-items: center; gap: 10px; }
+    .home-filter { position: relative; flex: 0 0 auto; }
+    .home-filter-btn {
+      width: 34px; height: 34px; border-radius: 50%; background: #FFFFFF;
+      border: 1px solid var(--line); color: var(--muted); padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
-    .home-chips::-webkit-scrollbar { display: none; }
-    .home-chips .hm-chip.on { background: #FFFFFF; color: var(--ink); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
+    .home-filter-btn svg { width: 16px; height: 16px; }
+    .home-filter-btn.act { background: var(--brand); border-color: var(--brand); color: #FFFFFF; }
+    .home-filter-menu {
+      position: absolute; top: calc(100% + 8px); right: 0; width: 172px; z-index: 60;
+      background: #FFFFFF; border: 1px solid var(--line); border-radius: var(--r-md);
+      padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.10);
+      max-height: 60vh; overflow-y: auto; display: none;
+    }
+    .home-filter-menu.show { display: block; }
+    .home-filter-menu::-webkit-scrollbar { display: none; }
+    .home-filter-item {
+      padding: 9px 12px; border-radius: 8px; font-size: var(--fs-caption);
+      color: var(--ink-2); white-space: nowrap; cursor: pointer;
+    }
+    .home-filter-item.on { background: var(--brand-soft); color: var(--brand); font-weight: 700; }
     .year-switcher {
       display: flex; align-items: center; justify-content: center;
       gap: 16px; margin: 4px 0 8px;
@@ -1179,13 +1194,20 @@
         <div class="hm-year home-year" id="yearLabel" onclick="openYearPicker()">2026</div>
         <button class="hm-nav next" onclick="changeYear(1)" aria-label="下一年"></button>
       </div>
-      <div class="home-viewtoggle" id="homeViewToggle">
-        <div class="hvt-thumb" id="hvtThumb"></div>
-        <button class="hvt on" data-view="month" onclick="setHomeView('month')">月</button>
-        <button class="hvt" data-view="year" onclick="setHomeView('year')">年</button>
+      <div class="home-header-right">
+        <div class="home-filter" id="homeFilter">
+          <button class="home-filter-btn" id="homeFilterBtn" onclick="toggleHomeFilter(event)" aria-label="筛选症状">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5h16M7 12h10M10 19h4"/></svg>
+          </button>
+          <div class="home-filter-menu" id="homeFilterMenu"></div>
+        </div>
+        <div class="home-viewtoggle" id="homeViewToggle">
+          <div class="hvt-thumb" id="hvtThumb"></div>
+          <button class="hvt on" data-view="month" onclick="setHomeView('month')">月</button>
+          <button class="hvt" data-view="year" onclick="setHomeView('year')">年</button>
+        </div>
       </div>
     </div>
-    <div class="home-chips" id="homeChips"></div>
   </div>
 
   <div class="year-picker-overlay" id="yearPickerOverlay" onclick="closeYearPicker(event)">
@@ -1512,20 +1534,38 @@
     // 首页症状标签筛选(置顶标签条)：'全部' 或某个标签名 → 高亮当年记过该标签的日期
     let homeSymFilter = '全部';
     function renderHomeChips() {
-      const box = document.getElementById('homeChips');
-      if (!box) return;
-      if (!SYMPTOMS_LIB || SYMPTOMS_LIB.length === 0) { box.style.display = 'none'; return; }
-      box.style.display = '';
+      const wrap = document.getElementById('homeFilter');
+      const btn = document.getElementById('homeFilterBtn');
+      const menu = document.getElementById('homeFilterMenu');
+      if (!wrap || !btn || !menu) return;
+      if (!SYMPTOMS_LIB || SYMPTOMS_LIB.length === 0) { wrap.style.display = 'none'; return; }
+      wrap.style.display = '';
       const names = ['全部'].concat(SYMPTOMS_LIB);
-      box.innerHTML = names.map(n =>
-        `<button class="hm-chip${n === homeSymFilter ? ' on' : ''}" data-name="${escapeAttr(n)}">${escapeHtml(n)}</button>`
+      menu.innerHTML = names.map(n =>
+        `<div class="home-filter-item${n === homeSymFilter ? ' on' : ''}" data-name="${escapeAttr(n)}">${escapeHtml(n)}</div>`
       ).join('');
-      box.querySelectorAll('.hm-chip').forEach(el => {
-        el.onclick = () => setHomeSymFilter(el.dataset.name);
+      menu.querySelectorAll('.home-filter-item').forEach(el => {
+        el.onclick = () => { closeHomeFilter(); setHomeSymFilter(el.dataset.name); };
       });
+      btn.classList.toggle('act', homeSymFilter !== '全部');
     }
+    // 头部筛选下拉:开合与关闭
+    function toggleHomeFilter(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('homeFilterMenu');
+      if (menu) menu.classList.toggle('show');
+    }
+    function closeHomeFilter() {
+      const menu = document.getElementById('homeFilterMenu');
+      if (menu) menu.classList.remove('show');
+    }
+    // 点击下拉之外的地方收起
+    document.addEventListener('click', (e) => {
+      const f = document.getElementById('homeFilter');
+      if (f && !f.contains(e.target)) closeHomeFilter();
+    });
     function setHomeSymFilter(name) {
-      homeSymFilter = (homeSymFilter === name && name !== '全部') ? '全部' : name;
+      homeSymFilter = name;
       render();
       // 选中具体标签时，自动跳到当年第一个高亮日期(rAF 等新 DOM 布局完成)
       if (homeSymFilter !== '全部') {
@@ -1949,7 +1989,7 @@
         if (zoomedMonth !== null) return;   // 放大态不响应
         if (e.touches.length !== 1) return;
         // 顶部标签条本身是横向滚动区，在上面滑动是看标签，不当作翻年份
-        if (e.target.closest && e.target.closest('.home-chips, .hm-chips')) { tracking = false; return; }
+        if (e.target.closest && e.target.closest('.home-filter, .hm-chips')) { tracking = false; return; }
         const t = e.touches[0];
         sx = t.clientX; sy = t.clientY;
         tracking = false;   // 已取消左右滑动:翻月/翻年一律用按钮
