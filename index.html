@@ -1040,11 +1040,12 @@
     .hm-dl b { color: var(--ink); }
     .hm-empty { text-align: center; color: var(--faint); font-size: var(--fs-caption); padding: 40px 10px; line-height: 1.8; }
     /* ── 标签视图（按月·按标签的卡片）── */
-    .hm-viewtoggle { position: relative; display: flex; width: auto; flex: 0 0 auto; background: var(--line-soft); border-radius: var(--r-full); padding: 3px; }
-    /* 绿色滑块:选中态跟着滑动,不再瞬间跳 */
+    /* 与筛选图标/翻年圆钮统一:白底 + 1px 描边(不再灰底+投影) */
+    .hm-viewtoggle { position: relative; display: flex; width: auto; flex: 0 0 auto; background: #FFFFFF; border: 1px solid var(--line); border-radius: var(--r-full); padding: 3px; }
+    /* 滑块:选中态跟着滑动;改用淡灰底代替白底投影 */
     .hm-vt-thumb {
       position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
-      background: #FFFFFF; border-radius: var(--r-full); box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+      background: var(--line-soft); border-radius: var(--r-full); box-shadow: none;
       transform: translateX(0);
     }
     .hm-vt {
