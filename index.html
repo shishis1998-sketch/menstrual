@@ -123,11 +123,15 @@
     .home-filter-btn svg { width: 16px; height: 16px; }
     .home-filter-btn.act { background: var(--brand); border-color: var(--brand); color: #FFFFFF; }
     .home-filter-menu {
-      position: absolute; top: calc(100% + 8px); right: 0; width: 172px; z-index: 60;
+      position: absolute; top: calc(100% + 8px); right: 0; z-index: 60;
+      /* 宽度随最长症状名自适应,加上下限兜底,避免过窄/过宽 */
+      width: max-content; min-width: 108px; max-width: min(72vw, 240px);
       background: #FFFFFF; border: 1px solid var(--line); border-radius: var(--r-md);
       padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.10);
       max-height: 60vh; overflow-y: auto; display: none;
     }
+    /* 名称过长时不撑破上限,超出用省略号 */
+    .home-filter-item { overflow: hidden; text-overflow: ellipsis; }
     .home-filter-menu.show { display: block; }
     .home-filter-menu::-webkit-scrollbar { display: none; }
     .home-filter-item {
