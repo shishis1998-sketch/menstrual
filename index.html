@@ -119,8 +119,13 @@
       border: 1px solid var(--line); color: var(--muted); padding: 0;
       display: inline-flex; align-items: center; justify-content: center;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: transform .12s ease, background-color .15s ease;
     }
     .home-filter-btn svg { width: 16px; height: 16px; }
+    /* 按压/展开反馈:缩小 + 淡灰底(生效红态下只缩放,保持红色不闪灰) */
+    .home-filter-btn:active { transform: scale(.9); }
+    .home-filter-btn:not(.act):active,
+    .home-filter-btn:not(.act).open { background: var(--line-soft); }
     .home-filter-btn.act { background: var(--brand); border-color: var(--brand); color: #FFFFFF; }
     .home-filter-menu {
       position: absolute; top: calc(100% + 8px); right: 0; z-index: 60;
@@ -1553,15 +1558,20 @@
       });
       btn.classList.toggle('act', homeSymFilter !== '全部');
     }
-    // 头部筛选下拉:开合与关闭
+    // 头部筛选下拉:开合与关闭(按钮同步 .open 态,呈现淡灰底反馈)
     function toggleHomeFilter(e) {
       if (e) e.stopPropagation();
       const menu = document.getElementById('homeFilterMenu');
-      if (menu) menu.classList.toggle('show');
+      const btn = document.getElementById('homeFilterBtn');
+      if (!menu) return;
+      const open = menu.classList.toggle('show');
+      if (btn) btn.classList.toggle('open', open);
     }
     function closeHomeFilter() {
       const menu = document.getElementById('homeFilterMenu');
+      const btn = document.getElementById('homeFilterBtn');
       if (menu) menu.classList.remove('show');
+      if (btn) btn.classList.remove('open');
     }
     // 点击下拉之外的地方收起
     document.addEventListener('click', (e) => {
