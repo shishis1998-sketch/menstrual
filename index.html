@@ -220,6 +220,24 @@
       font-size: var(--fs-footnote); padding: 3px 9px; border-radius: var(--r-md);
       background: var(--brand-soft); color: var(--brand-dark); word-break: break-all;
     }
+    /* 本月状态记录:按天竖向柱状图(柱顶列出当天症状) */
+    .sym-bars {
+      display: flex; align-items: flex-end; justify-content: center; flex-wrap: nowrap;
+      overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 8px 0 2px;
+    }
+    .sym-col { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; padding: 0 6px; }
+    .sym-col-tags { display: flex; flex-direction: column; align-items: center; gap: 3px; margin-bottom: 5px; }
+    .sym-col-tag {
+      font-size: 10px; line-height: 1.25; padding: 2px 6px; border-radius: 5px;
+      background: var(--brand-soft); color: var(--brand-dark); white-space: nowrap;
+    }
+    .sym-col-bar { width: 14px; min-height: 10px; background: var(--brand); border-radius: 5px 5px 2px 2px; }
+    .sym-col-day {
+      font-size: 10.5px; color: var(--muted); font-weight: 600; margin-top: 5px;
+      font-variant-numeric: tabular-nums;
+    }
+    .sym-gap { flex: 0 0 auto; align-self: flex-end; color: var(--faint); font-size: 12px;
+      letter-spacing: 1px; padding: 0 4px 24px; }
     .month {
       background: transparent; border-radius: var(--r-md);
       padding: 4px 2px 10px; box-shadow: none;
@@ -1871,29 +1889,39 @@
       return parts.join('、');
     }
 
-    // 生成某月“本月状态记录”(按症状,只读);无则返回 null
-    // 每个症状一行:列出它出现的日子,连续的并成区间,不连续用顿号
+    // 生成某月“本月状态记录”(只读)：按天的竖向柱状图。
+    // 横轴=日期,柱高=当天症状数,柱顶直接列出当天的症状;跳过无记录的日子,
+    // 非相邻的日子之间用 ⋯ 提示中间的空档。
     function buildMonthSymList(m) {
       const daysInMonth = new Date(year, m, 0).getDate();
-      // 症状 → { days:[升序], first:首次出现日 }
-      const map = new Map();
+      // 逐日收集有记录的天
+      const perDay = [];
       for (let d = 1; d <= daysInMonth; d++) {
-        for (const name of getSym(year, m, d)) {
-          let e = map.get(name);
-          if (!e) { e = { days: [], first: d }; map.set(name, e); }
-          e.days.push(d);
-        }
+        const syms = getSym(year, m, d);
+        if (syms.length) perDay.push({ d, syms });
       }
-      if (map.size === 0) return null;
-      // 按首次出现日期先后排序
-      const entries = [...map.entries()].sort((a, b) => a[1].first - b[1].first);
-      const rows = entries.map(([name, e]) =>
-        `<div class="sym-row"><span class="sym-name"><span class="sym-tag">${escapeHtml(name)}</span></span>` +
-        `<span class="sym-days">${formatDayRanges(e.days)}</span></div>`
-      );
+      if (perDay.length === 0) return null;
+
+      const UNIT = 14;  // 每个症状对应的柱高(px)
+      const cols = [];
+      let prevDay = null;
+      for (const { d, syms } of perDay) {
+        if (prevDay !== null && d !== prevDay + 1) cols.push('<div class="sym-gap">⋯</div>');
+        const tags = syms.map(s => `<span class="sym-col-tag">${escapeHtml(s)}</span>`).join('');
+        cols.push(
+          `<div class="sym-col">` +
+            `<div class="sym-col-tags">${tags}</div>` +
+            `<div class="sym-col-bar" style="height:${syms.length * UNIT}px"></div>` +
+            `<div class="sym-col-day">${d}</div>` +
+          `</div>`
+        );
+        prevDay = d;
+      }
+
       const el = document.createElement('div');
       el.className = 'sym-list';
-      el.innerHTML = `<div class="sym-list-title">本月状态记录</div>${rows.join('')}`;
+      el.innerHTML = `<div class="sym-list-title">本月状态记录</div>` +
+                     `<div class="sym-bars">${cols.join('')}</div>`;
       return el;
     }
 
